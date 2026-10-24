@@ -1,0 +1,21 @@
+# Local agent instructions and development handoff
+/.agent-local/
+/AGENTS.md
+
+# Real musical material must never enter version control. Use synthetic .ts/.json fixtures.
+/data/
+*.csv
+*.tsv
+*.xlsx
+*.xls
+
+# Local development and build outputs
+node_modules/
+dist/
+coverage/
+.vite/
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
