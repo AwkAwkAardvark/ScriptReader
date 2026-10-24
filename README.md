@@ -2,6 +2,8 @@
 
 A local-file rehearsal reader. Scripts stay in browser memory and are cleared on reload.
 
+To prepare another script, follow the [CSV and character-tagging guide](docs/csv-tagging-guide.md). It includes instructions for agents and a synthetic example.
+
 Requires Node.js 22.12 or newer (Node 22 is selected in `.nvmrc`).
 
 ```sh
