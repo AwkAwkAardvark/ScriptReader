@@ -1,4 +1,5 @@
-import Papa from 'papaparse';
+import { readCsv, validTag, type Diagnostic } from './csv';
+export type { Diagnostic } from './csv';
 
 export const HEADERS = ['No', 'Scene', 'Role', 'English', 'Korean', 'Type', 'Notes', 'Tag', 'Optional'] as const;
 export const TYPES = ['Line', 'StageDirection', 'Title', 'Song', 'SFX', 'Lighting', 'VFX'] as const;
@@ -13,26 +14,16 @@ export interface ScriptRecord {
   readonly tags: readonly string[];
 }
 export interface Character { tag: string; label: string }
-export interface Script { records: readonly ScriptRecord[]; characters: Character[] }
-export interface Diagnostic { recordNumber: number; field?: string; message: string }
+export interface Script { records: readonly ScriptRecord[]; characters: Character[]; identitySource: 'script' | 'cast' }
 export type ParseResult = { ok: true; script: Script } | { ok: false; errors: Diagnostic[] };
 
 const positiveInteger = (text: string) => /^\d+$/.test(text) && Number.isSafeInteger(Number(text)) && Number(text) > 0;
 export const isStructural = (record: ScriptRecord) => record.types.includes('Title') || record.types.includes('Song');
 
 /** CSV record numbers include the header, irrespective of embedded cell newlines. */
-export function parseScript(text: string): ParseResult {
-  const parsed = Papa.parse<string[]>(text, { delimiter: ',', skipEmptyLines: false });
-  const rows = parsed.data;
-  // A terminal line ending isn't an extra source record. Interior blank records are errors.
-  if (rows.length > 1 && rows.at(-1)?.length === 1 && rows.at(-1)?.[0] === '') rows.pop();
-  const errors: Diagnostic[] = parsed.errors.map(error => ({
-    recordNumber: (error.row ?? 0) + 1,
-    message: error.message,
-  }));
-  if (!rows[0] || rows[0].length !== HEADERS.length || HEADERS.some((header, i) => rows[0][i] !== header)) {
-    return { ok: false, errors: [{ recordNumber: 1, message: `Expected headers in this order: ${HEADERS.join(',')}.` }] };
-  }
+export function parseScript(text: string, cast?: readonly Character[]): ParseResult {
+  const { rows, errors } = readCsv(text, HEADERS, 'script');
+  if (!rows.length) return { ok: false, errors };
   if (rows.length === 1) errors.push({ recordNumber: 1, message: 'The script contains no records.' });
 
   const records: ScriptRecord[] = [];
@@ -62,16 +53,17 @@ export function parseScript(text: string): ParseResult {
     if (types.some(token => !TYPES.includes(token as RecordType))) report('Type', `Use only: ${TYPES.join(', ')}.`);
     if (new Set(types).size !== types.length) report('Type', 'Duplicate classification token.');
     const tags = source.Tag.trim() ? source.Tag.split(';').map(tag => tag.trim()) : [];
-    if (tags.some(tag => !tag || /[\s,\u0000-\u001f]/u.test(tag)) || new Set(tags).size !== tags.length) {
+    if (tags.some(tag => !validTag(tag)) || new Set(tags).size !== tags.length) {
       report('Tag', 'Use distinct individual tokens separated by semicolons, without empty tokens or embedded whitespace.');
     }
-    if (types.includes('Line') && !source.Role.trim()) report('Role', 'Dialogue requires a speaker label.');
+    if (types.includes('Line') && !source.Role.trim() && !(cast && tags.length > 0)) report('Role', 'Dialogue requires a speaker label.');
     if (source.Optional !== '' && source.Optional !== 'Y') report('Optional', 'Must be Y or blank.');
     records.push({ source, recordNumber, no, scene: Number(source.Scene), types: types as RecordType[], tags });
   }
 
-  const names = new Map<string, string>();
+  const names = new Map<string, string>(cast?.map(character => [character.tag, character.label]));
   for (const record of records) {
+    if (cast) continue;
     if (!record.types.includes('Line') || record.tags.length !== 1 || !record.source.Role.trim()) continue;
     const tag = record.tags[0];
     const label = record.source.Role;
@@ -81,11 +73,21 @@ export function parseScript(text: string): ParseResult {
   }
   for (const record of records) {
     for (const tag of record.tags) {
-      if (!names.has(tag)) errors.push({ recordNumber: record.recordNumber, field: 'Tag', message: `Character token ${tag} needs a single-character dialogue record to identify its name.` });
+      if (!names.has(tag)) errors.push({ document: 'script', recordNumber: record.recordNumber, field: 'Tag', message: cast
+        ? `Character token ${tag} is missing from the cast roster.`
+        : `Character token ${tag} needs a single-character dialogue record to identify its name.` });
     }
   }
   if (errors.length) return { ok: false, errors };
-  return { ok: true, script: { records, characters: [...names].map(([tag, label]) => ({ tag, label })) } };
+  return { ok: true, script: { records, characters: [...names].map(([tag, label]) => ({ tag, label })), identitySource: cast ? 'cast' : 'script' } };
+}
+
+/** Identity comes from the roster for individuals; preserve authored group labels. */
+export function attribution(record: ScriptRecord, script: Script): string {
+  if (script.identitySource === 'script') return record.source.Role;
+  const names = record.tags.map(tag => script.characters.find(character => character.tag === tag)?.label ?? tag);
+  if (record.tags.length === 1) return names[0];
+  return record.source.Role || (record.types.includes('Line') ? names.join(', ') : '');
 }
 
 export interface FilterOptions { character: string; before: number; after: number; includeNonDialogue: boolean }

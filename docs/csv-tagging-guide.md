@@ -5,10 +5,10 @@ Use this guide when converting an authorized script or reviewing its participati
 ## Instructions for an assisting agent
 
 1. Confirm the authoritative source version and the owner's participation rules. Preserve existing dialogue, translations, stage directions, source order, and identifiers. Do not replace an accepted version with an older source.
-2. Inventory the individual characters and propose a stable tag-to-name mapping. Resolve unclear identities with the owner before tagging their material.
+2. Inventory the individual characters and prepare a companion cast CSV with `Tag,Name` headers. Resolve unclear identities with the owner before tagging their material.
 3. Tag each record with its individual participants. Use explicit speakers and directions as evidence; flag uncertain membership instead of inferring it from vague wording.
 4. Review collective speeches, entrances, exits, effects, and songs separately. Resolve each group into its actual individual participants for that record.
-5. Validate the CSV and review representative passages in the reader. Deliver the private CSV, character mapping, validation summary, and any unresolved participation questions.
+5. Validate both CSV files and review representative passages in the reader. Deliver the private script CSV, cast CSV, validation summary, and any unresolved participation questions.
 
 Do not rewrite dialogue, invent a character's speech, add student assignments, or introduce new columns to make the file fit. Keep production files out of Git, app assets, shared fixtures, and deployment output. Use the ignored `data/` directory for local input. Only open private material when authorized; do not log full records. Automated fixtures and documentation must use synthetic text.
 
@@ -24,7 +24,7 @@ No,Scene,Role,English,Korean,Type,Notes,Tag,Optional
 | --- | --- |
 | `No` | Unique, increasing positive integer in original record order. Preserve existing identifiers; gaps are permitted. For a new conversion, assign increasing identifiers once. |
 | `Scene` | Positive integer identifying the scene. Keep scenes in script order and put a `Title` record at the beginning of each scene. |
-| `Role` | Displayed speaker or participant label. Required for `Line`; may be blank for other types. A group label is display text, not a membership definition. |
+| `Role` | Authored speaker or group label. With a cast loaded, a single tagged character displays its roster name; group labels are preserved. Blank group dialogue labels list roster names; blank group directions remain unlabeled. An untagged `Line` still needs a speaker label. Without a cast, every `Line` needs `Role`. |
 | `English` | Required primary text, including headings and cues. Preserve wording, punctuation, and embedded newlines. |
 | `Korean` | Existing Korean text, or blank. Preserve it; do not generate a translation unless separately requested. |
 | `Type` | One or more approved type tokens separated by semicolons. See below. |
@@ -50,17 +50,25 @@ The list above enumerates the choices, not the required contents of every cell. 
 - Keep identity separate from casting: tokens identify characters, not the students or actors assigned to play them. Preserve separate characters even if one actor plays both.
 - Leave a global or unattributed cue untagged when appropriate. It can still appear as surrounding context. Flag a missing dialogue-participant tag for review rather than silently treating it as complete.
 
-### How dropdown names are established
+### Companion cast CSV: authoritative identity
 
-Every token used anywhere in the file must have at least one genuine `Line` record whose `Tag` contains only that token and whose `Role` contains that character's readable name. For example:
+Prepare a UTF-8 CSV with exactly two headers, in this order:
 
 ```text
-Role = Ivo, Type = Line, Tag = Iv
+Tag,Name
 ```
 
-Use the same `Role` spelling on every single-token dialogue record for that character. Conflicting names are validation errors. Plural/group `Role` labels belong on records with the corresponding multiple individual tags, so they do not become character identities.
+Each record maps one individual token to one canonical display name. `Tag` must be nonempty and contain no whitespace, commas, or semicolons within the token. Whitespace around a token is trimmed, consistently with script tag parsing. `Name` must contain nonblank text and is preserved as supplied. Duplicate tags are errors even when the repeated names agree. Names need not be unique across different tags; the dropdown adds the tag to distinguish identical names.
 
-**Current limitation:** an action-only character with no identifying dialogue row cannot be added to the dropdown under this contract. Do not invent a dialogue row or misclassify a direction to bypass this. Report the limitation and request a separately approved format/application change.
+Every tag used in the script must occur in the cast. Unknown or case-mismatched script tags are errors at the affected **script** record. Invalid cast rows are reported against the **cast** file. Extra cast entries are permitted and selectable; they have no matching passages until the script assigns them participation.
+
+The cast supplies dropdown names and individual attributions; the original script cells remain unchanged. An action-only or group-only character can be selected without an identifying dialogue row. Keep group membership explicit in the script `Tag` column; a roster does not define collective aliases or infer participation.
+
+Use **Open Script** and **Open Cast** in either order, or drop one CSV onto its corresponding control. Either file can be replaced. An invalid supplied cast blocks the import rather than silently falling back to guessed names. **Remove cast** clears it and returns to legacy single-file behavior. Choose the matching production/version: matching identifiers alone cannot prove that two files belong together.
+
+### Legacy single-file compatibility
+
+Opening the script without a cast remains supported. In that mode, every token needs at least one genuine single-token `Line` row whose nonblank `Role` establishes its name. Conflicting solo speaker labels and tokens without such a row remain validation errors. Do not invent dialogue to work around this; supply a cast instead.
 
 ## Directions, effects, and songs
 
@@ -78,7 +86,18 @@ When reviewing the result, remember:
 
 ## Synthetic example
 
-The following invented excerpt uses `Iv` (Ivo) and `Te` (Tess). Assume the owner explicitly confirmed both characters for its group action and song. The first dialogue cell demonstrates a quoted embedded newline.
+The following invented pair uses `Iv` (Ivo), `Te` (Tess), and `Sp` (Silent Sprite). The sprite has an action but no dialogue. Assume the owner explicitly confirmed Ivo and Tess for the group action and song. The first dialogue cell demonstrates a quoted embedded newline.
+
+Cast CSV:
+
+```csv
+Tag,Name
+Iv,Ivo
+Te,Tess
+Sp,Silent Sprite
+```
+
+Script CSV:
 
 ```csv
 No,Scene,Role,English,Korean,Type,Notes,Tag,Optional
@@ -93,11 +112,12 @@ shall we begin?",등불이 준비됐어요.,Line,,Iv,
 8,1,Ivo,The path is clear now.,,Line,,Iv,Y
 9,2,,The garden gate,,Title,,,
 10,2,Tess,We can leave when you are ready.,,Line,,Te,
+11,2,,(A small sprite lifts the latch.),,StageDirection,,Sp,
 ```
 
 ## Validation and owner review
 
-Open the resulting file with **Open Script**. The reader validates header order, field counts, numeric identifiers, required text, supported types, tag syntax/identity mappings, and `Optional` values. Diagnostics identify logical CSV records, including the header as record 1; embedded cell newlines do not change this numbering.
+Open both files with **Open Script** and **Open Cast**. The reader validates CSV structure, cast identifiers/names, script-to-cast references, numeric source identifiers, required text, supported types, tag syntax, and `Optional` values. Diagnostics identify logical CSV records, including the header as record 1; embedded cell newlines do not change this numbering.
 
 Also check content decisions the parser cannot establish: correct speakers, missing participants, resolved collective membership, scene placement, and owner-confirmed song participation. Do not hard-code expected record counts or character names from another production.
 

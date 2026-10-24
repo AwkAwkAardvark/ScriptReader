@@ -11,7 +11,9 @@ npm ci
 npm run dev
 ```
 
-Open the local address shown in the terminal, choose **Open Script**, and select a character.
+Open the local address shown in the terminal. Choose **Open Script** and **Open Cast** (a `Tag,Name` CSV), in either order, then select a character. The cast supplies canonical names and supports characters without dialogue.
+
+Existing scripts can still be opened alone; without a cast file, names are derived from solo-tagged dialogue rows. **Remove cast** returns to that legacy mode. Both files stay in browser memory and are cleared on reload.
 
 ```sh
 npm test

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { filterScript, parseScript, type Diagnostic, type FilteredItem, type Script } from './script';
+import { attribution, filterScript, parseScript, type Diagnostic, type FilteredItem, type Script } from './script';
+import { parseCast } from './cast';
 import { copy, diagnosticMessage, type Copy, type Locale } from './i18n';
 
 type ReaderBlock = { kind: 'marker'; item: FilteredItem } | { kind: 'window'; passage: number; items: FilteredItem[] };
@@ -23,7 +24,7 @@ function ScriptText({ english, korean, showKorean }: { english: string; korean: 
   </div>;
 }
 
-function ScriptEntry({ item: { record, highlighted }, showKorean, text }: { item: FilteredItem; showKorean: boolean; text: Copy }) {
+function ScriptEntry({ item: { record, highlighted }, showKorean, text, label }: { item: FilteredItem; showKorean: boolean; text: Copy; label: string }) {
   if (record.types.includes('Song')) return <div className={`song-marker ${highlighted ? 'highlighted' : ''}`} data-record={record.no}>
     <span aria-hidden="true">♫</span><ScriptText english={record.source.English} korean={record.source.Korean} showKorean={showKorean} />
     {highlighted && <span className="visually-hidden">{text.contribution}</span>}
@@ -31,7 +32,7 @@ function ScriptEntry({ item: { record, highlighted }, showKorean, text }: { item
   const dialogue = record.types.includes('Line');
   const stageDirection = record.types.includes('StageDirection');
   return <article className={`script-entry ${highlighted ? 'highlighted' : ''} ${dialogue ? 'dialogue' : 'direction'} ${stageDirection ? 'stage-direction' : ''}`} data-record={record.no}>
-    <span className="entry-name" lang="en">{record.source.Role}</span>
+    <span className="entry-name">{label}</span>
     <ScriptText english={record.source.English} korean={record.source.Korean} showKorean={showKorean} />
   </article>;
 }
@@ -43,6 +44,38 @@ const readFile = (file: File) => new Promise<string>((resolve, reject) => {
   reader.onabort = () => reject(new Error('Opening the file was interrupted. Please try again.'));
   reader.readAsText(file, 'UTF-8');
 });
+
+type ImportKind = 'script' | 'cast';
+type ImportedFile = { name: string; text: string | null; loading: boolean; error?: string };
+
+function FileImport({ kind, file, text, onOpen, onIssue, onClear }: {
+  kind: ImportKind; file: ImportedFile | null; text: Copy;
+  onOpen: (file: File) => void; onIssue: () => void; onClear?: () => void;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  return <div className={`file-drop ${kind === 'cast' ? 'cast-drop' : ''} ${dragging ? 'is-dragging' : ''}`}
+    onDragOver={event => { event.preventDefault(); setDragging(true); }}
+    onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false); }}
+    onDrop={event => {
+      event.preventDefault(); setDragging(false);
+      if (event.dataTransfer.files.length !== 1) { onIssue(); return; }
+      onOpen(event.dataTransfer.files[0]);
+    }}>
+    <button className={`open-button ${kind === 'cast' ? 'secondary-button' : ''}`} onClick={() => input.current?.click()}>
+      {kind === 'cast' ? text.openCast : text.open} <span aria-hidden="true">↑</span>
+    </button>
+    <input ref={input} type="file" accept=".csv,text/csv" aria-label={kind === 'cast' ? text.castFile : text.scriptFile} className="visually-hidden"
+      onChange={event => {
+        const selected = event.target.files?.[0];
+        if (selected) onOpen(selected);
+        event.target.value = '';
+      }} />
+    {file ? <p className="imported-name"><span className="filename">{file.name}</span>
+      {onClear && <button className="clear-file" aria-label={text.removeCast} onClick={onClear}>×</button>}
+    </p> : kind === 'script' && <p>{text.drop}</p>}
+  </div>;
+}
 
 type Context = { before: number; after: number };
 function ContextPicker({ value, onChange, disabled, text }: {
@@ -80,8 +113,7 @@ function ContextPicker({ value, onChange, disabled, text }: {
 }
 
 export default function App() {
-  const [script, setScript] = useState<Script | null>(null);
-  const [filename, setFilename] = useState('');
+  const [files, setFiles] = useState<Record<ImportKind, ImportedFile | null>>({ script: null, cast: null });
   const [character, setCharacter] = useState('');
   const [context, setContext] = useState<Context>({ before: 3, after: 3 });
   const [includeNonDialogue, setIncludeNonDialogue] = useState(false);
@@ -92,38 +124,59 @@ export default function App() {
     document.documentElement.lang = locale;
     document.title = text.app;
   }, [locale, text.app]);
-  const [errors, setErrors] = useState<Diagnostic[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [dragging, setDragging] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
-  const request = useRef(0);
+  const request = useRef({ script: 0, cast: 0 });
+  const loading = Boolean(files.script?.loading || files.cast?.loading);
+  const imported = useMemo<{ script: Script | null; errors: Diagnostic[] }>(() => {
+    if (files.script?.loading || files.cast?.loading) return { script: null, errors: [] };
+    const errors: Diagnostic[] = [];
+    for (const kind of ['script', 'cast'] as const) {
+      if (files[kind]?.error) errors.push({ document: kind, recordNumber: 0, message: files[kind]!.error! });
+    }
+    if (errors.length) return { script: null, errors };
+    const cast = files.cast?.text != null ? parseCast(files.cast.text) : null;
+    if (cast && !cast.ok) return { script: null, errors: cast.errors };
+    if (files.script?.text == null) return { script: null, errors: [] };
+    const result = parseScript(files.script.text, cast?.characters);
+    return result.ok ? { script: result.script, errors: [] } : { script: null, errors: result.errors };
+  }, [files]);
+  const { script, errors } = imported;
   const filtered = useMemo(() => filterScript(script?.records ?? [], { character, ...context, includeNonDialogue }),
     [script, character, context, includeNonDialogue]);
   const selectedName = script?.characters.find(choice => choice.tag === character)?.label;
   const sceneCount = new Set(filtered.items.map(item => item.record.scene)).size;
   const contributionCount = filtered.items.filter(item => item.highlighted && item.record.types.includes('Line')).length;
   const blocks = useMemo(() => readingBlocks(filtered.items), [filtered.items]);
+  const repeatedNames = useMemo(() => {
+    const counts = new Map<string, number>();
+    script?.characters.forEach(choice => counts.set(choice.label, (counts.get(choice.label) ?? 0) + 1));
+    return counts;
+  }, [script]);
 
-  async function openFile(file: File) {
-    const current = ++request.current;
-    setLoading(true);
-    setErrors([]);
-    setScript(null);
+  async function openFile(kind: ImportKind, file: File) {
+    const current = ++request.current[kind];
     setCharacter('');
-    setFilename(file.name);
+    setFiles(previous => ({ ...previous, [kind]: { name: file.name, text: null, loading: true } }));
     try {
-      // Yield so the loading state can paint before parsing the local text.
-      const text = await readFile(file);
-      if (current !== request.current) return;
-      const result = parseScript(text);
-      if (result.ok) setScript(result.script);
-      else setErrors(result.errors);
+      const content = await readFile(file);
+      if (current !== request.current[kind]) return;
+      setFiles(previous => ({ ...previous, [kind]: { name: file.name, text: content, loading: false } }));
     } catch (error) {
-      if (current === request.current) setErrors([{ recordNumber: 0,
-        message: error instanceof Error ? error.message : 'Unable to open the file.' }]);
-    } finally {
-      if (current === request.current) setLoading(false);
+      if (current !== request.current[kind]) return;
+      setFiles(previous => ({ ...previous, [kind]: { name: file.name, text: null, loading: false,
+        error: error instanceof Error ? error.message : 'Unable to open the file.' } }));
     }
+  }
+
+  function importIssue(kind: ImportKind) {
+    request.current[kind]++;
+    setCharacter('');
+    setFiles(previous => ({ ...previous, [kind]: { name: '', text: null, loading: false, error: 'Please open one CSV file per control.' } }));
+  }
+
+  function clearCast() {
+    request.current.cast++;
+    setCharacter('');
+    setFiles(previous => ({ ...previous, cast: null }));
   }
 
   return <div className="app-shell">
@@ -141,34 +194,15 @@ export default function App() {
       <div className="workspace">
         <aside className="controls" aria-label={text.settings}>
           <section className="control-section file-section">
-            <div className={`file-drop ${dragging ? 'is-dragging' : ''}`}
-              onDragOver={event => { event.preventDefault(); setDragging(true); }}
-              onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false); }}
-              onDrop={event => {
-                event.preventDefault(); setDragging(false);
-                const files = event.dataTransfer.files;
-                if (files.length !== 1) {
-                  setErrors([{ recordNumber: 0, message: 'Please open one script file at a time.' }]);
-                  return;
-                }
-                void openFile(files[0]);
-              }}>
-              <button className="open-button" onClick={() => input.current?.click()}>{text.open} <span aria-hidden="true">↑</span></button>
-              <input ref={input} type="file" accept=".csv,text/csv" aria-label={text.scriptFile} className="visually-hidden"
-                onChange={event => {
-                  const file = event.target.files?.[0];
-                  if (file) void openFile(file);
-                  event.target.value = '';
-                }} />
-              <p>{filename ? <span className="filename">{filename}</span> : text.drop}</p>
-            </div>
+            <FileImport kind="script" file={files.script} text={text} onOpen={file => void openFile('script', file)} onIssue={() => importIssue('script')} />
+            <FileImport kind="cast" file={files.cast} text={text} onOpen={file => void openFile('cast', file)} onIssue={() => importIssue('cast')} onClear={clearCast} />
           </section>
 
           <section className="control-section">
             <label className="control-label" htmlFor="character">{text.character}</label>
             <select id="character" value={character} disabled={!script || loading} onChange={event => setCharacter(event.target.value)}>
               <option value="">{text.selectCharacter}</option>
-              {script?.characters.map(choice => <option key={choice.tag} value={choice.tag}>{choice.label}</option>)}
+              {script?.characters.map(choice => <option key={choice.tag} value={choice.tag}>{choice.label}{(repeatedNames.get(choice.label) ?? 0) > 1 ? ` (${choice.tag})` : ''}</option>)}
             </select>
           </section>
 
@@ -195,7 +229,7 @@ export default function App() {
           </header>
 
           {loading ? <div className="empty-state" role="status"><h3>{text.opening}</h3></div>
-            : errors.length > 0 ? <div className="validation" role="alert"><h3>{text.checkCsv}</h3><ul>{errors.map((error, index) => <li key={index}><strong>{error.recordNumber ? text.record(error.recordNumber) : text.file}{error.field ? ` · ${error.field}` : ''}</strong><span>{diagnosticMessage(error.message, locale)}</span></li>)}</ul></div>
+            : errors.length > 0 ? <div className="validation" role="alert"><h3>{text.checkCsv}</h3><ul>{errors.map((error, index) => <li key={index}><strong>{error.document === 'cast' ? text.castFile : text.scriptFile} · {error.recordNumber ? text.record(error.recordNumber) : text.file}{error.field ? ` · ${error.field}` : ''}</strong><span>{diagnosticMessage(error.message, locale)}</span></li>)}</ul></div>
             : !script || !character ? <div className="empty-state">
               <h3>{script ? text.chooseCharacter : text.openPrompt}</h3>
             </div>
@@ -204,11 +238,11 @@ export default function App() {
               <div className="reading-meta" role="status"><span>{text.summary(contributionCount, sceneCount)}</span></div>
               <div className="script-pages">{blocks.map(block => {
                 if (block.kind === 'window') return <section key={`window-${block.passage}`} className="passage-window" aria-label={text.passage} data-passage={block.passage}>
-                  <div className="window-entries">{block.items.map(item => <ScriptEntry key={item.record.no} item={item} showKorean={showKorean} text={text} />)}</div>
+                  <div className="window-entries">{block.items.map(item => <ScriptEntry key={item.record.no} item={item} showKorean={showKorean} text={text} label={attribution(item.record, script)} />)}</div>
                 </section>;
                 const { record } = block.item;
                 if (record.types.includes('Title')) return <h3 key={record.no} className="scene-heading"><span>{text.scene} {record.scene.toString().padStart(2, '0')}</span><span className="scene-title"><span lang="en">{record.source.English}</span>{showKorean && record.source.Korean.trim() && <span lang="ko" className="translation">{record.source.Korean}</span>}</span></h3>;
-                return <ScriptEntry key={record.no} item={block.item} showKorean={showKorean} text={text} />;
+                return <ScriptEntry key={record.no} item={block.item} showKorean={showKorean} text={text} label={attribution(record, script)} />;
               })}</div>
             </>}
         </section>

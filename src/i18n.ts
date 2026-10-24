@@ -4,6 +4,7 @@ export const copy = {
   en: {
     app: 'Script Reader', interfaceLanguage: 'Interface language', settings: 'Script settings',
     scriptFile: 'Script file', open: 'Open Script', drop: 'or drop CSV', character: 'Character',
+    castFile: 'Cast file', openCast: 'Open Cast', removeCast: 'Remove cast',
     selectCharacter: 'Select character', context: 'Context', other: 'Other', before: 'Before', after: 'After',
     rangeError: 'Enter a whole number from 0–10.', actions: 'Include actions & cues', korean: 'Display Korean lines',
     script: 'Script', opening: 'Opening…', checkCsv: 'Check the CSV', file: 'File',
@@ -15,6 +16,7 @@ export const copy = {
   ko: {
     app: 'Script Reader', interfaceLanguage: '화면 언어', settings: '대본 설정',
     scriptFile: '대본 파일', open: '대본 열기', drop: '또는 CSV 파일 놓기', character: '배역',
+    castFile: '배역 목록 파일', openCast: '배역 목록 열기', removeCast: '배역 목록 제거',
     selectCharacter: '배역 선택', context: '앞뒤 내용', other: '직접 입력', before: '앞', after: '뒤',
     rangeError: '0–10 사이의 정수를 입력하세요.', actions: '동작·큐 포함', korean: '한국어 표기',
     script: '대본', opening: '여는 중…', checkCsv: 'CSV 파일을 확인하세요', file: '파일',
@@ -43,6 +45,11 @@ export function diagnosticMessage(message: string, locale: Locale): string {
     'Opening the file was interrupted. Please try again.': '파일 열기가 중단되었습니다. 다시 열어 주세요.',
     'Unable to open the file.': '파일을 열 수 없습니다.',
     'Please open one script file at a time.': '대본 파일을 하나씩 열어 주세요.',
+    'Please open one CSV file per control.': '각 버튼에서 CSV 파일을 하나씩 열어 주세요.',
+    'The cast contains no characters.': '배역 목록이 비어 있습니다.',
+    'Each cast row requires one individual tag without whitespace, commas or semicolons.': '각 배역 행에는 공백·쉼표·세미콜론이 없는 개별 태그가 하나 필요합니다.',
+    'Duplicate cast tag.': '배역 태그가 중복되었습니다.',
+    'A character name is required.': '배역 이름이 필요합니다.',
     'Quoted field unterminated': '따옴표로 시작한 필드가 닫히지 않았습니다.',
     'Trailing quote on quoted field is malformed': '필드를 닫는 따옴표 형식이 올바르지 않습니다.',
   };
@@ -57,5 +64,7 @@ export function diagnosticMessage(message: string, locale: Locale): string {
   if (match) return `배역 토큰 ${match[1]}에 서로 다른 화자 이름이 연결되어 있습니다.`;
   match = message.match(/^Character token (.*) needs a single-character dialogue record to identify its name\.$/);
   if (match) return `배역 토큰 ${match[1]}의 이름을 확인할 수 있는 단독 배역 대사 레코드가 필요합니다.`;
+  match = message.match(/^Character token (.*) is missing from the cast roster\.$/);
+  if (match) return `배역 토큰 ${match[1]}이 배역 목록에 없습니다.`;
   return message;
 }
