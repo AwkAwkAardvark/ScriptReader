@@ -12,13 +12,13 @@ export function ContextPicker({ value, onChange, disabled, text }: {
   useEffect(() => { if (preset === 'other') customInput.current?.focus(); }, [preset]);
   return <fieldset className="context-picker" disabled={disabled}>
     <legend>{text.context}</legend>
-    <div className="context-options">{['default', '1', '3', '5', 'other'].map(option => <label key={option} className={option === 'default' ? 'default-context' : undefined}>
+    <div className="context-options">{['default', '1', '3', '5', 'other'].map(option => <label key={option}>
       <input type="radio" name="context" value={option} checked={preset === option} onChange={() => {
         setPreset(option);
         if (option === 'other') setDraft({ before: String(value.before), after: String(value.after) });
         else onChange(option === 'default' ? { before: 2, after: 1 } : { before: Number(option), after: Number(option) });
       }} />
-      <span>{option === 'default' ? `${text.before} 2 / ${text.after} 1` : option === 'other' ? text.other : `±${option}`}</span>
+      <span>{option === 'default' ? text.defaultContext : option === 'other' ? text.other : `±${option}`}</span>
     </label>)}</div>
     {preset === 'other' && <div className="custom-context">
       {(['before', 'after'] as const).map(side => <div className="custom-count" key={side}>

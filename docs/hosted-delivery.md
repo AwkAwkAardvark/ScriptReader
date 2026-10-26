@@ -37,7 +37,7 @@ Copy `.env.example` to ignored `.env` and enter the project's URL and a server s
 npm run publish:script -- --slug paper-garden --title "The paper garden" --script /path/to/script.csv --cast /path/to/cast.csv --media /path/to/media.csv
 ```
 
-This command validates only; it prints counts and diagnostics, not dialogue. Both script and cast are required for hosted publishing. Their schemas match the existing CSV guide.
+This command validates only; it prints counts and diagnostics, not dialogue. Both script and cast are required for hosted publishing. Their schemas match the existing CSV guide. Character choices preserve cast CSV row order; reorder that roster to organize a production without hard-coding its roles into the reader.
 
 The optional media CSV has exactly these columns:
 

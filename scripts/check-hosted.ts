@@ -31,7 +31,7 @@ try {
   assert.equal(await page.getByRole('alert').count(), 0, await page.locator('.reader').innerText());
   await page.getByLabel('Character', { exact: true }).selectOption('Ro');
   await page.waitForFunction(() => !document.querySelector<HTMLButtonElement>('.print-button')?.disabled);
-  assert.equal(await page.getByRole('radio', { name: 'Before 2 / After 1' }).isChecked(), true);
+  assert.equal(await page.getByRole('radio', { name: 'Default' }).isChecked(), true);
   const initialCalls = calls.length;
   await page.getByRole('radio', { name: '±1', exact: true }).check();
   await page.waitForFunction(() => !document.querySelector<HTMLButtonElement>('.print-button')?.disabled);
@@ -55,14 +55,18 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: join(out, `hosted-mobile-${width}.png`), fullPage: true });
   }
+  async function openSettings() { const summary = page.locator('.settings-summary'); if (await summary.isVisible() && await summary.getAttribute('aria-expanded') === 'false') await summary.click(); }
   // Ro plus four more characters admitted; the sixth is denied by the actual database.
   for (const tag of ['Mi', 'A1', 'A2', 'A3']) {
+    await openSettings();
     await page.getByLabel('Character', { exact: true }).selectOption(tag);
     await page.waitForFunction(() => document.querySelector('.reader')?.getAttribute('aria-busy') === 'false');
-    await page.getByText(/characters today/).filter({ hasText: tag === 'A3' ? '5/5' : '' }).waitFor();
+    await page.getByText(/characters today/).filter({ hasText: tag === 'A3' ? '5/5' : '' }).waitFor({ state: 'attached' });
   }
+  await openSettings();
   await page.getByLabel('Character', { exact: true }).selectOption('A4');
   await page.getByRole('alert').filter({ hasText: 'Daily character allowance reached.' }).waitFor();
+  await openSettings();
   await page.getByLabel('Character', { exact: true }).selectOption('Ro');
   await page.waitForFunction(() => !document.querySelector<HTMLButtonElement>('.print-button')?.disabled);
   assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0);
