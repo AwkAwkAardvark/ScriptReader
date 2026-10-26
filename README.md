@@ -1,6 +1,8 @@
 # Script Reader
 
-A local-file rehearsal reader. Scripts stay in browser memory and are cleared on reload.
+A rehearsal reader with hosted production links and local CSV import. Students can open a production link, select a character, adjust context, and print their passages without signing in.
+
+Hosted scripts are stored privately in Supabase and filtered by a Cloudflare Pages Functions API. The browser receives selected passages and caches them in memory only. Local imports remain on the device and clear on reload. See the [hosted operations guide](docs/hosted-delivery.md) for deployment, publishing, and recovery.
 
 To prepare another script, follow the [CSV and character-tagging guide](docs/csv-tagging-guide.md). It includes instructions for agents and a synthetic example.
 
@@ -36,3 +38,13 @@ Copy `.agent-local/demo/ScriptReader-demo.html` to the demo computer and open it
 The demo is about 14 MB because it includes the complete Korean font for offline use. Regenerate it after app changes. Generated demo files and review PDFs stay outside version control. The bundled [Noto Sans KR font license](src/assets/fonts/OFL.txt) permits redistribution with the font.
 
 Optional browser/PDF regression review (synthetic content only): install the Playwright Chromium browser with `npx playwright install chromium`, build the demo, run `npm run preview -- --port 4174` in one terminal, then `npm run test:browser` in another. `APP_URL` can select another preview address; `PLAYWRIGHT_EXECUTABLE_PATH` can select an installed Chromium executable. PDFs, desktop/mobile screenshots and results are saved under ignored `.agent-local/previews/milestone-2/`. For independent PDF text, margins and pagination checks, install PyMuPDF in a temporary Python environment and run `python scripts/check-pdf.py`.
+
+Hosted delivery is documented in the [operations guide](docs/hosted-delivery.md). Run `npm run dev:hosted` to exercise fictional production links, the server API and a temporary local PostgreSQL database without cloud credentials. Default context is 2 before / 1 after; hosted views preload through 3 before / 2 after and fetch larger requests up to 10 as needed. The hosted deployment builds from `main`; other branch previews are disabled. Provider setup is covered in the operations guide.
+
+## Releases and contributions
+
+Milestones 1–3 are complete at `v0.3.0`; see [release notes](CHANGELOG.md). Future work uses short branches such as `codex/feat/audio-playback`, `codex/fix/print-layout`, or `codex/docs/operations`, with reviewed changes merged into `main`. Push focused checkpoints after relevant checks pass. Production builds follow `main`; other branches do not deploy automatically.
+
+Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `perf:`, `ci:`, `build:`, and `chore:`. Use `fix:` for urgent repairs too; debugging work takes the type of the resulting change. Commit types are distinct from release tags. Use patch releases for fixes and minor releases for new capabilities; private script revisions do not automatically change the app version. Preserve existing history and version tags.
+
+Recording storage, upload management, and audio playback will be planned as a separate feature, using synthetic audio for development. YouTube remains the current media source. Song-participation annotation is data preparation and may be revised independently. The custom domain and legacy website remain deferred.

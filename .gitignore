@@ -20,3 +20,10 @@ coverage/
 *.local
 .DS_Store
 *.tsbuildinfo
+
+# Hosting secrets and local runtime state
+.dev.vars
+.dev.vars.*
+.wrangler/
+supabase/.temp/
+supabase/.branches/
