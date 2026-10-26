@@ -122,6 +122,8 @@ describe('HTTP boundary', () => {
     expect(JSON.stringify(bundle)).not.toContain(env.SUPABASE_SECRET_KEY);
     expect(JSON.stringify(bundle)).not.toContain('Notes');
     expect(view.headers.get('Cache-Control')).toBe('no-store');
+    expect(view.headers.get('Content-Security-Policy')).toContain("default-src 'none'");
+    expect(view.headers.get('X-Frame-Options')).toBe('DENY');
     expect(view.headers.has('Set-Cookie')).toBe(false);
   });
   it('rejects cross-origin, malformed, oversized, and out-of-range requests before the database', async () => {
@@ -137,7 +139,9 @@ describe('HTTP boundary', () => {
     expect(response.headers.has('Set-Cookie')).toBe(true);
     expect(rpc.mock.calls[0][1].p_new_browser).toBe(true);
     rpc.mockRejectedValue(new Error('PRIVATE DATA'));
-    expect(await (await handleApi(request(), env, rpc)).text()).not.toContain('PRIVATE DATA');
+    const failed = await handleApi(request(), env, rpc);
+    expect(failed.headers.get('Content-Security-Policy')).toContain("frame-ancestors 'none'");
+    expect(await failed.text()).not.toContain('PRIVATE DATA');
   });
   it('uses new secret API keys without treating them as JWTs', async () => {
     const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}'));

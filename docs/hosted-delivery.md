@@ -1,6 +1,6 @@
 # Hosted reader operations
 
-The hosted site uses Cloudflare Pages with Pages Functions and Supabase Postgres. The browser calls the same-origin application API; it never receives a database secret or the complete stored revision. The local-file reader at `/` and standalone HTML remain available separately. Student production links use `/p/<slug>`.
+The hosted site uses Cloudflare Pages with Pages Functions and Supabase Postgres. The browser calls the same-origin application API; it never receives a database secret or the complete stored revision. The hosted root `/` redirects to `/p/aladdin`; the local-file reader is available at `/import`, and the standalone HTML remains separate. Student production links use `/p/<slug>`.
 
 ## Local development and checks
 
@@ -53,7 +53,7 @@ New visits use the active revision. An existing reader does not mix revisions: i
 
 ## Cloudflare configuration
 
-The hosted deployment is active on Cloudflare Pages with Pages Functions, using the provider's `pages.dev` address. Production follows `main`; other branch previews are disabled. The local-file route remains available at `/`. No custom domain or legacy website changes are required. The following instructions describe setup and maintenance; inspect the existing project before creating resources or applying migrations.
+The hosted deployment is active on Cloudflare Pages with Pages Functions, using the provider's `pages.dev` address. Production follows `main`; other branch previews are disabled. The local-file route is `/import`; unknown routes no longer open the importer. No custom domain or legacy website changes are required. The following instructions describe setup and maintenance; inspect the existing project before creating resources or applying migrations.
 
 Connect the private GitHub repository, use a Vite build with `npm run build`, output directory `dist`, Node 22, and the intended production branch. The root `functions/` directory supplies the same-origin API and `wrangler.jsonc` contains non-secret settings. Preview deployments must use a synthetic-only database; do not give branch previews access to real production material.
 
@@ -63,7 +63,7 @@ Configure these **server secrets** through the dashboard or authenticated Cloudf
 
 - `SUPABASE_URL`: intended project URL.
 - `SUPABASE_SECRET_KEY`: the server key for that project.
-- `BROWSER_COOKIE_SECRET`: a high-entropy signing secret, generated with `node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))"` and saved privately.
+- `BROWSER_COOKIE_SECRET`: a high-entropy signing secret, generated with a cryptographically secure random generator and saved directly to a private, ignored file or the provider’s encrypted settings. Do not print it in logs or put it in chat. Preserve an existing signing secret during routine deployments.
 
 Local `.env` access is not required to configure hosting. From another device, copy the Supabase server key directly from that project's **Settings > API Keys** into the Pages project's **Settings > Variables and Secrets**, selecting **Production** and **Encrypt/Secret**. Never send it through chat. Set **all three bindings above as encrypted secrets**, including the URL, then redeploy so the Functions receive the settings. This matters because the checked-in Wrangler configuration controls plaintext runtime variables and overrides dashboard plaintext settings during deployment. Secret presence can be verified by name/type without revealing its value. A connected administrator may also publish a locally validated payload through the existing `reader_publish` RPC using the Supabase management connection; this does not require copying the server key to the local workstation.
 
@@ -99,3 +99,6 @@ Application recovery is separate: roll back to a known-good Cloudflare productio
 Milestone 3 was accepted after the deployed three-scene pilot. Verify the synthetic suite and build before release; use authorized private input only for manual acceptance. Check representative roles, context and cue modes, scene/song boundaries, Korean display, mobile widths, YouTube playback/fallback, PDF output, secure cookie persistence, and absence of script storage in the browser. Check that the API returns selected views rather than a complete stored revision. Keep the existing five-role allowance and rate controls unchanged.
 
 Keep all real inputs, media sidecars, private review artifacts, and agent guidance outside Git and application bundles. Publishing requires explicit owner authorization; the current full-script rollout is authorized, while future inputs still require their own intended publication scope. No further numbered milestones are defined. Owner-managed SoundCloud links and its embedded player are the planned recording integration; no custom audio player or recording storage is required for that approach. SoundCloud support still needs implementation; the domain and legacy-site work remain deferred.
+
+
+For credential exposure checks and the limits of this review, see the [security guide](security.md).

@@ -26,6 +26,8 @@ async function load(page, rows) {
   await page.getByLabel(/^(Script file|대본 파일)$/).setInputFiles({ name: 'synthetic-script.csv', mimeType: 'text/csv', buffer: Buffer.from(csv(rows)) });
   await page.getByLabel(/^(Cast file|배역 목록 파일)$/).setInputFiles({ name: 'synthetic-cast.csv', mimeType: 'text/csv', buffer: Buffer.from('Tag,Name\nRo,Rowan Reed\nMi,Mira Moss\nUn,Unused') });
   await page.getByLabel(/^(Character|배역)$/).selectOption('Ro');
+  const summary = page.locator('.settings-summary');
+  if (await summary.isVisible() && await summary.getAttribute('aria-expanded') === 'false') await summary.click();
   await page.getByRole('radio', { name: '±3', exact: true }).check();
   await page.waitForFunction(() => !document.querySelector('.print-button').disabled);
 }
@@ -33,7 +35,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto(process.env.APP_URL ?? 'http://127.0.0.1:4174');
+  await page.goto(process.env.APP_URL ?? 'http://127.0.0.1:4174/import');
   assert.equal(await page.getByRole('button', { name: buttonName }).isDisabled(), true);
   await load(page, short);
   await page.getByRole('checkbox', { name: 'Display Korean lines' }).check();
@@ -72,6 +74,8 @@ try {
   await page.pdf({ path: join(out, 'pagination-stress.pdf'), preferCSSPageSize: true });
   assert.equal(await page.locator('.passage-window.print-split').count(), 2);
   assert.equal(await page.locator('.script-entry.print-split').count(), 1);
+  const settings = page.locator('.settings-summary');
+  if (await settings.isVisible() && await settings.getAttribute('aria-expanded') === 'false') await settings.click();
   await page.getByLabel('배역', { exact: true }).selectOption('Un');
   assert.equal(await page.getByRole('button', { name: buttonName }).isDisabled(), true);
 

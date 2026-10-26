@@ -18,7 +18,8 @@
     "publish:script": "tsx scripts/publish.ts",
     "dev:hosted": "tsx scripts/dev-hosted.ts",
     "preview:cloudflare": "wrangler pages dev dist",
-    "test:hosted-browser": "tsx scripts/check-hosted.ts"
+    "test:hosted-browser": "tsx scripts/check-hosted.ts",
+    "check:exposure": "node scripts/check-exposure.mjs"
   },
   "dependencies": {
     "papaparse": "^5.5.3",
