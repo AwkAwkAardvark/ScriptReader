@@ -57,6 +57,8 @@ Cloudflare authorization is required before this section can be completed. No cu
 
 Connect the private GitHub repository, use a Vite build with `npm run build`, output directory `dist`, Node 22, and the intended production branch. The root `functions/` directory supplies the same-origin API and `wrangler.jsonc` contains non-secret settings. Preview deployments must use a synthetic-only database; do not give branch previews access to real production material.
 
+Cloudflare account-tool access and its GitHub installation are separate connections. Before creating a Git-integrated project, authorize the Cloudflare GitHub app for this repository through Pages' **Import an existing Git repository** flow. If project creation returns error `8000011` about the Pages Git installation, check that installation and its repository access before retrying; reconnecting the account tools alone does not establish Git access. During a private-data pilot, disable other branch previews and configure server secrets only for the intended deployment environment.
+
 Configure these **server secrets** through the dashboard or authenticated Cloudflare tooling:
 
 - `SUPABASE_URL`: intended project URL.
