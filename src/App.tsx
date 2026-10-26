@@ -1,3 +1,4 @@
+import { ControlsPanel } from './ControlsPanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { filterScript, parseScript, type Diagnostic, type Script } from './script';
 import { parseCast } from './cast';
@@ -144,7 +145,7 @@ function LocalReader() {
       <h1 className="visually-hidden">{text.app}</h1>
 
       <div className="workspace">
-        <aside className="controls" aria-label={text.settings}>
+        <ControlsPanel character={character} name={selectedName} text={text}>
           <section className="control-section file-section">
             <FileImport kind="script" file={files.script} text={text} onOpen={file => void openFile('script', file)} onIssue={() => importIssue('script')} />
             <FileImport kind="cast" file={files.cast} text={text} onOpen={file => void openFile('cast', file)} onIssue={() => importIssue('cast')} onClear={clearCast} />
@@ -173,7 +174,7 @@ function LocalReader() {
               <span>{text.korean}</span>
             </label>
           </section>
-        </aside>
+        </ControlsPanel>
 
         <section className="reader" aria-labelledby="reader-title" aria-busy={loading}>
           <header className="reader-header">

@@ -1,3 +1,4 @@
+import { ControlsPanel } from '../ControlsPanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ContextPicker } from '../ContextPicker';
 import { copy, type Locale } from '../i18n';
@@ -65,7 +66,7 @@ export function HostedReader({ slug }: { slug: string }) {
         <button lang="ko" aria-pressed={locale === 'ko'} onClick={() => setLocale('ko')}>한국어</button>
       </div></header>
     <main><h1 className="visually-hidden">{production?.title ?? text.app}</h1><div className="workspace">
-      <aside className="controls" aria-label={text.settings}>
+      <ControlsPanel character={character} name={production?.characters.find(choice => choice.tag === character)?.label} text={text}>
         <p className="production-title">{production?.title ?? text.script}</p>
         <section className="control-section"><label className="control-label" htmlFor="character">{text.character}</label>
           <select id="character" value={character} disabled={!production || problem?.error === 'revision_changed'} onChange={event => { setProblem(null); setCharacter(event.target.value); }}>
@@ -77,7 +78,7 @@ export function HostedReader({ slug }: { slug: string }) {
           <label className="toggle-row"><input type="checkbox" checked={includeNonDialogue} disabled={!production} onChange={event => setCues(event.target.checked)} /><span className="toggle-track" aria-hidden="true" /><span>{text.actions}</span></label>
           <label className="toggle-row"><input type="checkbox" checked={showKorean} disabled={!production} onChange={event => setKorean(event.target.checked)} /><span className="toggle-track" aria-hidden="true" /><span>{text.korean}</span></label>
         </section>
-      </aside>
+      </ControlsPanel>
       <ReaderPane reading={problem ? null : reading} title={production?.characters.find(choice => choice.tag === character)?.label ?? text.script} text={text} busy={busy} media={bundle?.media ?? {}}>
         {problem ? <div className="validation" role="alert"><p>{text.apiError[problem.error]}</p>
           {reset && <p><time dateTime={reset}>{new Date(reset).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-GB', { timeZone: 'Asia/Seoul' })} KST</time></p>}

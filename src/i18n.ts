@@ -2,7 +2,7 @@ export type Locale = 'en' | 'ko';
 
 export const copy = {
   en: {
-    app: 'Script Reader', interfaceLanguage: 'Interface language', settings: 'Script settings',
+    app: 'Script Reader', interfaceLanguage: 'Interface language', settings: 'Script settings', settingsButton: 'Settings', defaultContext: 'Default',
     scriptFile: 'Script file', open: 'Open Script', drop: 'or drop CSV', character: 'Character',
     castFile: 'Cast file', openCast: 'Open Cast', removeCast: 'Remove cast',
     selectCharacter: 'Select character', context: 'Context', other: 'Other', before: 'Before', after: 'After',
@@ -17,7 +17,7 @@ export const copy = {
     summary: (lines: number, scenes: number) => `${lines} ${lines === 1 ? 'line' : 'lines'} · ${scenes} ${scenes === 1 ? 'scene' : 'scenes'}`,
   },
   ko: {
-    app: 'Script Reader', interfaceLanguage: '화면 언어', settings: '대본 설정',
+    app: 'Script Reader', interfaceLanguage: '화면 언어', settings: '대본 설정', settingsButton: '설정', defaultContext: '기본',
     scriptFile: '대본 파일', open: '대본 열기', drop: '또는 CSV 파일 놓기', character: '배역',
     castFile: '배역 목록 파일', openCast: '배역 목록 열기', removeCast: '배역 목록 제거',
     selectCharacter: '배역 선택', context: '앞뒤 내용', other: '직접 입력', before: '앞', after: '뒤',

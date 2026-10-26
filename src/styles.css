@@ -91,7 +91,7 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
 .control-label, .context-picker legend { display: block; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .context-picker { border: 0; padding: 0; margin: 0; min-width: 0; }
 .context-picker legend { padding: 0; }
-.context-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.context-options { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)) minmax(0, 1.2fr); gap: 6px; }
 .context-options label { position: relative; cursor: pointer; }
 .context-options input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; z-index: 1; }
 .context-options span { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid #b9c5b7; border-radius: 10px; font-size: 13px; color: #43583f; }
@@ -174,7 +174,7 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
   .passage-window.print-split, .script-entry.print-split, .song-marker.print-split { break-inside: auto; }
 }
 
-.default-context { grid-column: 1 / -1; }
+
 .production-title { font-size: 16px; font-weight: 600; margin: 0 0 16px; overflow-wrap: anywhere; }
 .allowance { font-size: 11px; color: #65715f; margin-bottom: 0; }
 .video-toggle { border: 1px solid #c4a336; border-radius: 50%; width: 36px; height: 36px; flex: 0 0 auto; background: transparent; color: inherit; margin-left: auto; }
@@ -182,3 +182,11 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
 .song-player iframe { display: block; border: 0; width: 100%; aspect-ratio: 16 / 9; }
 .song-player a { display: inline-block; font-size: 12px; color: #315e44; margin-top: 8px; }
 @media print { .song-player, .video-toggle { display: none !important; } }
+
+.settings-summary { display: none; }
+@media (max-width: 720px) {
+  .settings-summary { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; border: 0; background: none; color: #283c2c; padding: 0; min-height: 44px; text-align: left; font-size: 14px; font-weight: 600; }
+  .settings-summary > span:last-child { flex-shrink: 0; font-size: 12px; font-weight: 400; }
+  .settings-summary[aria-expanded="true"] { margin-bottom: 16px; }
+  .controls.controls-collapsed { padding: 8px 16px; border-radius: 16px; }
+}
