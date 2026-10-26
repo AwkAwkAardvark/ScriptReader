@@ -1,41 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { attribution, filterScript, parseScript, type Diagnostic, type FilteredItem, type Script } from './script';
+import { filterScript, parseScript, type Diagnostic, type Script } from './script';
 import { parseCast } from './cast';
 import { copy, diagnosticMessage, type Copy, type Locale } from './i18n';
 
-type ReaderBlock = { kind: 'marker'; item: FilteredItem } | { kind: 'window'; passage: number; items: FilteredItem[] };
-
-function readingBlocks(items: FilteredItem[]): ReaderBlock[] {
-  const blocks: ReaderBlock[] = [];
-  for (const item of items) {
-    if (item.passage === null) blocks.push({ kind: 'marker', item });
-    else {
-      const last = blocks.at(-1);
-      if (last?.kind === 'window' && last.passage === item.passage) last.items.push(item);
-      else blocks.push({ kind: 'window', passage: item.passage, items: [item] });
-    }
-  }
-  return blocks;
-}
-
-function ScriptText({ english, korean, showKorean }: { english: string; korean: string; showKorean: boolean }) {
-  return <div className="entry-text"><p lang="en">{english}</p>
-    {showKorean && korean.trim() && <p lang="ko" className="translation">{korean}</p>}
-  </div>;
-}
-
-function ScriptEntry({ item: { record, highlighted }, showKorean, text, label }: { item: FilteredItem; showKorean: boolean; text: Copy; label: string }) {
-  if (record.types.includes('Song')) return <div className={`song-marker ${highlighted ? 'highlighted' : ''}`} data-record={record.no}>
-    <span aria-hidden="true">♫</span><ScriptText english={record.source.English} korean={record.source.Korean} showKorean={showKorean} />
-    {highlighted && <span className="visually-hidden">{text.contribution}</span>}
-  </div>;
-  const dialogue = record.types.includes('Line');
-  const stageDirection = record.types.includes('StageDirection');
-  return <article className={`script-entry ${highlighted ? 'highlighted' : ''} ${dialogue ? 'dialogue' : 'direction'} ${stageDirection ? 'stage-direction' : ''}`} data-record={record.no}>
-    <span className="entry-name">{label}</span>
-    <ScriptText english={record.source.English} korean={record.source.Korean} showKorean={showKorean} />
-  </article>;
-}
+import { buildReadingDocument } from './reading-document';
+import { ReadingContent } from './ReadingContent';
+import { preparePrintFont } from './print-font';
+import { preparePrintLayout } from './print-layout';
 
 const readFile = (file: File) => new Promise<string>((resolve, reject) => {
   const reader = new FileReader();
@@ -124,6 +95,11 @@ export default function App() {
     document.documentElement.lang = locale;
     document.title = text.app;
   }, [locale, text.app]);
+  useEffect(() => {
+    const prepare = () => preparePrintLayout();
+    window.addEventListener('beforeprint', prepare);
+    return () => window.removeEventListener('beforeprint', prepare);
+  }, []);
   const request = useRef({ script: 0, cast: 0 });
   const loading = Boolean(files.script?.loading || files.cast?.loading);
   const imported = useMemo<{ script: Script | null; errors: Diagnostic[] }>(() => {
@@ -143,9 +119,18 @@ export default function App() {
   const filtered = useMemo(() => filterScript(script?.records ?? [], { character, ...context, includeNonDialogue }),
     [script, character, context, includeNonDialogue]);
   const selectedName = script?.characters.find(choice => choice.tag === character)?.label;
-  const sceneCount = new Set(filtered.items.map(item => item.record.scene)).size;
-  const contributionCount = filtered.items.filter(item => item.highlighted && item.record.types.includes('Line')).length;
-  const blocks = useMemo(() => readingBlocks(filtered.items), [filtered.items]);
+  const reading = useMemo(() => script && character ? buildReadingDocument(script, filtered, character,
+    { ...context, includeNonDialogue, showKorean }) : null, [script, filtered, character, context, includeNonDialogue, showKorean]);
+  const [fontState, setFontState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [fontAttempt, setFontAttempt] = useState(0);
+  useEffect(() => {
+    if (!reading?.blocks.length) return;
+    let active = true;
+    setFontState('loading');
+    void preparePrintFont().then(() => { if (active) setFontState('ready'); }, () => { if (active) setFontState('error'); });
+    return () => { active = false; };
+  }, [Boolean(reading?.blocks.length), fontAttempt]);
+  const canPrint = Boolean(reading?.blocks.length && !loading && !errors.length && fontState === 'ready');
   const repeatedNames = useMemo(() => {
     const counts = new Map<string, number>();
     script?.characters.forEach(choice => counts.set(choice.label, (counts.get(choice.label) ?? 0) + 1));
@@ -226,6 +211,7 @@ export default function App() {
         <section className="reader" aria-labelledby="reader-title" aria-busy={loading}>
           <header className="reader-header">
             <h2 id="reader-title">{selectedName || text.script}</h2>
+            <div className="print-actions"><button className="print-button" disabled={!canPrint} onClick={() => { if (canPrint) window.print(); }}>{text.print}</button></div>
           </header>
 
           {loading ? <div className="empty-state" role="status"><h3>{text.opening}</h3></div>
@@ -235,15 +221,11 @@ export default function App() {
             </div>
             : filtered.items.length === 0 ? <div className="empty-state"><h3>{text.noMatches}</h3></div>
             : <>
-              <div className="reading-meta" role="status"><span>{text.summary(contributionCount, sceneCount)}</span></div>
-              <div className="script-pages">{blocks.map(block => {
-                if (block.kind === 'window') return <section key={`window-${block.passage}`} className="passage-window" aria-label={text.passage} data-passage={block.passage}>
-                  <div className="window-entries">{block.items.map(item => <ScriptEntry key={item.record.no} item={item} showKorean={showKorean} text={text} label={attribution(item.record, script)} />)}</div>
-                </section>;
-                const { record } = block.item;
-                if (record.types.includes('Title')) return <h3 key={record.no} className="scene-heading"><span>{text.scene} {record.scene.toString().padStart(2, '0')}</span><span className="scene-title"><span lang="en">{record.source.English}</span>{showKorean && record.source.Korean.trim() && <span lang="ko" className="translation">{record.source.Korean}</span>}</span></h3>;
-                return <ScriptEntry key={record.no} item={block.item} showKorean={showKorean} text={text} label={attribution(record, script)} />;
-              })}</div>
+              <div className="reading-meta" role="status"><span>{text.summary(reading!.contributionCount, reading!.sceneCount)}</span></div>
+              <p className="print-context">{text.before} {context.before} · {text.after} {context.after}</p>
+              {fontState === 'loading' && <p className="print-status" role="status">{text.preparingPrint}</p>}
+              {fontState === 'error' && <p className="print-status" role="status">{text.printError} <button onClick={() => setFontAttempt(value => value + 1)}>{text.retry}</button></p>}
+              <ReadingContent document={reading!} text={text} />
             </>}
         </section>
       </div>

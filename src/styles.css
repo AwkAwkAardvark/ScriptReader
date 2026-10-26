@@ -1,5 +1,5 @@
 :root {
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: "Segoe UI", Roboto, Arial, ScriptReaderPrint, sans-serif;
   color: #202620;
   background: #f1f4f1;
   font-synthesis: none;
@@ -73,7 +73,7 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
 .song-marker > span:first-child { flex-shrink: 0; font-size: 23px; }
 .song-marker p { min-width: 0; font-size: 15px; font-weight: 500; line-height: 1.5; margin: 0; color: #6d591a; white-space: pre-wrap; overflow-wrap: anywhere; }
 .script-entry .translation, .script-entry.highlighted .translation, .song-marker .translation, .scene-title .translation {
-  display: block; margin: 4px 0 0; font-family: "Noto Sans CJK KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  display: block; margin: 4px 0 0; font-family: "Noto Sans CJK KR", "Malgun Gothic", "Apple SD Gothic Neo", ScriptReaderPrint, sans-serif;
   font-size: 12px; font-weight: 300; font-style: italic; font-synthesis: style; line-height: 1.55; color: #687462;
   white-space: pre-wrap; overflow-wrap: anywhere; letter-spacing: 0;
 }
@@ -137,3 +137,39 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
   .empty-state h3 { font-size: 21px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+.print-button { border: 1px solid #c7cfc7; border-radius: 20px; background: white; color: #285638; padding: 9px 15px; font: inherit; font-size: 13px; cursor: pointer; }
+.print-button:disabled { opacity: .45; cursor: default; }
+.print-button:focus-visible { outline: 2px solid #3a754c; outline-offset: 3px; }
+.print-status { font-size: 12px; color: #687462; }
+.print-status button { font: inherit; }
+.print-context { display: none; }
+@page { size: A4 portrait; margin: 14mm; }
+@media print {
+  :root { font-family: ScriptReaderPrint, sans-serif; color: #111; background: white; font-size: 11pt; }
+  body { margin: 0; background: white; }
+  .masthead, .controls, .print-actions, .print-status, .empty-state, .validation, main > h1 { display: none !important; }
+  .app-shell, .workspace, .reader, main { display: block; width: auto; max-width: none; min-height: 0; margin: 0; padding: 0; }
+  .reader-header { margin: 0 0 2mm; padding: 0; }
+  .reader-header h2 { font: 700 17pt ScriptReaderPrint, sans-serif; color: #111; }
+  .reading-meta { font-size: 9pt; color: #444; margin: 0 0 1mm; padding: 0; }
+  .print-context { display: block; font-size: 9pt; margin: 0 0 5mm; }
+  .scene-heading { display: flex; margin: 5mm 0 3mm; padding: 2mm 0 0; border-top: 2pt solid black; color: black; font-size: 11pt; break-after: avoid; break-inside: avoid; }
+  .scene-heading:not(:first-child) { margin-top: 5mm; }
+  .scene-heading > span:first-child { color: black; font-size: 9pt; }
+  .passage-window { margin: 0 0 4mm; padding: 0; border: .6pt solid #666; border-radius: 0; box-shadow: none; background: none; overflow: visible; break-inside: avoid; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .window-entries { padding: 2mm; }
+  .script-entry { grid-template-columns: 26mm minmax(0, 1fr); gap: 3mm; align-items: baseline; margin: 0; padding: 1.5mm 2mm; border-left: 2pt solid transparent; border-radius: 0; break-inside: avoid; color: #111; }
+  .entry-name { font: 500 9pt ScriptReaderPrint, sans-serif; color: #222; overflow-wrap: anywhere; }
+  .script-entry.highlighted, .song-marker.highlighted { background: none; border-left: 2pt solid #111; }
+  .script-entry.highlighted .entry-name { font-weight: 800; color: black; }
+  .entry-text, .direction .entry-text, .song-marker .entry-text { font: 400 11pt/1.5 ScriptReaderPrint, sans-serif; color: #111; min-width: 0; }
+  .script-entry p, .script-entry.highlighted p, .song-marker p { font: 400 11pt/1.5 ScriptReaderPrint, sans-serif; color: #111; }
+  .entry-text p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; orphans: 3; widows: 3; }
+  .stage-direction .entry-text > p:first-child { font-style: italic; font-synthesis: style; color: #444; }
+  .script-entry .translation, .script-entry.highlighted .translation, .song-marker .translation, .scene-title .translation { display: block; margin: 1mm 0 0; font: italic 300 9pt/1.45 ScriptReaderPrint, sans-serif; color: #666; font-synthesis: style; }
+  .song-marker { margin: 0; padding: 2mm; border-left: 2pt solid transparent; border-top: .5pt solid #999; border-bottom: .5pt solid #999; border-radius: 0; background: none; color: black; break-inside: avoid; }
+  .song-marker.highlighted { box-shadow: none; }
+  .song-marker .entry-text > p:first-child { font-weight: 600; }
+  .passage-window.print-split, .script-entry.print-split, .song-marker.print-split { break-inside: auto; }
+}
