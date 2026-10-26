@@ -1,0 +1,18 @@
+import { describe, expect, it } from 'vitest';
+import { readerRoute } from './routes';
+
+describe('reader entry points', () => {
+  it('opens the main production at the hosted root and preserves production links', () => {
+    expect(readerRoute('/', 'https:', false)).toEqual({kind:'production',slug:'aladdin'});
+    expect(readerRoute('/p/aladdin-pilot/', 'https:', false)).toEqual({kind:'production',slug:'aladdin-pilot'});
+    expect(readerRoute('/p/another-script', 'https:', false)).toEqual({kind:'production',slug:'another-script'});
+  });
+  it('keeps the importer explicit and the offline/development workflows local', () => {
+    expect(readerRoute('/import/', 'https:', false)).toEqual({kind:'local'});
+    expect(readerRoute('/path/Staff Demo.html', 'file:', false)).toEqual({kind:'local'});
+    expect(readerRoute('/', 'http:', true)).toEqual({kind:'local'});
+  });
+  it.each(['/unknown','/.env','/server/api.ts','/p/a/b','/p/%3Cscript%3E','/p/'+ 'a'.repeat(81)])('does not open an importer for unsupported path %s', path => {
+    expect(readerRoute(path,'https:',false)).toEqual({kind:'not-found'});
+  });
+});

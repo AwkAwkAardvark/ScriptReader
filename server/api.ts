@@ -32,7 +32,8 @@ const limit = (value: string | undefined, fallback: number) => value && /^\d+$/.
 const statusFor = { not_found: 404, invalid_request: 400, quota: 429, rate: 429, revision_changed: 409, unavailable: 503 };
 export async function handleApi(request: Request, env: Environment, rpcOverride?: Rpc): Promise<Response> {
   const headers = new Headers({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
-    'X-Content-Type-Options': 'nosniff', Vary: 'Cookie' });
+    'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+    'X-Frame-Options': 'DENY', 'Referrer-Policy': 'strict-origin-when-cross-origin', Vary: 'Cookie' });
   const respond = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers });
   const problem = (error: ApiProblem['error']) => respond({ error }, statusFor[error]);
   try {
