@@ -51,9 +51,9 @@ Review the counts, including video count. Add `--publish` to the same command to
 
 New visits use the active revision. An existing reader does not mix revisions: if a later request finds an update, it asks for reload. Previously downloaded text can remain in memory until reload; this is not remote revocation of content already delivered.
 
-## Cloudflare configuration — deployment checkpoint
+## Cloudflare configuration
 
-Cloudflare authorization is required before this section can be completed. No custom domain or changes to the legacy hagwon website are required. Start with the provider's `pages.dev` address and a synthetic production.
+The hosted deployment is active on Cloudflare Pages with Pages Functions, using the provider's `pages.dev` address. Production follows `main`; other branch previews are disabled. The local-file route remains available at `/`. No custom domain or legacy website changes are required. The following instructions describe setup and maintenance; inspect the existing project before creating resources or applying migrations.
 
 Connect the private GitHub repository, use a Vite build with `npm run build`, output directory `dist`, Node 22, and the intended production branch. The root `functions/` directory supplies the same-origin API and `wrangler.jsonc` contains non-secret settings. Preview deployments must use a synthetic-only database; do not give branch previews access to real production material.
 
@@ -84,6 +84,18 @@ Default configurable server limits:
 
 The IP throttle is deliberately shared-network tolerant; the five-character allowance is never per IP. Reopening the same character or requesting more context does not consume another slot. Rate responses include `Retry-After`; quota responses include the next midnight in Asia/Seoul. A Supabase Cron job purges expired data every five minutes while the project is running; API requests also purge it. It retains current/prior Korean allowance days and two days of rate buckets, with up to five minutes of scheduled-cleanup delay. The embedded local database uses API-time cleanup. No raw IP addresses or script text are logged by the application.
 
-## Release checklist
+## Publishing and recovery
 
-Verify the deployed synthetic workflow, HTTPS cookie persistence, response secrecy, no client-side script storage, mobile controls, and PDF output. Publish real material only after separate owner authorization. Keep all real inputs and media sidecars outside Git and application bundles. Defer the hagwon domain, legacy-site work and recording hosting.
+Script publishing and application deployment are independent. Publishing changes the active data revision without rebuilding the frontend. Validate the complete script, cast, and optional complete media sidecar before each publication; preserve source order and record identifiers. Current song participation may remain blank while casting is finalized. Blank song tags do not independently select a passage, but song markers still appear in included scenes. Never infer participants or rewrite source text.
+
+Keep the production slug stable when revising an existing script. A separately named pilot remains a separate production with its own revision and allowance. Existing tabs detect changed revisions on a subsequent server request and ask for reload; downloaded text is not remotely revoked.
+
+Before publishing, record the existing active revision identifier privately, along with aggregate validation results and the new revision identifier afterward. Previous immutable revisions remain in Supabase. To recover, use the trusted administrator connection to confirm the old revision belongs to the intended production, then transactionally set that production's `active_revision` to that exact revision. Do not edit the revision payload, change grants, rotate secrets, or delete other productions as part of rollback. Verify metadata and a representative passage after switching the pointer.
+
+Application recovery is separate: roll back to a known-good Cloudflare production deployment and reconcile the source with a normal revert commit on `main` so the next build preserves the fix. Preserve history; do not force-push release tags or reset the main branch.
+
+## Release verification
+
+Milestone 3 was accepted after the deployed three-scene pilot. Verify the synthetic suite and build before release; use authorized private input only for manual acceptance. Check representative roles, context and cue modes, scene/song boundaries, Korean display, mobile widths, YouTube playback/fallback, PDF output, secure cookie persistence, and absence of script storage in the browser. Check that the API returns selected views rather than a complete stored revision. Keep the existing five-role allowance and rate controls unchanged.
+
+Keep all real inputs, media sidecars, private review artifacts, and agent guidance outside Git and application bundles. Publishing requires explicit owner authorization; the current full-script rollout is authorized, while future inputs still require their own intended publication scope. No further numbered milestones are defined. Recording storage/upload management is the next separately planned feature; the domain and legacy-site work remain deferred.
