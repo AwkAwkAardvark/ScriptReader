@@ -7,6 +7,8 @@ import { buildReadingDocument } from './reading-document';
 import { ReadingContent } from './ReadingContent';
 import { preparePrintFont } from './print-font';
 import { preparePrintLayout } from './print-layout';
+import { ContextPicker, type Context } from './ContextPicker';
+import { HostedReader } from './hosted/HostedReader';
 
 const readFile = (file: File) => new Promise<string>((resolve, reject) => {
   const reader = new FileReader();
@@ -48,45 +50,10 @@ function FileImport({ kind, file, text, onOpen, onIssue, onClear }: {
   </div>;
 }
 
-type Context = { before: number; after: number };
-function ContextPicker({ value, onChange, disabled, text }: {
-  value: Context; onChange: (counts: Context) => void; disabled: boolean; text: Copy;
-}) {
-  const [preset, setPreset] = useState('3');
-  const [draft, setDraft] = useState({ before: String(value.before), after: String(value.after) });
-  const customInput = useRef<HTMLInputElement>(null);
-  const isValid = (text: string) => /^\d+$/.test(text) && Number(text) >= 0 && Number(text) <= 10;
-  useEffect(() => { if (preset === 'other') customInput.current?.focus(); }, [preset]);
-  return <fieldset className="context-picker" disabled={disabled}>
-    <legend>{text.context}</legend>
-    <div className="context-options">{['1', '3', '5', 'other'].map(option => <label key={option}>
-      <input type="radio" name="context" value={option} checked={preset === option} onChange={() => {
-        setPreset(option);
-        if (option === 'other') setDraft({ before: String(value.before), after: String(value.after) });
-        else onChange({ before: Number(option), after: Number(option) });
-      }} />
-      <span>{option === 'other' ? text.other : `±${option}`}</span>
-    </label>)}</div>
-    {preset === 'other' && <div className="custom-context">
-      {(['before', 'after'] as const).map(side => <div className="custom-count" key={side}>
-        <label htmlFor={`context-${side}`}>{text[side]}</label>
-        <input id={`context-${side}`} ref={side === 'before' ? customInput : undefined} type="number" inputMode="numeric" min="0" max="10" step="1" value={draft[side]}
-          aria-invalid={!isValid(draft[side])} aria-describedby={!isValid(draft[side]) ? `context-${side}-error` : undefined}
-          onChange={event => {
-            const next = event.target.value;
-            setDraft(previous => ({ ...previous, [side]: next }));
-            if (isValid(next)) onChange({ ...value, [side]: Number(next) });
-          }} />
-        {!isValid(draft[side]) && <span className="field-error" id={`context-${side}-error`}>{text.rangeError}</span>}
-      </div>)}
-    </div>}
-  </fieldset>;
-}
-
-export default function App() {
+function LocalReader() {
   const [files, setFiles] = useState<Record<ImportKind, ImportedFile | null>>({ script: null, cast: null });
   const [character, setCharacter] = useState('');
-  const [context, setContext] = useState<Context>({ before: 3, after: 3 });
+  const [context, setContext] = useState<Context>({ before: 2, after: 1 });
   const [includeNonDialogue, setIncludeNonDialogue] = useState(false);
   const [locale, setLocale] = useState<Locale>('en');
   const [showKorean, setShowKorean] = useState(false);
@@ -231,4 +198,9 @@ export default function App() {
       </div>
     </main>
   </div>;
+}
+
+export default function App() {
+  const route = window.location.pathname.match(/^\/p\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/);
+  return route ? <HostedReader slug={route[1]} /> : <LocalReader />;
 }

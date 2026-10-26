@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ebenezer-script-reader",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-10-26",
+  "vars": {
+    "BROWSER_REQUESTS_PER_MINUTE": "60",
+    "IP_REQUESTS_PER_MINUTE": "1200",
+    "NEW_IDENTITIES_PER_MINUTE": "120"
+  }
+}

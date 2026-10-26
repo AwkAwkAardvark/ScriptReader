@@ -24,7 +24,7 @@ describe('student reader workflow', () => {
     render(<App />);
     expect(screen.getByText('Open a script')).toBeInTheDocument();
     expect(screen.getByLabelText('Character')).toBeDisabled();
-    expect(screen.getByRole('radio', { name: '±3' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Before 2 / After 1' })).toBeChecked();
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Include actions & cues' })).not.toBeChecked();
     const click = vi.spyOn(screen.getByLabelText('Script file'), 'click');
@@ -60,7 +60,7 @@ describe('student reader workflow', () => {
     expect(screen.getByRole('heading', { name: 'Mira' })).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Character'), 'Ro');
     expect(screen.getByRole('heading', { name: 'Rowan' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: '±3' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Before 2 / After 1' })).toBeChecked();
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(document.querySelector('.script-entry.highlighted .entry-name')).toHaveTextContent('Rowan');
     expect(screen.getByText('We made it before sunset.')).toBeInTheDocument();
@@ -147,7 +147,7 @@ describe('student reader workflow', () => {
     expect(screen.getByRole('button', { name: '대본 열기' })).toBeInTheDocument();
     expect(screen.getByLabelText('배역')).toHaveValue('Mi');
     expect(screen.getByText('대사 3개 · 장면 1개')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: '±3' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: '앞 2 / 뒤 1' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: '한국어 표기' })).toBeChecked();
     expect(ids()).toEqual(original);
     await user.click(screen.getByRole('checkbox', { name: '한국어 표기' }));

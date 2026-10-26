@@ -26,6 +26,7 @@ async function load(page, rows) {
   await page.getByLabel(/^(Script file|대본 파일)$/).setInputFiles({ name: 'synthetic-script.csv', mimeType: 'text/csv', buffer: Buffer.from(csv(rows)) });
   await page.getByLabel(/^(Cast file|배역 목록 파일)$/).setInputFiles({ name: 'synthetic-cast.csv', mimeType: 'text/csv', buffer: Buffer.from('Tag,Name\nRo,Rowan Reed\nMi,Mira Moss\nUn,Unused') });
   await page.getByLabel(/^(Character|배역)$/).selectOption('Ro');
+  await page.getByRole('radio', { name: '±3', exact: true }).check();
   await page.waitForFunction(() => !document.querySelector('.print-button').disabled);
 }
 try {
