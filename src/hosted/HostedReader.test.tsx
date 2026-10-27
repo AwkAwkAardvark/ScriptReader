@@ -34,12 +34,13 @@ describe('hosted reader', () => {
     expect(screen.getByRole('heading', { level: 1, name: production.title })).toBeVisible();
     expect(document.querySelector('.settings-title')).toHaveTextContent(production.title);
     expect(screen.getByRole('button', { name: 'Print / Save PDF' }).closest('.controls')).toBeNull();
-    expect(screen.getByRole('radio', { name: 'Default' })).toBeChecked();
+    expect(screen.getByRole('slider', { name: 'Before' })).toHaveValue('2');
+    expect(screen.getByRole('slider', { name: 'After' })).toHaveValue('1');
     expect(loadPassages).toHaveBeenCalledTimes(1);
-    await user.click(screen.getByRole('radio', { name: '±1' }));
+    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '1' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Print / Save PDF' })).toBeEnabled());
     expect(loadPassages).toHaveBeenCalledTimes(1);
-    await user.click(screen.getByRole('radio', { name: '±5' }));
+    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '5' } });
     expect(screen.getByRole('button', { name: 'Print / Save PDF' })).toBeDisabled();
     await waitFor(() => expect(loadPassages).toHaveBeenCalledTimes(2));
     await user.click(screen.getByRole('checkbox', { name: 'Display Korean lines' }));
@@ -88,23 +89,24 @@ describe('hosted reader', () => {
   it('clears old views on revision change and reloads metadata', async () => {
     const user = await select();
     vi.mocked(loadPassages).mockRejectedValueOnce(new ApiFailure({ error: 'revision_changed' }));
-    await user.click(screen.getByRole('radio', { name: '±5' }));
+    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '5' } });
     expect(await screen.findByRole('alert')).toHaveTextContent('The script has been updated.');
     expect(screen.queryByText('The gate is open. Shall we take a look?')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Reload script' }));
     await waitFor(() => expect(loadProduction).toHaveBeenCalledTimes(2));
     expect(screen.getByLabelText('Character')).toHaveValue('');
   });
-  it('debounces changing custom counts and preserves validation', async () => {
-    const user = await select();
-    await user.click(screen.getByRole('radio', { name: 'Other' }));
-    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '7' } });
-    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '8' } });
-    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '9' } });
+  it('does not fetch intermediate drag values and requests the final count on release', async () => {
+    await select();
+    const before = screen.getByLabelText('Before');
+    fireEvent.pointerDown(before, { pointerId: 1 });
+    fireEvent.change(before, { target: { value: '4' } });
+    fireEvent.change(before, { target: { value: '5' } });
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 300)); });
+    expect(loadPassages).toHaveBeenCalledTimes(1);
+    fireEvent.pointerUp(before, { pointerId: 1 });
     await waitFor(() => expect(loadPassages).toHaveBeenCalledTimes(2));
-    expect(vi.mocked(loadPassages).mock.calls[1][3].before).toBe(9);
-    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '11' } });
-    expect(screen.getByLabelText('Before')).toHaveAttribute('aria-invalid', 'true');
+    expect(vi.mocked(loadPassages).mock.calls[1][3]).toMatchObject({ before: 5, after: 1 });
   });
 });
 it('mounts YouTube only on click, switches players, collapses and includes the external fallback', async () => {

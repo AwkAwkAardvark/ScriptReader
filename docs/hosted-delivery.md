@@ -102,3 +102,5 @@ Keep all real inputs, media sidecars, private review artifacts, and agent guidan
 
 
 For credential exposure checks and the limits of this review, see the [security guide](security.md).
+
+Context controls use independent Before/After sliders from 0–5, initially 2/1. Pointer dragging previews the number locally and applies the passage change on release; keyboard adjustments apply immediately. The API rejects non-integer or out-of-range counts before contacting the database. Small context views remain prefetched; larger supported views are fetched on demand.

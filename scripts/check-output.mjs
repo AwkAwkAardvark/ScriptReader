@@ -28,7 +28,11 @@ async function load(page, rows) {
   await page.getByLabel(/^(Character|배역)$/).selectOption('Ro');
   const summary = page.locator('.settings-summary');
   if (await summary.isVisible() && await summary.getAttribute('aria-expanded') === 'false') await summary.click();
-  await page.getByRole('radio', { name: '±3', exact: true }).check();
+  for (const name of [/^(Before|앞)$/, /^(After|뒤)$/]) {
+    await page.getByRole('slider', { name }).focus();
+    await page.keyboard.press('Home');
+    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
+  }
   await page.waitForFunction(() => !document.querySelector('.print-button').disabled);
 }
 try {

@@ -24,6 +24,8 @@ The hosted root opens the main production; use `/import` for CSV import in a pro
 
 Balanced parentheses within dialogue, including nested or multiline actions, are italicized on screen and in print. The original text is preserved; unmatched parentheses and square brackets remain literal text. Structural headings and songs are not parsed as dialogue.
 
+Context uses two independent sliders (Before/After), each from 0–5 and initially 2/1. Dragging applies the passage change on release; keyboard changes apply immediately.
+
 Choose **Print / Save PDF** after selecting a character. It prints the current passages, context and Korean display choice, with an ink-friendly A4 layout. The button becomes available once the bundled English/Korean font is ready; retry if loading fails. Use the browser dialog to print or save a PDF. The layout requests A4 portrait and 14 mm margins; keep scale at 100% and disable browser headers/footers for the intended result. Printer/browser settings can override page size and margins.
 
 For a portable staff demo:

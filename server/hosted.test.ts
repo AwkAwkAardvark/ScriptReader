@@ -26,7 +26,7 @@ describe('server selection and publishing', () => {
   it('matches full-revision filtering for every context count, cue mode and character', () => {
     const production = { slug: 'garden', title: 'Garden', revision, characters: payload.script.characters, used: 1, resetAt: '2026-10-27T15:00:00Z' };
     for (const character of ['Ro', 'Mi', 'A1']) for (const includeNonDialogue of [false, true]) {
-      for (let before = 0; before <= 10; before++) for (let after = 0; after <= 10; after++) {
+      for (let before = 0; before <= 5; before++) for (let after = 0; after <= 5; after++) {
         const counts = { before, after, includeNonDialogue };
         const bundle = passageBundle(production, payload, character, counts);
         const expected = buildReadingDocument(payload.script, filterScript(payload.script.records, { character, ...counts }), character, { ...counts, showKorean: true });
@@ -132,7 +132,14 @@ describe('HTTP boundary', () => {
     expect((await handleApi(request('', {}, { Origin: 'https://elsewhere.example' }), env, rpc)).status).toBe(403);
     expect((await handleApi(request('/passages', { before: -1 }), env, rpc)).status).toBe(400);
     expect((await handleApi(request('', { huge: 'x'.repeat(5000) }), env, rpc)).status).toBe(413);
+    const valid = { revision, character: 'Ro', before: 2, after: 1, includeNonDialogue: false };
+    for (const side of ['before', 'after']) for (const count of [-1, 6, 10, 1.5, '5', null]) {
+      expect((await handleApi(request('/passages', { ...valid, [side]: count }), env, rpc)).status).toBe(400);
+    }
     expect(rpc).not.toHaveBeenCalled();
+    rpc.mockResolvedValue({ error: 'not_found' });
+    expect((await handleApi(request('/passages', { ...valid, before: 5, after: 0 }), env, rpc)).status).toBe(404);
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
   it('does not trust a tampered cookie and suppresses internal errors', async () => {
     const rpc = vi.fn().mockResolvedValue({ error: 'not_found' });

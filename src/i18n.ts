@@ -2,11 +2,11 @@ export type Locale = 'en' | 'ko';
 
 export const copy = {
   en: {
-    app: 'Script Reader', interfaceLanguage: 'Interface language', settings: 'Script settings', settingsButton: 'Settings', defaultContext: 'Default',
+    app: 'Script Reader', interfaceLanguage: 'Interface language', settings: 'Script settings', settingsButton: 'Settings',
     scriptFile: 'Script file', open: 'Open Script', drop: 'or drop CSV', character: 'Character',
     castFile: 'Cast file', openCast: 'Open Cast', removeCast: 'Remove cast',
-    selectCharacter: 'Select character', context: 'Context', other: 'Other', before: 'Before', after: 'After',
-    rangeError: 'Enter a whole number from 0–10.', actions: 'Include actions & cues', korean: 'Display Korean lines',
+    selectCharacter: 'Select character', context: 'Context', before: 'Before', after: 'After',
+    actions: 'Include actions & cues', korean: 'Display Korean lines',
     script: 'Script', opening: 'Opening…', checkCsv: 'Check the CSV', file: 'File',
     chooseCharacter: 'Select a character', openPrompt: 'Open a script', noMatches: 'No matches.',
     passage: 'Rehearsal passage', contribution: 'Your contribution', scene: 'SCENE',
@@ -18,11 +18,11 @@ export const copy = {
     summary: (lines: number, scenes: number) => `${lines} ${lines === 1 ? 'line' : 'lines'} · ${scenes} ${scenes === 1 ? 'scene' : 'scenes'}`,
   },
   ko: {
-    app: 'Script Reader', interfaceLanguage: '화면 언어', settings: '대본 설정', settingsButton: '설정', defaultContext: '기본',
+    app: 'Script Reader', interfaceLanguage: '화면 언어', settings: '대본 설정', settingsButton: '설정',
     scriptFile: '대본 파일', open: '대본 열기', drop: '또는 CSV 파일 놓기', character: '배역',
     castFile: '배역 목록 파일', openCast: '배역 목록 열기', removeCast: '배역 목록 제거',
-    selectCharacter: '배역 선택', context: '앞뒤 내용', other: '직접 입력', before: '앞', after: '뒤',
-    rangeError: '0–10 사이의 정수를 입력하세요.', actions: '동작·큐 포함', korean: '한국어 표기',
+    selectCharacter: '배역 선택', context: '앞뒤 내용', before: '앞', after: '뒤',
+    actions: '동작·큐 포함', korean: '한국어 표기',
     script: '대본', opening: '여는 중…', checkCsv: 'CSV 파일을 확인하세요', file: '파일',
     chooseCharacter: '배역을 선택하세요', openPrompt: '대본을 열어 주세요', noMatches: '해당 내용이 없습니다.',
     passage: '연습 구간', contribution: '내 참여 부분', scene: '장면',

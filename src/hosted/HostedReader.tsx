@@ -1,3 +1,4 @@
+import { DEFAULT_CONTEXT } from '../context';
 import { ControlsPanel } from '../ControlsPanel';
 import { CharacterOptions } from '../CharacterOptions';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -11,7 +12,7 @@ export function HostedReader({ slug }: { slug: string }) {
   const [locale, setLocale] = useState<Locale>('en'); const text = copy[locale];
   const [production, setProduction] = useState<Production | null>(null);
   const [character, setCharacter] = useState('');
-  const [counts, setCounts] = useState({ before: 2, after: 1 });
+  const [counts, setCounts] = useState(DEFAULT_CONTEXT);
   const [includeNonDialogue, setCues] = useState(false); const [showKorean, setKorean] = useState(false);
   const [problem, setProblem] = useState<ApiProblem | null>(null);
   const [attempt, setAttempt] = useState(0);

@@ -1,3 +1,4 @@
+import { DEFAULT_CONTEXT } from './context';
 import { readerRoute } from './routes';
 import { ControlsPanel } from './ControlsPanel';
 import { CharacterOptions } from './CharacterOptions';
@@ -56,7 +57,7 @@ function FileImport({ kind, file, text, onOpen, onIssue, onClear }: {
 function LocalReader() {
   const [files, setFiles] = useState<Record<ImportKind, ImportedFile | null>>({ script: null, cast: null });
   const [character, setCharacter] = useState('');
-  const [context, setContext] = useState<Context>({ before: 2, after: 1 });
+  const [context, setContext] = useState<Context>(DEFAULT_CONTEXT);
   const [includeNonDialogue, setIncludeNonDialogue] = useState(false);
   const [locale, setLocale] = useState<Locale>('en');
   const [showKorean, setShowKorean] = useState(false);
