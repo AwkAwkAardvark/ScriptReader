@@ -16,12 +16,15 @@ export async function startHostedDemo(apiPort = 8788, webPort = 5173) {
     const headers = new Headers();
     for (const [key, value] of Object.entries(req.headers)) if (value) headers.set(key, Array.isArray(value) ? value.join(',') : value);
     const method = req.method ?? 'GET';
-    const request = new Request(`http://127.0.0.1:${webPort}${req.url}`, { method, headers, ...(method !== 'GET' && method !== 'HEAD' ? { body: Buffer.concat(parts) } : {}) });
+    // Vite preserves the browser Host when proxying; both loopback names are valid.
+    const host = [`127.0.0.1:${webPort}`, `localhost:${webPort}`].includes(req.headers.host ?? '')
+      ? req.headers.host : `127.0.0.1:${webPort}`;
+    const request = new Request(`http://${host}${req.url}`, { method, headers, ...(method !== 'GET' && method !== 'HEAD' ? { body: Buffer.concat(parts) } : {}) });
     const response = await handleApi(request, { SUPABASE_URL: 'https://unused.invalid', SUPABASE_SECRET_KEY: 'local-only', BROWSER_COOKIE_SECRET: 'synthetic-development-cookie-secret-ONLY' }, rpc);
     res.writeHead(response.status, Object.fromEntries(response.headers)); res.end(Buffer.from(await response.arrayBuffer()));
   });
   await new Promise<void>(resolve => server.listen(apiPort, '127.0.0.1', resolve));
-  const vite = await createViteServer({ server: { host: '127.0.0.1', port: webPort, strictPort: true, proxy: { '/api': `http://127.0.0.1:${apiPort}` } } });
+  const vite = await createViteServer({ server: { host: '127.0.0.1', port: webPort, strictPort: true, proxy: { '/api': { target: `http://127.0.0.1:${apiPort}`, changeOrigin: false } } } });
   await vite.listen();
   return { db, rpc, origin: `http://127.0.0.1:${webPort}`, close: async () => { await vite.close(); await new Promise<void>(resolve => server.close(() => resolve())); await db.close(); } };
 }

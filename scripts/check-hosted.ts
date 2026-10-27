@@ -26,6 +26,11 @@ try {
   page.on('response', response => { if (response.url().includes('/api/') && response.status() >= 400) console.log('API check:', response.status(), new URL(response.url()).pathname); });
   page.on('request', request => { if (request.url().includes('/api/')) calls.push(request.url()); });
   await page.route('https://www.youtube.com/embed/**', route => route.fulfill({ contentType: 'text/html', body: '<p>Synthetic player</p>' }));
+  const localhostOrigin = demo.origin.replace('127.0.0.1', 'localhost');
+  const localMeta = await page.request.post(localhostOrigin + '/api/productions/synthetic-garden', { headers: { Origin: localhostOrigin }, data: {} });
+  assert.equal(localMeta.status(), 200);
+  const foreign = await page.request.post(localhostOrigin + '/api/productions/synthetic-garden', { headers: { Origin: 'https://elsewhere.invalid' }, data: {} });
+  assert.equal(foreign.status(), 403);
   await page.goto(demo.origin + '/p/synthetic-garden');
   const logo = page.getByRole('img', { name: 'Ebenezer', exact: true });
   await logo.evaluate((image: HTMLImageElement) => image.decode());
