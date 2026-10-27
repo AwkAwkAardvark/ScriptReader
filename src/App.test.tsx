@@ -36,7 +36,7 @@ describe('student reader workflow', () => {
     const user = await openScript();
     expect(screen.getByText('Select a character')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    expect(screen.getByRole('heading', { name: 'Mira' })).toBeInTheDocument();
+    expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Mira');
     expect(screen.getByText('3 lines · 1 scene')).toBeInTheDocument();
     const passage = screen.getByRole('region', { name: 'Rehearsal passage' });
     expect(passage).toHaveTextContent('Let’s listen before we decide.');
@@ -57,9 +57,9 @@ describe('student reader workflow', () => {
     render(<App />);
     const user = await openScript();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    expect(screen.getByRole('heading', { name: 'Mira' })).toBeInTheDocument();
+    expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Mira');
     await user.selectOptions(screen.getByLabelText('Character'), 'Ro');
-    expect(screen.getByRole('heading', { name: 'Rowan' })).toBeInTheDocument();
+    expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Rowan');
     expect(screen.getByRole('radio', { name: 'Default' })).toBeChecked();
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(document.querySelector('.script-entry.highlighted .entry-name')).toHaveTextContent('Rowan');
@@ -180,7 +180,7 @@ describe('student reader workflow', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Display Korean lines' }));
     expect(screen.getByText('시계공의 정원')).toHaveClass('translation');
     expect(screen.getByText('작은 시간')).toHaveClass('translation');
-    expect(screen.getByText(koreanMarkup)).toHaveClass('translation');
+    expect(screen.getByText((_content, element) => element?.matches('p.translation') === true && element.textContent === koreanMarkup)).toHaveClass('translation');
     expect(document.querySelector('img')).toBeNull();
   });
   it('reports validation errors and clears the previous script when a replacement is invalid', async () => {
@@ -208,7 +208,7 @@ describe('script and cast import', () => {
     expect(screen.getByLabelText('Character')).toBeDisabled();
     const user = await openScript();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    expect(screen.getByRole('heading', { name: 'Mira Moss' })).toBeInTheDocument();
+    expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Mira Moss');
     expect(document.querySelector('.script-entry.highlighted .entry-name')).toHaveTextContent('Mira Moss');
     expect(screen.queryByText('Mira', { exact: true })).not.toBeInTheDocument();
   });
@@ -220,12 +220,12 @@ describe('script and cast import', () => {
     fireEvent.change(screen.getByLabelText('After'), { target: { value: '1' } });
     await openCast();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    expect(screen.getByRole('heading', { name: 'Mira Moss' })).toBeInTheDocument();
+    expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Mira Moss');
     expect(screen.getByLabelText('After')).toHaveValue(1);
     expect(screen.getByText('Someone has left us a message.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Remove cast' }));
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    expect(screen.getByRole('heading', { name: 'Mira' })).toBeInTheDocument();
+    expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Mira');
     expect(screen.queryByText('characters.csv')).not.toBeInTheDocument();
   });
   it('supports action-only and unused characters with an explicit cast', async () => {

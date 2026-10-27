@@ -31,6 +31,9 @@ async function select() {
 describe('hosted reader', () => {
   it('defaults to 2/1, uses preloaded views without extra calls, and fetches larger context', async () => {
     const user = await select();
+    expect(screen.getByRole('heading', { level: 1, name: production.title })).toBeVisible();
+    expect(document.querySelector('.settings-title')).toHaveTextContent(production.title);
+    expect(screen.getByRole('button', { name: 'Print / Save PDF' }).closest('.controls')).toBeNull();
     expect(screen.getByRole('radio', { name: 'Default' })).toBeChecked();
     expect(loadPassages).toHaveBeenCalledTimes(1);
     await user.click(screen.getByRole('radio', { name: '±1' }));
@@ -73,8 +76,9 @@ describe('hosted reader', () => {
     await user.selectOptions(screen.getByLabelText('Character'), 'Ro');
     await screen.findByText('The gate is open. Shall we take a look?');
     await act(async () => finish(passageBundle(production, payload, 'Mi', { before: 2, after: 1, includeNonDialogue: false })));
-    expect(screen.getByRole('heading', { name: 'Rowan Reed' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Mira Moss' })).not.toBeInTheDocument();
+    expect(document.querySelector('#reader-title')).toHaveTextContent('Rowan Reed');
+    expect(screen.getByLabelText('Character')).toHaveValue('Ro');
+    expect(document.querySelector('#reader-title')).not.toHaveTextContent('Mira Moss');
   });
   it('clears old views on revision change and reloads metadata', async () => {
     const user = await select();

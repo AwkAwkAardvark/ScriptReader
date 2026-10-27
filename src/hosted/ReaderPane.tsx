@@ -23,10 +23,11 @@ export function ReaderPane({ reading, title, text, media, children, busy }: {
   }, []);
   const canPrint = hasReading && !busy && font === 'ready';
   return <section className="reader" aria-labelledby="reader-title" aria-busy={busy}>
-    <header className="reader-header"><h2 id="reader-title">{title}</h2>
+    <header className="reader-header"><h2 id="reader-title" className="print-reader-title">{title}</h2>
+      {reading && <div className="reading-meta" role="status">{text.summary(reading.contributionCount, reading.sceneCount)}</div>}
       <div className="print-actions"><button className="print-button" disabled={!canPrint} onClick={() => { if (canPrint) window.print(); }}>{text.print}</button></div>
     </header>
-    {reading && <><div className="reading-meta" role="status">{text.summary(reading.contributionCount, reading.sceneCount)}</div>
+    {reading && <>
       <p className="print-context">{text.before} {reading.context.before} · {text.after} {reading.context.after}</p>
       {font === 'loading' && <p className="print-status" role="status">{text.preparingPrint}</p>}
       {font === 'error' && <p className="print-status" role="status">{text.printError} <button onClick={() => setAttempt(value => value + 1)}>{text.retry}</button></p>}

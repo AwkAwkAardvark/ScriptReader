@@ -1,10 +1,15 @@
+import { parentheticalRuns } from './parentheticals';
 import { useEffect, useState } from 'react';
 import type { Copy } from './i18n';
 import type { ReadingDocument, ReadingEntry } from './reading-document';
 
+function DialogueText({ value }: { value: string }) {
+  return parentheticalRuns(value).map((run, index) => run.italic
+    ? <em className="inline-stage-action" key={index}>{run.text}</em> : run.text);
+}
 function ScriptText({ entry }: { entry: ReadingEntry }) {
-  return <div className="entry-text"><p lang="en">{entry.english}</p>
-    {entry.korean.trim() && <p lang="ko" className="translation">{entry.korean}</p>}
+  return <div className="entry-text"><p lang="en">{entry.kind === 'dialogue' ? <DialogueText value={entry.english} /> : entry.english}</p>
+    {entry.korean.trim() && <p lang="ko" className="translation">{entry.kind === 'dialogue' ? <DialogueText value={entry.korean} /> : entry.korean}</p>}
   </div>;
 }
 function ScriptEntry({ entry, text, video, active, onToggle }: { entry: ReadingEntry; text: Copy; video?: string; active: boolean; onToggle: () => void }) {
