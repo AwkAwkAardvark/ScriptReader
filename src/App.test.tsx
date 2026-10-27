@@ -180,7 +180,7 @@ describe('student reader workflow', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Display Korean lines' }));
     expect(screen.getByText('시계공의 정원')).toHaveClass('translation');
     expect(screen.getByText('작은 시간')).toHaveClass('translation');
-    expect(screen.getByText(koreanMarkup)).toHaveClass('translation');
+    expect(screen.getByText((_content, element) => element?.matches('p.translation') === true && element.textContent === koreanMarkup)).toHaveClass('translation');
     expect(document.querySelector('img')).toBeNull();
   });
   it('reports validation errors and clears the previous script when a replacement is invalid', async () => {

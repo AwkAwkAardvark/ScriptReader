@@ -15,7 +15,7 @@ const quote = value => '"' + String(value).replaceAll('"', '""') + '"';
 const csv = rows => ['No,Scene,Role,English,Korean,Type,Notes,Tag,Optional', ...rows.map(row => row.map(quote).join(','))].join('\n');
 const short = [
   [1, 1, '', 'The paper garden', '종이 정원', 'Title', '', '', ''],
-  [2, 1, 'Rowan', 'The gate is open. Shall we take a look?', '문이 열려 있어요.', 'Line', '', 'Ro', ''],
+  [2, 1, 'Rowan', 'The gate is open. Shall we take a look? (quietly (toward the gate))', '문이 열려 있어요. (작게 (속삭이며))', 'Line', '', 'Ro', ''],
   [3, 1, '', '(A paper bird lands beside the bench.)', '(종이 새가 벤치 옆에 내려앉는다.)', 'StageDirection', '', '', ''],
   [4, 1, 'Mira', 'Someone has left us a message.', '누군가 메시지를 남겼어요.', 'Line', '', 'Mi', ''],
   [5, 1, '', 'A little time to wonder', '잠시 생각할 시간', 'Song', '', '', ''],
@@ -39,6 +39,9 @@ try {
   assert.equal(await page.getByRole('button', { name: buttonName }).isDisabled(), true);
   await load(page, short);
   await page.getByRole('checkbox', { name: 'Display Korean lines' }).check();
+  assert.equal(await page.locator('[data-record="2"] [lang=en] em').innerText(), '(quietly (toward the gate))');
+  assert.equal(await page.locator('[data-record="2"] [lang=en] em').evaluate(e => getComputedStyle(e).fontStyle), 'italic');
+  assert.equal(await page.locator('[data-record="2"] [lang=ko] em').innerText(), '(작게 (속삭이며))');
   const order = await page.locator('[data-record]').evaluateAll(elements => elements.map(element => element.dataset.record));
   assert.deepEqual(order, ['2', '3', '4', '5', '6']);
   await page.screenshot({ path: join(out, 'desktop.png'), fullPage: true });
@@ -49,6 +52,7 @@ try {
     const style = getComputedStyle(element);
     return { font: style.fontFamily, size: style.fontSize, color: style.color, weight: style.fontWeight, italic: style.fontStyle };
   }));
+  assert.equal(await page.locator('[data-record="2"] [lang=en] em').evaluate(e => getComputedStyle(e).fontStyle), 'italic');
   assert.equal(styles[0].font.includes('ScriptReaderPrint'), true);
   assert.ok(Math.abs(parseFloat(styles[0].size) - 11 * 96 / 72) < .02);
   assert.equal(styles[0].color, 'rgb(17, 17, 17)');
@@ -92,6 +96,7 @@ try {
   await demo.getByRole('checkbox', { name: 'Display Korean lines' }).check();
   assert.equal(await demo.locator('[data-record="2"]').count(), 1);
   await demo.pdf({ path: join(out, 'offline-demo.pdf'), preferCSSPageSize: true });
+  assert.equal(await demo.locator('[data-record="2"] [lang=en] em').innerText(), '(quietly (toward the gate))');
   assert.deepEqual(network, []);
   assert.deepEqual(errors, []);
   assert.equal(await demo.evaluate(() => localStorage.length + sessionStorage.length), 0);

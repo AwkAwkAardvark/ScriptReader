@@ -31,6 +31,9 @@ async function select() {
 describe('hosted reader', () => {
   it('defaults to 2/1, uses preloaded views without extra calls, and fetches larger context', async () => {
     const user = await select();
+    expect(screen.getByRole('heading', { level: 1, name: production.title })).toBeVisible();
+    expect(document.querySelector('.controls')).not.toHaveTextContent(production.title);
+    expect(screen.getByRole('button', { name: 'Print / Save PDF' }).closest('.controls')).toBeNull();
     expect(screen.getByRole('radio', { name: 'Default' })).toBeChecked();
     expect(loadPassages).toHaveBeenCalledTimes(1);
     await user.click(screen.getByRole('radio', { name: '±1' }));

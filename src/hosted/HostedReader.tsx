@@ -65,9 +65,8 @@ export function HostedReader({ slug }: { slug: string }) {
         <button lang="en" aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>ENG</button>
         <button lang="ko" aria-pressed={locale === 'ko'} onClick={() => setLocale('ko')}>한국어</button>
       </div></header>
-    <main><h1 className="visually-hidden">{production?.title ?? text.app}</h1><div className="workspace">
-      <ControlsPanel character={character} name={production?.characters.find(choice => choice.tag === character)?.label} text={text}>
-        <p className="production-title">{production?.title ?? text.script}</p>
+    <main><h1 className="production-title">{production?.title ?? text.app}</h1><div className="workspace">
+      <ControlsPanel character={character} text={text}>
         <section className="control-section"><label className="control-label" htmlFor="character">{text.character}</label>
           <select id="character" value={character} disabled={!production || problem?.error === 'revision_changed'} onChange={event => { setProblem(null); setCharacter(event.target.value); }}>
             <option value="">{text.selectCharacter}</option>

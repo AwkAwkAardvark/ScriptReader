@@ -32,6 +32,9 @@ try {
   await page.getByLabel('Character', { exact: true }).selectOption('Ro');
   await page.waitForFunction(() => !document.querySelector<HTMLButtonElement>('.print-button')?.disabled);
   assert.equal(await page.getByRole('radio', { name: 'Default' }).isChecked(), true);
+  assert.equal(await page.locator('h1.production-title').count(), 1);
+  assert.equal(await page.locator('.controls .production-title').count(), 0);
+  assert.equal(await page.locator('.controls .print-button').count(), 0);
   const initialCalls = calls.length;
   await page.getByRole('radio', { name: '±1', exact: true }).check();
   await page.waitForFunction(() => !document.querySelector<HTMLButtonElement>('.print-button')?.disabled);
@@ -53,6 +56,9 @@ try {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.waitForFunction(() => document.querySelector('.settings-summary')?.getAttribute('aria-expanded') === 'false');
+    assert.equal((await page.locator('.settings-summary').innerText()).replace(/\s+/g, ' '), 'Settings ▾');
+    assert.equal(await page.locator('.settings-summary').getAttribute('aria-expanded'), 'false');
     await page.screenshot({ path: join(out, `hosted-mobile-${width}.png`), fullPage: true });
   }
   async function openSettings() { const summary = page.locator('.settings-summary'); if (await summary.isVisible() && await summary.getAttribute('aria-expanded') === 'false') await summary.click(); }

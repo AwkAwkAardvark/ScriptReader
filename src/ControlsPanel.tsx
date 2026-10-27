@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Copy } from './i18n';
 
 /** Keep the desktop sidebar open; mobile settings fold after character selection. */
-export function ControlsPanel({ character, name, text, children }: {
-  character: string; name?: string; text: Copy; children: ReactNode;
+export function ControlsPanel({ character, text, children }: {
+  character: string; text: Copy; children: ReactNode;
 }) {
   const [mobile, setMobile] = useState(() => window.matchMedia?.('(max-width: 720px)').matches ?? false);
   const [expanded, setExpanded] = useState(true);
@@ -21,8 +21,8 @@ export function ControlsPanel({ character, name, text, children }: {
   }, [character, mobile]);
   const open = !mobile || expanded;
   return <aside className={`controls${open ? '' : ' controls-collapsed'}`} aria-label={text.settings}>
-    <button ref={summary} className="settings-summary" aria-label={`${name || text.character} ${text.settingsButton}`} aria-expanded={open} aria-controls="settings-body" onClick={() => setExpanded(value => !value)}>
-      <span>{name || text.character}</span><span>{text.settingsButton} <span aria-hidden="true">{open ? '▴' : '▾'}</span></span>
+    <button ref={summary} className="settings-summary" aria-label={text.settingsButton} aria-expanded={open} aria-controls="settings-body" onClick={() => setExpanded(value => !value)}>
+      <span>{text.settingsButton}</span><span aria-hidden="true">{open ? '▴' : '▾'}</span>
     </button>
     <div id="settings-body" hidden={!open}>{children}</div>
   </aside>;

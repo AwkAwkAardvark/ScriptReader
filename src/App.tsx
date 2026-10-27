@@ -146,7 +146,7 @@ function LocalReader() {
       <h1 className="visually-hidden">{text.app}</h1>
 
       <div className="workspace">
-        <ControlsPanel character={character} name={selectedName} text={text}>
+        <ControlsPanel character={character} text={text}>
           <section className="control-section file-section">
             <FileImport kind="script" file={files.script} text={text} onOpen={file => void openFile('script', file)} onIssue={() => importIssue('script')} />
             <FileImport kind="cast" file={files.cast} text={text} onOpen={file => void openFile('cast', file)} onIssue={() => importIssue('cast')} onClear={clearCast} />
