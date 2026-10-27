@@ -1,3 +1,4 @@
+import { validContextCount } from '../src/context';
 import type { ApiProblem, Counts } from '../src/hosted/protocol';
 import { passageBundle } from './passages';
 import { supabaseRpc, type FetchArgs, type FetchResult, type Rpc } from './database';
@@ -64,7 +65,7 @@ export async function handleApi(request: Request, env: Environment, rpcOverride?
       if (typeof body.character !== 'string' || body.character.length < 1 || body.character.length > 200 ||
         typeof body.revision !== 'string' || !/^[a-f0-9-]{36}$/.test(body.revision) ||
         typeof body.includeNonDialogue !== 'boolean' ||
-        ![body.before, body.after].every(count => typeof count === 'number' && Number.isInteger(count) && count >= 0 && count <= 10)) return problem('invalid_request');
+        ![body.before, body.after].every(validContextCount)) return problem('invalid_request');
       counts = { before: body.before as number, after: body.after as number, includeNonDialogue: body.includeNonDialogue };
     }
     const browser = await identity(request, env.BROWSER_COOKIE_SECRET);

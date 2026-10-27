@@ -24,7 +24,8 @@ describe('student reader workflow', () => {
     render(<App />);
     expect(screen.getByText('Open a script')).toBeInTheDocument();
     expect(screen.getByLabelText('Character')).toBeDisabled();
-    expect(screen.getByRole('radio', { name: 'Default' })).toBeChecked();
+    expect(screen.getByRole('slider', { name: 'Before' })).toHaveValue('2');
+    expect(screen.getByRole('slider', { name: 'After' })).toHaveValue('1');
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Include actions & cues' })).not.toBeChecked();
     const click = vi.spyOn(screen.getByLabelText('Script file'), 'click');
@@ -43,7 +44,6 @@ describe('student reader workflow', () => {
     expect(passage).toHaveTextContent('A little time to wonder');
     expect(passage).toHaveTextContent('Then that is where our story goes next.');
     expect(screen.queryByText(/WINDOW \d/)).not.toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: 'Other' }));
     fireEvent.change(screen.getByLabelText('Before'), { target: { value: '0' } });
     fireEvent.change(screen.getByLabelText('After'), { target: { value: '0' } });
     expect(screen.getAllByRole('region', { name: 'Rehearsal passage' })).toHaveLength(4);
@@ -60,51 +60,27 @@ describe('student reader workflow', () => {
     expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Mira');
     await user.selectOptions(screen.getByLabelText('Character'), 'Ro');
     expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Rowan');
-    expect(screen.getByRole('radio', { name: 'Default' })).toBeChecked();
+    expect(screen.getByRole('slider', { name: 'Before' })).toHaveValue('2');
+    expect(screen.getByRole('slider', { name: 'After' })).toHaveValue('1');
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
     expect(document.querySelector('.script-entry.highlighted .entry-name')).toHaveTextContent('Rowan');
     expect(screen.getByText('We made it before sunset.')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
     expect(screen.queryByText('We made it before sunset.')).not.toBeInTheDocument();
   });
-  it('applies presets to both sides and reveals focused independent fields for Other', async () => {
+  it('changes the two context sliders independently within 0–5', async () => {
     render(<App />);
     const user = await openScript();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    await user.click(screen.getByRole('radio', { name: '±1' }));
-    expect(screen.getByRole('radio', { name: '±1' })).toBeChecked();
+    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '1' } });
+    expect(screen.getByLabelText('After')).toHaveValue('1');
     expect(screen.getByText('(A paper bird drifts down beside the bench.)')).toBeInTheDocument();
-    expect(screen.getByText('A warm light falls across the garden path.')).toBeInTheDocument();
-    expect(screen.queryByText('(Mira lifts the lantern.)')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: '±5' }));
+    fireEvent.change(screen.getByLabelText('After'), { target: { value: '5' } });
+    expect(screen.getByLabelText('Before')).toHaveValue('1');
     expect(screen.getByText('(Mira lifts the lantern.)')).toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: 'Other' }));
-    expect(screen.getByLabelText('Before')).toHaveFocus();
-    expect(screen.getByLabelText('Before')).toHaveValue(5);
-    expect(screen.getByLabelText('After')).toHaveValue(5);
     expect(screen.getByLabelText('Before')).toHaveAttribute('min', '0');
-    expect(screen.getByLabelText('Before')).toHaveAttribute('max', '10');
-    fireEvent.change(screen.getByLabelText('Before'), { target: { value: '10' } });
-    expect(screen.getByLabelText('Before')).toHaveAttribute('aria-invalid', 'false');
-    await user.click(screen.getByRole('radio', { name: '±3' }));
-    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: '±3' })).toBeChecked();
-  });
-  it.each(['-1', '11', '1.5', ''].flatMap(value => ['Before', 'After'].map(side => [side, value])))('rejects %s context %s and retains the last valid selection', async (side, value) => {
-    render(<App />);
-    const user = await openScript();
-    await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    await user.click(screen.getByRole('radio', { name: 'Other' }));
-    fireEvent.change(screen.getByLabelText(side), { target: { value: '0' } });
-    const ids = () => Array.from(document.querySelectorAll('[data-record]')).map(node => node.getAttribute('data-record'));
-    const previous = ids();
-    fireEvent.change(screen.getByLabelText(side), { target: { value } });
-    expect(screen.getByLabelText(side)).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByText('Enter a whole number from 0–10.')).toBeInTheDocument();
-    expect(ids()).toEqual(previous);
-    fireEvent.change(screen.getByLabelText(side), { target: { value: '10' } });
-    expect(screen.getByLabelText(side)).toHaveAttribute('aria-invalid', 'false');
-    expect(ids().length).toBeGreaterThan(previous.length);
+    expect(screen.getByLabelText('Before')).toHaveAttribute('max', '5');
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
   });
   it('renders markup as text and preserves multiline text', async () => {
     render(<App />);
@@ -114,20 +90,17 @@ describe('student reader workflow', () => {
     expect(screen.getByText((_, element) => element?.tagName === 'P' && element.textContent === text)).toBeInTheDocument();
     expect(document.querySelector('img')).toBeNull();
   });
-  it('supports three before and one after while presets restore symmetric context', async () => {
+  it('supports three before and one after independently', async () => {
     render(<App />);
     const user = await openScript();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    await user.click(screen.getByRole('radio', { name: 'Other' }));
     fireEvent.change(screen.getByLabelText('Before'), { target: { value: '3' } });
     fireEvent.change(screen.getByLabelText('After'), { target: { value: '1' } });
     const actual = Array.from(document.querySelectorAll('[data-record]')).map(node => Number(node.getAttribute('data-record')));
     const expected = filterScript(scriptFor().records, { character: 'Mi', before: 3, after: 1, includeNonDialogue: false });
     expect(actual).toEqual(expected.items.filter(item => !item.record.types.includes('Title')).map(item => item.record.no));
-    await user.click(screen.getByRole('radio', { name: '±5' }));
-    await user.click(screen.getByRole('radio', { name: 'Other' }));
-    expect(screen.getByLabelText('Before')).toHaveValue(5);
-    expect(screen.getByLabelText('After')).toHaveValue(5);
+    expect(screen.getByLabelText('Before')).toHaveValue('3');
+    expect(screen.getByLabelText('After')).toHaveValue('1');
   });
   it('switches interface language independently of Korean translations without altering filtering', async () => {
     render(<App />);
@@ -147,7 +120,7 @@ describe('student reader workflow', () => {
     expect(screen.getByRole('button', { name: '대본 열기' })).toBeInTheDocument();
     expect(screen.getByLabelText('배역')).toHaveValue('Mi');
     expect(screen.getByText('대사 3개 · 장면 1개')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: '기본' })).toBeChecked();
+    expect(screen.getByRole('slider', { name: '앞' })).toHaveValue('2');
     expect(screen.getByRole('checkbox', { name: '한국어 표기' })).toBeChecked();
     expect(ids()).toEqual(original);
     await user.click(screen.getByRole('checkbox', { name: '한국어 표기' }));
@@ -157,13 +130,12 @@ describe('student reader workflow', () => {
     expect(document.documentElement).toHaveAttribute('lang', 'en');
     expect(screen.getByLabelText('Character')).toHaveValue('Mi');
   });
-  it('localizes context validation and file diagnostics when the interface is Korean', async () => {
+  it('localizes sliders and file diagnostics when the interface is Korean', async () => {
     render(<App />);
     const user = await openScript();
     await user.click(screen.getByRole('button', { name: '한국어' }));
-    await user.click(screen.getByRole('radio', { name: '직접 입력' }));
-    fireEvent.change(screen.getByLabelText('앞'), { target: { value: '-1' } });
-    expect(screen.getByText('0–10 사이의 정수를 입력하세요.')).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: '앞' })).toHaveAttribute('max', '5');
+    expect(screen.getByRole('slider', { name: '뒤' })).toHaveValue('1');
     await user.upload(screen.getByLabelText('대본 파일'), new File(['wrong,headers'], 'bad.csv', { type: 'text/csv' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('CSV 파일을 확인하세요');
     expect(screen.getByRole('alert')).toHaveTextContent('다음 순서의 헤더가 필요합니다');
@@ -216,12 +188,11 @@ describe('script and cast import', () => {
     render(<App />);
     const user = await openScript();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
-    await user.click(screen.getByRole('radio', { name: 'Other' }));
     fireEvent.change(screen.getByLabelText('After'), { target: { value: '1' } });
     await openCast();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
     expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Mira Moss');
-    expect(screen.getByLabelText('After')).toHaveValue(1);
+    expect(screen.getByLabelText('After')).toHaveValue('1');
     expect(screen.getByText('Someone has left us a message.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Remove cast' }));
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');

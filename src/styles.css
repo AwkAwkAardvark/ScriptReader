@@ -91,18 +91,13 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
 .control-label, .context-picker legend { display: block; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .context-picker { border: 0; padding: 0; margin: 0; min-width: 0; }
 .context-picker legend { padding: 0; }
-.context-options { display: grid; grid-template-columns: minmax(max-content, 1.4fr) repeat(3, minmax(0, 1fr)) minmax(max-content, 1.6fr); gap: 6px; }
-.context-options label { position: relative; cursor: pointer; }
-.context-options input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; z-index: 1; }
-.context-options span { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 6px; white-space: nowrap; border: 1px solid #b9c5b7; border-radius: 10px; font-size: 13px; color: #43583f; }
-.context-options input:checked + span { background: #e0eddf; border-color: #315e44; color: #244c30; font-weight: 600; }
-.context-options input:focus-visible + span { outline: 3px solid #3c8056; outline-offset: 2px; }
+.context-sliders { display: grid; gap: 16px; }
+.context-slider { min-width: 0; }
+.context-slider-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: #43583f; }
+.context-slider-heading output { min-width: 24px; text-align: center; font-size: 16px; font-weight: 600; color: #244c30; font-variant-numeric: tabular-nums; }
+.context-slider input { display: block; width: 100%; height: 44px; margin: 0; accent-color: #315e44; cursor: pointer; touch-action: pan-y; }
+.context-endpoints { display: flex; justify-content: space-between; font-size: 11px; color: #65715f; margin-top: -4px; }
 .context-picker:disabled { opacity: .5; }
-.custom-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-.custom-count { min-width: 0; }
-.custom-count label { display: block; font-size: 11px; color: #4a6449; margin-bottom: 7px; }
-.custom-context input { width: 100%; min-height: 44px; border: 1px solid #aebcab; border-radius: 10px; padding: 10px 12px; font-size: 16px; background: #fff; color: #283c2c; }
-.custom-context .field-error { display: block; margin-top: 6px; font-size: 11px; line-height: 1.5; }
 @media (max-width: 1000px) {
   .app-shell { padding: 0 24px; }
   .workspace { grid-template-columns: 270px minmax(0, 1fr); gap: 20px; }
