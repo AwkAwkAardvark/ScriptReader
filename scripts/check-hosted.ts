@@ -57,8 +57,10 @@ try {
     await page.setViewportSize({ width, height: 844 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.waitForFunction(() => document.querySelector('.settings-summary')?.getAttribute('aria-expanded') === 'false');
-    assert.equal((await page.locator('.settings-summary').innerText()).replace(/\s+/g, ' '), 'Settings ▾');
+    assert.equal((await page.locator('.settings-summary').innerText()).replace(/\s+/g, ' '), 'Workshop Musical 2026: The Paper Garden ☰');
     assert.equal(await page.locator('.settings-summary').getAttribute('aria-expanded'), 'false');
+    assert.equal(await page.locator('#reader-title').isVisible(), false);
+    assert.equal(await page.locator('.production-title').evaluate(e => e.clientWidth), 1);
     await page.screenshot({ path: join(out, `hosted-mobile-${width}.png`), fullPage: true });
   }
   async function openSettings() { const summary = page.locator('.settings-summary'); if (await summary.isVisible() && await summary.getAttribute('aria-expanded') === 'false') await summary.click(); }

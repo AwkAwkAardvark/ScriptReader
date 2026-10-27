@@ -179,7 +179,8 @@ function LocalReader() {
 
         <section className="reader" aria-labelledby="reader-title" aria-busy={loading}>
           <header className="reader-header">
-            <h2 id="reader-title">{selectedName || text.script}</h2>
+            <h2 id="reader-title" className="print-reader-title">{selectedName || text.script}</h2>
+            {reading && !loading && !errors.length && reading.blocks.length > 0 && <div className="reading-meta" role="status">{text.summary(reading.contributionCount, reading.sceneCount)}</div>}
             <div className="print-actions"><button className="print-button" disabled={!canPrint} onClick={() => { if (canPrint) window.print(); }}>{text.print}</button></div>
           </header>
 
@@ -190,7 +191,6 @@ function LocalReader() {
             </div>
             : filtered.items.length === 0 ? <div className="empty-state"><h3>{text.noMatches}</h3></div>
             : <>
-              <div className="reading-meta" role="status"><span>{text.summary(reading!.contributionCount, reading!.sceneCount)}</span></div>
               <p className="print-context">{text.before} {context.before} · {text.after} {context.after}</p>
               {fontState === 'loading' && <p className="print-status" role="status">{text.preparingPrint}</p>}
               {fontState === 'error' && <p className="print-status" role="status">{text.printError} <button onClick={() => setFontAttempt(value => value + 1)}>{text.retry}</button></p>}

@@ -42,6 +42,7 @@ try {
   assert.equal(await page.locator('[data-record="2"] [lang=en] em').innerText(), '(quietly (toward the gate))');
   assert.equal(await page.locator('[data-record="2"] [lang=en] em').evaluate(e => getComputedStyle(e).fontStyle), 'italic');
   assert.equal(await page.locator('[data-record="2"] [lang=ko] em').innerText(), '(작게 (속삭이며))');
+  assert.equal(await page.locator('#reader-title').isVisible(), false);
   const order = await page.locator('[data-record]').evaluateAll(elements => elements.map(element => element.dataset.record));
   assert.deepEqual(order, ['2', '3', '4', '5', '6']);
   await page.screenshot({ path: join(out, 'desktop.png'), fullPage: true });
@@ -53,6 +54,8 @@ try {
     return { font: style.fontFamily, size: style.fontSize, color: style.color, weight: style.fontWeight, italic: style.fontStyle };
   }));
   assert.equal(await page.locator('[data-record="2"] [lang=en] em').evaluate(e => getComputedStyle(e).fontStyle), 'italic');
+  assert.equal(await page.locator('#reader-title').isVisible(), true);
+  assert.equal(await page.locator('#reader-title').innerText(), 'Rowan Reed');
   assert.equal(styles[0].font.includes('ScriptReaderPrint'), true);
   assert.ok(Math.abs(parseFloat(styles[0].size) - 11 * 96 / 72) < .02);
   assert.equal(styles[0].color, 'rgb(17, 17, 17)');

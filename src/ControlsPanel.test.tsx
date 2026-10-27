@@ -9,15 +9,15 @@ function viewport(mobile: boolean) {
   vi.stubGlobal('matchMedia', vi.fn(() => query));
   return query;
 }
-const panel = (character = '') => <ControlsPanel character={character} text={copy.en}><label>Character<select><option>Rowan</option></select></label><button>Context control</button></ControlsPanel>;
+const panel = (character = '') => <ControlsPanel character={character} title="Workshop Musical 2026: Paper Garden" text={copy.en}><label>Character<select><option>Rowan</option></select></label><button>Context control</button></ControlsPanel>;
 describe('responsive settings', () => {
   it('folds after mobile selection, focuses the summary, and reopens without losing settings', () => {
     viewport(true); const { rerender } = render(panel());
     expect(screen.getByLabelText('Character')).toBeVisible();
     rerender(panel('Ro'));
-    const summary = screen.getByRole('button', { name: 'Settings' });
+    const summary = screen.getByRole('button', { name: 'Workshop Musical 2026: Paper Garden — Settings' });
     expect(summary).toHaveAttribute('aria-expanded', 'false');expect(summary).toHaveFocus();
-    expect(summary).toHaveTextContent(/^Settings/);expect(summary).not.toHaveTextContent('Rowan');
+    expect(summary).toHaveTextContent('Workshop Musical 2026: Paper Garden');expect(summary).toHaveTextContent('☰');expect(summary).not.toHaveTextContent('Settings');expect(summary).not.toHaveTextContent('Rowan');
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
     fireEvent.click(summary);expect(screen.getByLabelText('Character')).toBeVisible();
     rerender(panel('Ro'));expect(summary).toHaveAttribute('aria-expanded', 'true');
