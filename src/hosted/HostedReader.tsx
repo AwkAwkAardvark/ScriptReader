@@ -80,7 +80,7 @@ export function HostedReader({ slug }: { slug: string }) {
       </ControlsPanel>
       <ReaderPane reading={problem ? null : reading} title={production?.characters.find(choice => choice.tag === character)?.label ?? text.script} text={text} busy={busy} media={bundle?.media ?? {}}>
         {problem ? <div className="validation" role="alert"><p>{text.apiError[problem.error]}</p>
-          {reset && <p><time dateTime={reset}>{new Date(reset).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-GB', { timeZone: 'Asia/Seoul' })} KST</time></p>}
+          {reset && <p>{problem.error === 'quota' ? text.allowanceResets : text.retryAt} <time dateTime={reset}>{new Date(reset).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-GB', { timeZone: 'Asia/Seoul' })} KST</time></p>}
           <button onClick={() => { if (!production || problem.error === 'revision_changed' || problem.error === 'not_found') setAttempt(value => value + 1); else setRetry(value => value + 1); }}>{problem.error === 'revision_changed' ? text.reload : text.retry}</button>
         </div> : busy ? <div className="empty-state" role="status">{text.opening}</div> : !character && <div className="empty-state">{text.chooseCharacter}</div>}
       </ReaderPane>

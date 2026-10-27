@@ -62,6 +62,11 @@ describe('hosted reader', () => {
     vi.mocked(loadPassages).mockRejectedValueOnce(new ApiFailure({ error: 'quota', resetAt: production.resetAt }));
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
     expect(await screen.findByRole('alert')).toHaveTextContent('Daily character allowance reached.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Character allowance resets at:');
+    expect(screen.getByRole('alert').querySelector('time')).toHaveAttribute('dateTime', production.resetAt);
+    await user.click(screen.getByRole('button', { name: '한국어' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('배역 선택 한도 초기화 시각:');
+    await user.click(screen.getByRole('button', { name: 'ENG' }));
     expect(screen.getByRole('button', { name: 'Print / Save PDF' })).toBeDisabled();
     await user.selectOptions(screen.getByLabelText('Character'), 'Ro');
     expect(await screen.findByText('The gate is open. Shall we take a look?')).toBeInTheDocument();
