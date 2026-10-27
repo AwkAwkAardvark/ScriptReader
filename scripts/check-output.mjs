@@ -23,6 +23,7 @@ const short = [
 ];
 const buttonName = /^(Print \/ Save PDF|인쇄 \/ PDF 저장)$/;
 async function load(page, rows) {
+  await page.getByRole('img', { name: 'Ebenezer', exact: true }).evaluate(image => image.decode());
   await page.getByLabel(/^(Script file|대본 파일)$/).setInputFiles({ name: 'synthetic-script.csv', mimeType: 'text/csv', buffer: Buffer.from(csv(rows)) });
   await page.getByLabel(/^(Cast file|배역 목록 파일)$/).setInputFiles({ name: 'synthetic-cast.csv', mimeType: 'text/csv', buffer: Buffer.from('Tag,Name\nRo,Rowan Reed\nMi,Mira Moss\nUn,Unused') });
   await page.getByLabel(/^(Character|배역)$/).selectOption('Ro');

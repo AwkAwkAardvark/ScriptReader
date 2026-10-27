@@ -1,3 +1,4 @@
+import { BrandMark } from '../BrandMark';
 import { DEFAULT_CONTEXT } from '../context';
 import { ControlsPanel } from '../ControlsPanel';
 import { CharacterOptions } from '../CharacterOptions';
@@ -61,7 +62,7 @@ export function HostedReader({ slug }: { slug: string }) {
   const busy = !problem && (!production || Boolean(character && !reading));
   const reset = problem?.resetAt ?? (problem?.retryAfter ? new Date(Date.now() + problem.retryAfter * 1000).toISOString() : null);
   return <div className="app-shell">
-    <header className="masthead"><a className="brand" href={`/p/${slug}`}><span className="brand-mark" aria-hidden="true">sr<span>.</span></span><span>Script Reader</span></a>
+    <header className="masthead"><a className="brand" href={`/p/${slug}`}><BrandMark /><span>Script Reader</span></a>
       <div className="language-switch" role="group" aria-label={text.interfaceLanguage}>
         <button lang="en" aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>ENG</button>
         <button lang="ko" aria-pressed={locale === 'ko'} onClick={() => setLocale('ko')}>한국어</button>
