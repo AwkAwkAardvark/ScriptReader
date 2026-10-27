@@ -27,6 +27,9 @@ try {
   page.on('request', request => { if (request.url().includes('/api/')) calls.push(request.url()); });
   await page.route('https://www.youtube.com/embed/**', route => route.fulfill({ contentType: 'text/html', body: '<p>Synthetic player</p>' }));
   await page.goto(demo.origin + '/p/synthetic-garden');
+  const logo = page.getByRole('img', { name: 'Ebenezer', exact: true });
+  await logo.evaluate((image: HTMLImageElement) => image.decode());
+  assert.equal(await logo.evaluate(image => image.clientHeight), 44);
   await page.waitForFunction(() => !document.querySelector<HTMLSelectElement>('#character')?.disabled || Boolean(document.querySelector('[role=alert]')));
   assert.equal(await page.getByRole('alert').count(), 0, await page.locator('.reader').innerText());
   await page.getByLabel('Character', { exact: true }).selectOption('Ro');

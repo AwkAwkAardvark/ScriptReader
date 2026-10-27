@@ -1,3 +1,4 @@
+import { BrandMark } from './BrandMark';
 import { DEFAULT_CONTEXT } from './context';
 import { readerRoute } from './routes';
 import { ControlsPanel } from './ControlsPanel';
@@ -132,7 +133,7 @@ function LocalReader() {
 
   return <div className="app-shell">
     <header className="masthead">
-      <a className="brand" href="#"><span className="brand-mark" aria-hidden="true">sr<span>.</span></span><span>{text.app}</span></a>
+      <a className="brand" href="#"><BrandMark /><span>{text.app}</span></a>
       <div className="language-switch" role="group" aria-label={text.interfaceLanguage}>
         <button lang="en" aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>ENG</button>
         <button lang="ko" aria-pressed={locale === 'ko'} onClick={() => setLocale('ko')}>한국어</button>
