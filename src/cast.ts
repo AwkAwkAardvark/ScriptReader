@@ -6,14 +6,17 @@ export type CastResult = { ok: true; characters: Character[] } | { ok: false; er
 
 /** Cast names are explicit metadata, independent of dialogue or stage participation. */
 export function parseCast(text: string): CastResult {
-  const { rows, errors } = readCsv(text, CAST_HEADERS, 'cast');
+  const basic = readCsv(text, CAST_HEADERS, 'cast');
+  const extended = basic.rows.length ? basic : readCsv(text, [...CAST_HEADERS, 'DividerBefore'], 'cast');
+  const { rows, errors } = extended.rows.length ? extended : basic;
+  const width = rows[0]?.length ?? 2;
   if (rows.length === 1) errors.push({ document: 'cast', recordNumber: 1, message: 'The cast contains no characters.' });
   const characters: Character[] = [];
   const seen = new Set<string>();
   for (let i = 1; i < rows.length; i++) {
     const report = (field: string, message: string) => errors.push({ document: 'cast', recordNumber: i + 1, field, message });
-    if (rows[i].length !== 2) {
-      report('CSV', `Expected 2 fields; received ${rows[i].length}.`);
+    if (rows[i].length !== width) {
+      report('CSV', `Expected ${width} fields; received ${rows[i].length}.`);
       continue;
     }
     const [rawTag, label] = rows[i];
@@ -22,7 +25,9 @@ export function parseCast(text: string): CastResult {
     if (seen.has(tag)) report('Tag', 'Duplicate cast tag.');
     seen.add(tag);
     if (!label.trim()) report('Name', 'A character name is required.');
-    characters.push({ tag, label });
+    const divider = rows[i][2];
+    if (width === 3 && divider !== '' && divider !== 'Y') report('DividerBefore', 'Must be Y or blank.');
+    characters.push({ tag, label, ...(divider === 'Y' ? { dividerBefore: true } : {}) });
   }
   return errors.length ? { ok: false, errors } : { ok: true, characters };
 }

@@ -1,5 +1,6 @@
 import { readerRoute } from './routes';
 import { ControlsPanel } from './ControlsPanel';
+import { CharacterOptions } from './CharacterOptions';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { filterScript, parseScript, type Diagnostic, type Script } from './script';
 import { parseCast } from './cast';
@@ -100,11 +101,6 @@ function LocalReader() {
     return () => { active = false; };
   }, [Boolean(reading?.blocks.length), fontAttempt]);
   const canPrint = Boolean(reading?.blocks.length && !loading && !errors.length && fontState === 'ready');
-  const repeatedNames = useMemo(() => {
-    const counts = new Map<string, number>();
-    script?.characters.forEach(choice => counts.set(choice.label, (counts.get(choice.label) ?? 0) + 1));
-    return counts;
-  }, [script]);
 
   async function openFile(kind: ImportKind, file: File) {
     const current = ++request.current[kind];
@@ -156,7 +152,7 @@ function LocalReader() {
             <label className="control-label" htmlFor="character">{text.character}</label>
             <select id="character" value={character} disabled={!script || loading} onChange={event => setCharacter(event.target.value)}>
               <option value="">{text.selectCharacter}</option>
-              {script?.characters.map(choice => <option key={choice.tag} value={choice.tag}>{choice.label}{(repeatedNames.get(choice.label) ?? 0) > 1 ? ` (${choice.tag})` : ''}</option>)}
+              <CharacterOptions characters={script?.characters ?? []} />
             </select>
           </section>
 

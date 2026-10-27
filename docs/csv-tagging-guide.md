@@ -52,11 +52,13 @@ The list above enumerates the choices, not the required contents of every cell. 
 
 ### Companion cast CSV: authoritative identity
 
-Prepare a UTF-8 CSV with exactly two headers, in this order:
+Prepare a UTF-8 CSV with these two headers, in this order:
 
 ```text
 Tag,Name
 ```
+
+For unnamed dropdown groups, an optional third column is supported: `Tag,Name,DividerBefore`. Put `Y` on the first character of each new group and leave the other cells blank. This inserts a disabled `────────` option before that character; a divider on the first character is ignored. Keep characters in the intended display order. This metadata does not create a selectable character, name a faction, or affect participation, filtering, or allowances. Existing two-column cast files remain valid.
 
 Each record maps one individual token to one canonical display name. `Tag` must be nonempty and contain no whitespace, commas, or semicolons within the token. Whitespace around a token is trimmed, consistently with script tag parsing. `Name` must contain nonblank text and is preserved as supplied. Duplicate tags are errors even when the repeated names agree. Names need not be unique across different tags; the dropdown adds the tag to distinguish identical names.
 

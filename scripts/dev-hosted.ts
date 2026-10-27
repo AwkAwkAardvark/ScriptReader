@@ -8,7 +8,7 @@ import { csvFor } from '../src/test/fixtures';
 
 export async function startHostedDemo(apiPort = 8788, webPort = 5173) {
   const { db, rpc } = await localDatabase();
-  const payload = preparePublication(csvFor(), 'Tag,Name\nRo,Rowan Reed\nMi,Mira Moss\nA1,Visitor One\nA2,Visitor Two\nA3,Visitor Three\nA4,Visitor Four', 'No,YouTubeURL\n9,https://youtu.be/abcdefghijk\n17,https://youtu.be/lmnopqrstuv');
+  const payload = preparePublication(csvFor(), 'Tag,Name,DividerBefore\nRo,Rowan Reed,\nMi,Mira Moss,Y\nA1,Visitor One,\nA2,Visitor Two,\nA3,Visitor Three,\nA4,Visitor Four,', 'No,YouTubeURL\n9,https://youtu.be/abcdefghijk\n17,https://youtu.be/lmnopqrstuv');
   await rpc('reader_publish', { p_slug: 'synthetic-garden', p_title: 'Workshop Musical 2026: The Paper Garden', p_payload: payload });
   const server = createHttpServer(async (req, res) => {
     const parts: Buffer[] = []; let length = 0;

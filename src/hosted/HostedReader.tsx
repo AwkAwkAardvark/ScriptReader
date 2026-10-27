@@ -1,4 +1,5 @@
 import { ControlsPanel } from '../ControlsPanel';
+import { CharacterOptions } from '../CharacterOptions';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ContextPicker } from '../ContextPicker';
 import { copy, type Locale } from '../i18n';
@@ -57,7 +58,6 @@ export function HostedReader({ slug }: { slug: string }) {
   const bundle = result?.key === key ? result.bundle : null;
   const reading = bundle ? unpackView(bundle, options, showKorean) : null;
   const busy = !problem && (!production || Boolean(character && !reading));
-  const names = production?.characters.map(choice => choice.label) ?? [];
   const reset = problem?.resetAt ?? (problem?.retryAfter ? new Date(Date.now() + problem.retryAfter * 1000).toISOString() : null);
   return <div className="app-shell">
     <header className="masthead"><a className="brand" href={`/p/${slug}`}><span className="brand-mark" aria-hidden="true">sr<span>.</span></span><span>Script Reader</span></a>
@@ -70,7 +70,7 @@ export function HostedReader({ slug }: { slug: string }) {
         <section className="control-section"><label className="control-label" htmlFor="character">{text.character}</label>
           <select id="character" value={character} disabled={!production || problem?.error === 'revision_changed'} onChange={event => { setProblem(null); setCharacter(event.target.value); }}>
             <option value="">{text.selectCharacter}</option>
-            {production?.characters.map(choice => <option key={choice.tag} value={choice.tag}>{choice.label}{names.filter(name => name === choice.label).length > 1 ? ` (${choice.tag})` : ''}</option>)}
+            <CharacterOptions characters={production?.characters ?? []} />
           </select>{production && <p className="allowance">{text.allowance(production.used)}</p>}
         </section>
         <section className="control-section context-section"><ContextPicker value={counts} onChange={setCounts} disabled={!production} text={text} />
