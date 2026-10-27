@@ -80,8 +80,8 @@ For each song, ask the owner to confirm who participates and what participation 
 
 When reviewing the result, remember:
 
-- Dialogue matches select passages for their tagged characters. With actions/cues enabled, tagged non-dialogue can also select passages.
-- All selected context records remain visible, including untagged directions and effects. Each nonstructural source row counts as one context entry, regardless of text wrapping or embedded newlines.
+- Dialogue matches select passages for their tagged characters. With **Hide actions & cues** off (the default), tagged non-dialogue can also select passages.
+- By default, selected context includes untagged directions and effects. **Hide actions & cues** removes standalone cues from the displayed/printed result while leaving inline parentheticals in dialogue visible. Each original nonstructural source row still counts as one context entry; hidden cues are not replaced by extra dialogue.
 - Scene and song markers consume no context entries. Context expansion stops at both scene changes and song boundaries.
 - An included scene shows its heading and its song markers. A boundary song belongs to the passage that reaches it; passages sharing that song merge without pulling additional context across it. Omitted source rows and scene changes still separate passages.
 - Korean display uses the existing `Korean` column. Changing interface language does not translate or rewrite script content.

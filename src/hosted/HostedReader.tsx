@@ -1,3 +1,4 @@
+import { applyActionVisibility } from '../action-visibility';
 import { BrandMark } from '../BrandMark';
 import { DEFAULT_CONTEXT } from '../context';
 import { ControlsPanel } from '../ControlsPanel';
@@ -14,7 +15,8 @@ export function HostedReader({ slug }: { slug: string }) {
   const [production, setProduction] = useState<Production | null>(null);
   const [character, setCharacter] = useState('');
   const [counts, setCounts] = useState(DEFAULT_CONTEXT);
-  const [includeNonDialogue, setCues] = useState(false); const [showKorean, setKorean] = useState(false);
+  const [hideActions, setHideActions] = useState(false);
+  const includeNonDialogue = !hideActions; const [showKorean, setKorean] = useState(false);
   const [problem, setProblem] = useState<ApiProblem | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [retry, setRetry] = useState(0);
@@ -58,7 +60,8 @@ export function HostedReader({ slug }: { slug: string }) {
     // Production usage changes don't invalidate passage requests; revisions do.
   }, [slug, production?.revision, character, options, key, includeNonDialogue, retry]);
   const bundle = result?.key === key ? result.bundle : null;
-  const reading = bundle ? unpackView(bundle, options, showKorean) : null;
+  const unpacked = bundle ? unpackView(bundle, options, showKorean) : null;
+  const reading = unpacked ? applyActionVisibility(unpacked, hideActions) : null;
   const busy = !problem && (!production || Boolean(character && !reading));
   const reset = problem?.resetAt ?? (problem?.retryAfter ? new Date(Date.now() + problem.retryAfter * 1000).toISOString() : null);
   return <div className="app-shell">
@@ -76,7 +79,7 @@ export function HostedReader({ slug }: { slug: string }) {
           </select>{production && <p className="allowance">{text.allowance(production.used)}</p>}
         </section>
         <section className="control-section context-section"><ContextPicker value={counts} onChange={setCounts} disabled={!production} text={text} />
-          <label className="toggle-row"><input type="checkbox" checked={includeNonDialogue} disabled={!production} onChange={event => setCues(event.target.checked)} /><span className="toggle-track" aria-hidden="true" /><span>{text.actions}</span></label>
+          <label className="toggle-row"><input type="checkbox" checked={hideActions} disabled={!production} onChange={event => setHideActions(event.target.checked)} /><span className="toggle-track" aria-hidden="true" /><span>{text.actions}</span></label>
           <label className="toggle-row"><input type="checkbox" checked={showKorean} disabled={!production} onChange={event => setKorean(event.target.checked)} /><span className="toggle-track" aria-hidden="true" /><span>{text.korean}</span></label>
         </section>
       </ControlsPanel>

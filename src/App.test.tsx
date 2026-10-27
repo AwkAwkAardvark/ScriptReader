@@ -27,7 +27,7 @@ describe('student reader workflow', () => {
     expect(screen.getByRole('slider', { name: 'Before' })).toHaveValue('2');
     expect(screen.getByRole('slider', { name: 'After' })).toHaveValue('1');
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: 'Include actions & cues' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Hide actions & cues' })).not.toBeChecked();
     const click = vi.spyOn(screen.getByLabelText('Script file'), 'click');
     await userEvent.click(screen.getByRole('button', { name: 'Open Script' }));
     expect(click).toHaveBeenCalled();
@@ -38,20 +38,22 @@ describe('student reader workflow', () => {
     expect(screen.getByText('Select a character')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
     expect((screen.getByLabelText('Character') as HTMLSelectElement).selectedOptions[0]).toHaveTextContent('Mira');
-    expect(screen.getByText('3 lines · 1 scene')).toBeInTheDocument();
-    const passage = screen.getByRole('region', { name: 'Rehearsal passage' });
+    expect(screen.getByText('3 lines · 2 scenes')).toBeInTheDocument();
+    const passage = screen.getAllByRole('region', { name: 'Rehearsal passage' })[0];
     expect(passage).toHaveTextContent('Let’s listen before we decide.');
     expect(passage).toHaveTextContent('A little time to wonder');
     expect(passage).toHaveTextContent('Then that is where our story goes next.');
     expect(screen.queryByText(/WINDOW \d/)).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Before'), { target: { value: '0' } });
     fireEvent.change(screen.getByLabelText('After'), { target: { value: '0' } });
-    expect(screen.getAllByRole('region', { name: 'Rehearsal passage' })).toHaveLength(4);
+    expect(screen.getAllByRole('region', { name: 'Rehearsal passage' })).toHaveLength(6);
     expect(screen.getByText('Someone has left us a message.')).toBeInTheDocument();
     expect(screen.queryByText('(A paper bird drifts down beside the bench.)')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('checkbox', { name: 'Include actions & cues' }));
     expect(screen.getByText('(Mira opens the workshop door.)')).toBeInTheDocument();
-    expect(screen.getByText('The gears turn')).toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: 'Hide actions & cues' }));
+    expect(screen.queryByText('(Mira opens the workshop door.)')).not.toBeInTheDocument();
+    expect(screen.queryByText('The gears turn')).not.toBeInTheDocument();
+    expect(document.querySelectorAll('.script-entry.direction')).toHaveLength(0);
   });
   it('switches characters without reopening the file or changing context settings', async () => {
     render(<App />);
@@ -97,7 +99,7 @@ describe('student reader workflow', () => {
     fireEvent.change(screen.getByLabelText('Before'), { target: { value: '3' } });
     fireEvent.change(screen.getByLabelText('After'), { target: { value: '1' } });
     const actual = Array.from(document.querySelectorAll('[data-record]')).map(node => Number(node.getAttribute('data-record')));
-    const expected = filterScript(scriptFor().records, { character: 'Mi', before: 3, after: 1, includeNonDialogue: false });
+    const expected = filterScript(scriptFor().records, { character: 'Mi', before: 3, after: 1, includeNonDialogue: true });
     expect(actual).toEqual(expected.items.filter(item => !item.record.types.includes('Title')).map(item => item.record.no));
     expect(screen.getByLabelText('Before')).toHaveValue('3');
     expect(screen.getByLabelText('After')).toHaveValue('1');
@@ -119,7 +121,7 @@ describe('student reader workflow', () => {
     expect(document.documentElement).toHaveAttribute('lang', 'ko');
     expect(screen.getByRole('button', { name: '대본 열기' })).toBeInTheDocument();
     expect(screen.getByLabelText('배역')).toHaveValue('Mi');
-    expect(screen.getByText('대사 3개 · 장면 1개')).toBeInTheDocument();
+    expect(screen.getByText('대사 3개 · 장면 2개')).toBeInTheDocument();
     expect(screen.getByRole('slider', { name: '앞' })).toHaveValue('2');
     expect(screen.getByRole('checkbox', { name: '한국어 표기' })).toBeChecked();
     expect(ids()).toEqual(original);
@@ -205,10 +207,10 @@ describe('script and cast import', () => {
     const records = syntheticRecords.map((row, index) => index === 2 ? { ...row, Tag: 'Sp' } : row);
     const user = await openScript(csvFor(records));
     await user.selectOptions(screen.getByLabelText('Character'), 'Sp');
-    expect(screen.getByText('No matches.')).toBeInTheDocument();
-    await user.click(screen.getByRole('checkbox', { name: 'Include actions & cues' }));
     expect(screen.getByText('(A paper bird drifts down beside the bench.)')).toBeInTheDocument();
     expect(document.querySelector('.script-entry.highlighted .entry-name')).toHaveTextContent('Silent Sprite');
+    await user.click(screen.getByRole('checkbox', { name: 'Hide actions & cues' }));
+    expect(screen.getByText('No matches.')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Character'), 'Un');
     expect(screen.getByText('No matches.')).toBeInTheDocument();
   });
