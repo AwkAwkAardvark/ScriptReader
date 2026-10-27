@@ -12,7 +12,7 @@ import { csvFor } from '../src/test/fixtures';
 
 let local: Awaited<ReturnType<typeof localDatabase>>;
 let revision: string;
-const cast = 'Tag,Name\nRo,Rowan Reed\nMi,Mira Moss\nA1,Visitor One\nA2,Visitor Two\nA3,Visitor Three\nA4,Visitor Four';
+const cast = 'Tag,Name,DividerBefore\nRo,Rowan Reed,\nMi,Mira Moss,Y\nA1,Visitor One,\nA2,Visitor Two,\nA3,Visitor Three,\nA4,Visitor Four,';
 const payload = preparePublication(csvFor(), cast, 'No,YouTubeURL\n9,https://youtu.be/abcdefghijk');
 const base = { p_slug: 'garden', p_browser: 'a'.repeat(64), p_ip: 'b'.repeat(64), p_new_browser: false, p_now: '2026-10-26T12:00:00Z', p_browser_limit: 1000, p_ip_limit: 10000 };
 const fetchDb = (args: Record<string, unknown> = {}) => local.rpc('reader_fetch', { ...base, ...args }) as Promise<FetchResult>;
@@ -50,6 +50,7 @@ describe('database admissions and revisions', () => {
     const result = await fetchDb();
     expect(result).not.toHaveProperty('payload');
     expect(result).toHaveProperty('production.used', 0);
+    expect(result).toHaveProperty('production.characters', payload.script.characters);
   });
   it('admits five unique characters atomically, permits repeats, rejects the sixth', async () => {
     const results = await Promise.all(['Ro', 'Mi', 'A1', 'A2', 'A3', 'A4'].map(p_character => fetchDb({ p_character, p_revision: revision })));

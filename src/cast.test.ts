@@ -6,6 +6,16 @@ import { csvFor, syntheticRecords } from './test/fixtures';
 const cast = [{ tag: 'Ro', label: 'Rowan Reed' }, { tag: 'Mi', label: 'Mira Moss' }];
 
 describe('cast CSV validation', () => {
+  it('accepts optional display dividers and preserves them through script parsing', () => {
+    const result = parseCast('Tag,Name,DividerBefore\nRo,Rowan,\nMi,Mira,Y');
+    expect(result).toEqual({ ok: true, characters: [{ tag: 'Ro', label: 'Rowan' }, { tag: 'Mi', label: 'Mira', dividerBefore: true }] });
+    if (!result.ok) throw new Error('Expected valid cast');
+    const parsed = parseScript(csvFor(), result.characters);
+    if (!parsed.ok) throw new Error('Expected valid script');
+    expect(parsed.script.characters).toEqual(result.characters);
+    expect(parseCast('Tag,Name,DividerBefore\nRo,Rowan,yes').ok).toBe(false);
+    expect(parseCast('Tag,Name,DividerBefore\nRo,Rowan').ok).toBe(false);
+  });
   it('reads explicit identifiers and Unicode names in source order, independently of script rows', () => {
     expect(parseCast('\uFEFFTag,Name\r\nMi,미라\r\nRo,"Rowan, the keeper"\r\n'))
       .toEqual({ ok: true, characters: [{ tag: 'Mi', label: '미라' }, { tag: 'Ro', label: 'Rowan, the keeper' }] });

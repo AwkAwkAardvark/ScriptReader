@@ -13,7 +13,7 @@ export interface ScriptRecord {
   readonly types: readonly RecordType[];
   readonly tags: readonly string[];
 }
-export interface Character { tag: string; label: string }
+export interface Character { tag: string; label: string; dividerBefore?: boolean }
 export interface Script { records: readonly ScriptRecord[]; characters: Character[]; identitySource: 'script' | 'cast' }
 export type ParseResult = { ok: true; script: Script } | { ok: false; errors: Diagnostic[] };
 
@@ -79,7 +79,7 @@ export function parseScript(text: string, cast?: readonly Character[]): ParseRes
     }
   }
   if (errors.length) return { ok: false, errors };
-  return { ok: true, script: { records, characters: [...names].map(([tag, label]) => ({ tag, label })), identitySource: cast ? 'cast' : 'script' } };
+  return { ok: true, script: { records, characters: cast ? cast.map(character => ({ ...character })) : [...names].map(([tag, label]) => ({ tag, label })), identitySource: cast ? 'cast' : 'script' } };
 }
 
 /** Identity comes from the roster for individuals; preserve authored group labels. */
