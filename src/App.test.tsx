@@ -88,7 +88,7 @@ describe('student reader workflow', () => {
     const user = await openScript(csvFor(syntheticRecords.map((record, i) => i === 3 ? { ...record, English: text } : record)));
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
     expect(screen.getByText((_, element) => element?.tagName === 'P' && element.textContent === text)).toBeInTheDocument();
-    expect(document.querySelector('img')).toBeNull();
+    expect(Array.from(document.images)).toEqual([screen.getByRole('img', { name: 'Ebenezer', exact: true })]);
   });
   it('supports three before and one after independently', async () => {
     render(<App />);
@@ -153,7 +153,7 @@ describe('student reader workflow', () => {
     expect(screen.getByText('시계공의 정원')).toHaveClass('translation');
     expect(screen.getByText('작은 시간')).toHaveClass('translation');
     expect(screen.getByText((_content, element) => element?.matches('p.translation') === true && element.textContent === koreanMarkup)).toHaveClass('translation');
-    expect(document.querySelector('img')).toBeNull();
+    expect(Array.from(document.images)).toEqual([screen.getByRole('img', { name: 'Ebenezer', exact: true })]);
   });
   it('reports validation errors and clears the previous script when a replacement is invalid', async () => {
     render(<App />);
@@ -243,7 +243,7 @@ describe('script and cast import', () => {
     await openCast('Tag,Name\nRo,Rowan\nMi,<img src=x onerror=alert(1)>');
     await user.selectOptions(screen.getByLabelText('Character'), 'Mi');
     expect(document.querySelector('.script-entry.highlighted .entry-name')).toHaveTextContent('<img src=x onerror=alert(1)>');
-    expect(document.querySelector('img')).toBeNull();
+    expect(Array.from(document.images)).toEqual([screen.getByRole('img', { name: 'Ebenezer', exact: true })]);
   });
   it('localizes cast import controls and diagnostics', async () => {
     render(<App />);
