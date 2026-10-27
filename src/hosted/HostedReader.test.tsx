@@ -52,9 +52,11 @@ describe('hosted reader', () => {
   });
   it('fetches uncached cues and reuses the previously cached mode', async () => {
     const user = await select();
-    await user.click(screen.getByRole('checkbox', { name: 'Include actions & cues' }));
+    expect(document.querySelector('.script-entry.direction')).not.toBeNull();
+    await user.click(screen.getByRole('checkbox', { name: 'Hide actions & cues' }));
     await waitFor(() => expect(loadPassages).toHaveBeenCalledTimes(2));
-    await user.click(screen.getByRole('checkbox', { name: 'Include actions & cues' }));
+    await waitFor(() => expect(document.querySelector('.script-entry.direction')).toBeNull());
+    await user.click(screen.getByRole('checkbox', { name: 'Hide actions & cues' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Print / Save PDF' })).toBeEnabled());
     expect(loadPassages).toHaveBeenCalledTimes(2);
   });

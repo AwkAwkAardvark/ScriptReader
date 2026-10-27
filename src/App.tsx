@@ -1,3 +1,4 @@
+import { applyActionVisibility } from './action-visibility';
 import { BrandMark } from './BrandMark';
 import { DEFAULT_CONTEXT } from './context';
 import { readerRoute } from './routes';
@@ -59,7 +60,8 @@ function LocalReader() {
   const [files, setFiles] = useState<Record<ImportKind, ImportedFile | null>>({ script: null, cast: null });
   const [character, setCharacter] = useState('');
   const [context, setContext] = useState<Context>(DEFAULT_CONTEXT);
-  const [includeNonDialogue, setIncludeNonDialogue] = useState(false);
+  const [hideActions, setHideActions] = useState(false);
+  const includeNonDialogue = !hideActions;
   const [locale, setLocale] = useState<Locale>('en');
   const [showKorean, setShowKorean] = useState(false);
   const text = copy[locale];
@@ -91,8 +93,8 @@ function LocalReader() {
   const filtered = useMemo(() => filterScript(script?.records ?? [], { character, ...context, includeNonDialogue }),
     [script, character, context, includeNonDialogue]);
   const selectedName = script?.characters.find(choice => choice.tag === character)?.label;
-  const reading = useMemo(() => script && character ? buildReadingDocument(script, filtered, character,
-    { ...context, includeNonDialogue, showKorean }) : null, [script, filtered, character, context, includeNonDialogue, showKorean]);
+  const reading = useMemo(() => script && character ? applyActionVisibility(buildReadingDocument(script, filtered, character,
+    { ...context, includeNonDialogue, showKorean }), hideActions) : null, [script, filtered, character, context, includeNonDialogue, showKorean, hideActions]);
   const [fontState, setFontState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [fontAttempt, setFontAttempt] = useState(0);
   useEffect(() => {
@@ -161,8 +163,8 @@ function LocalReader() {
           <section className="control-section context-section">
             <ContextPicker value={context} onChange={setContext} disabled={!script || loading} text={text} />
             <label className="toggle-row">
-              <input type="checkbox" checked={includeNonDialogue} disabled={!script || loading}
-                onChange={event => setIncludeNonDialogue(event.target.checked)} />
+              <input type="checkbox" checked={hideActions} disabled={!script || loading}
+                onChange={event => setHideActions(event.target.checked)} />
               <span className="toggle-track" aria-hidden="true" />
               <span>{text.actions}</span>
             </label>
