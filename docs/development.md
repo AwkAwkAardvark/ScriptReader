@@ -11,7 +11,7 @@ npm run dev
 
 Open the local address shown in the terminal. Choose **Open Script** and **Open Cast** (a `Tag,Name` CSV), in either order, then select a character. The cast supplies canonical names and supports characters without dialogue.
 
-Existing scripts can still be opened alone; without a cast file, names are derived from solo-tagged dialogue rows. **Remove cast** returns to that legacy mode. Both files stay in browser memory and are cleared on reload.
+Existing scripts can still be opened alone; without a cast file, names are derived from solo-tagged dialogue rows. **Remove cast** returns to that single-file fallback. Both files stay in browser memory and are cleared on reload.
 
 ```sh
 npm test
@@ -46,10 +46,24 @@ Optional browser/PDF regression review (synthetic content only): install the Pla
 
 Run `npm run dev:hosted` to exercise fictional production links with a temporary local PostgreSQL database and no cloud credentials. See the [operations guide](hosted-delivery.md#local-development-and-checks) for hosted browser checks.
 
+## Checks
+
+Choose checks appropriate to the change. Documentation-only edits need content and link checks, plus validation of any CSV examples against the parser. Application changes need relevant unit tests and a build; use browser checks for affected UI, import, hosted API, or print interactions. A separate full browser review is not required for every edit. The CI suite below still runs its configured checks. Automated fixtures remain synthetic.
+
 ## Releases and contributions
 
-Milestones 1–3 are complete at `v0.3.0`; see [release notes](../CHANGELOG.md). Future work uses short branches such as `codex/feat/audio-playback`, `codex/fix/print-layout`, or `codex/docs/operations`, with reviewed changes merged into `main`. Push focused checkpoints after relevant checks pass. Production builds follow `main`; other branches do not deploy automatically. Cloudflare is connected to GitHub and automatically runs `npm run build` and publishes `dist` after a merge into `main`. The GitHub Actions `CI` workflow runs locked dependency installation, tests, typecheck/build, the exposure check, and fictional hosted/import/offline/print browser checks for pull requests targeting `main` and pushes to `main`. It also supports manual runs. The workflow has read-only repository permissions, uses pinned action commits, and needs no Supabase or Cloudflare secrets. Generated review files stay in the temporary runner and are not uploaded. Check results are visible on each PR; making them mandatory requires a separate repository branch-protection rule. Cloudflare deployment still follows merges to `main` and does not independently wait for the push-triggered CI run. Application changes and shared documentation are recorded in commits and pull requests. Private source CSVs, secrets, generated review artifacts, and local agent guidance remain excluded from Git. Script-data publication to Supabase is a separate administrative operation.
+Milestones 1–3 are complete; the latest release tag is `v0.3.0`. See [release notes](../CHANGELOG.md).
 
-Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `perf:`, `ci:`, `build:`, and `chore:`. Use `fix:` for urgent repairs too; debugging work takes the type of the resulting change. Commit types are distinct from release tags. Use patch releases for fixes and minor releases for new capabilities; private script revisions do not automatically change the app version. Preserve existing history and version tags.
+Use short, tool-neutral branches such as `feat/audio-playback`, `fix/print-layout`, or `docs/operations`. Create focused commits at meaningful completed checkpoints, after appropriate checks, and push them regularly. A checkpoint does not need its own pull request or release tag. Merge reviewed changes into `main`, preserving history.
 
-YouTube is the current media source. Planned recordings will use owner-managed SoundCloud links and its embedded player; no custom player or recording storage is required for that approach. SoundCloud support is not implemented yet. Song-participation annotation is data preparation and may be revised independently. The custom domain and legacy website remain deferred.
+Use descriptive commit messages with Conventional Commit prefixes; common examples are `feat:`, `fix:`, and `docs:`. Commit prefixes describe the change and do not determine the release size.
+
+Each successful pull-request merge into `main` receives the next patch version, such as `0.3.0` → `0.3.1`, without separate release approval. Update the package version and lockfile consistently, record the change in the changelog, and create and push an annotated `vX.Y.Z` tag on the resulting main commit. Minor or major release changes, such as `0.3.x` → `0.4.0` or `1.0.0`, require explicit owner authorization. Do not create retrospective tags without a separate request. Private script-data revisions are independent of app versions and do not automatically create releases. Preserve existing tags and history.
+
+## CI and deployment
+
+The GitHub Actions `CI` workflow runs on pull requests targeting `main`, pushes to `main`, and manual requests. It performs locked dependency installation, tests, typecheck/build, the exposure check, and synthetic hosted/import/offline/print browser checks. It uses read-only repository permissions and pinned action commits, needs no provider secrets, and does not upload generated review artifacts. Results appear on each PR; mandatory merge checks require a separate branch-protection rule.
+
+Cloudflare automatically builds and publishes `main` with `npm run build` and output directory `dist`. Other branches do not deploy automatically. Cloudflare does not independently wait for the push-triggered CI run, so verify PR checks before merging and the production deployment afterward. See the [operations guide](hosted-delivery.md) for publishing and recovery.
+
+Keep private source files, credentials, generated review artifacts, and local guidance out of Git and application bundles. The explicitly authorized eleven-record documentation excerpt in the [CSV guide](csv-tagging-guide.md#worked-example-chapter-3) is a limited exception for documentation only. Automated fixtures remain synthetic. Script publication to Supabase is a separate administrative operation.
