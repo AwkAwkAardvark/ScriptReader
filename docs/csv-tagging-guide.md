@@ -1,126 +1,145 @@
 # Preparing a script for Script Reader
 
-Use this guide when converting an authorized script or reviewing its participation tags. The format works across productions; cast names, cast size, scene count, and songs come from the file.
+Prepare two matching UTF-8 CSV files: a **script** describing the records and their participants, and a **cast** mapping character identifiers to names. The cast defines who exists; script tags define who participates in each record. Neither file assigns students to roles.
 
-## Instructions for an assisting agent
+This is the standard input format, including for hosted publishing. Single-file import is a [fallback](#single-file-fallback), not the recommended preparation path. The reader takes character names and scenes from the input; it is not tied to one production.
 
-1. Confirm the authoritative source version and the owner's participation rules. Preserve existing dialogue, translations, stage directions, source order, and identifiers. Do not replace an accepted version with an older source.
-2. Inventory the individual characters and prepare a companion cast CSV with `Tag,Name` headers. Resolve unclear identities with the owner before tagging their material.
-3. Tag each record with its individual participants. Use explicit speakers and directions as evidence; flag uncertain membership instead of inferring it from vague wording.
-4. Review collective speeches, entrances, exits, effects, and songs separately. Resolve each group into its actual individual participants for that record.
-5. Validate both CSV files and review representative passages in the reader. Deliver the private script CSV, cast CSV, validation summary, and any unresolved participation questions.
+## Prepare the inputs
 
-Do not rewrite dialogue, invent a character's speech, add student assignments, or introduce new columns to make the file fit. Keep production files out of Git, app assets, shared fixtures, and deployment output. Use the ignored `data/` directory for local input. Only open private material when authorized; do not log full records. Automated fixtures and documentation must use synthetic text.
+1. **Choose the authoritative source.** Confirm the production and source version before editing. Work on a copy. Preserve authored dialogue, translations, directions, and source order. When revising accepted input, preserve its record identifiers. For a new conversion, assign increasing positive `No` values once.
+2. **Inventory the characters.** List each individual, including characters who only act or appear in group passages. Resolve numbered members of groups with the production owner. Keep different characters separate even if one actor plays both.
+3. **Assign identifiers and build the cast.** Give each character one stable tag and a readable name. For numbered ensemble roles, use a three-letter prefix followed by the member number: Guard 1 → `Gua1`, Merchant 2 → `Mer2`, Friend 3 → `Fri3`, Attendant 4 → `Att4`. Keep existing accepted identifiers for named roles, such as `Jas`. Resolve collisions before using a tag; do not silently renumber or rename established characters.
+4. **Convert the script into records.** Put each authored dialogue unit, standalone direction/effect, heading, or song marker in its own record. Preserve embedded line breaks inside a quoted cell rather than splitting on visual wrapping or every sentence. Fill `Scene`, `Role`, `English`, and any existing `Korean`; classify records using the supported `Type` values below. For preparation, keep scenes together in performance order and start each with a `Title` record.
+5. **Assign participants.** For dialogue, use the speaker's tag. For joint speech and directions, list the confirmed individual participants separated by semicolons. Expand a label such as “friends” using confirmed membership for that moment, not every person in the cast. Use explicit directions or owner confirmation as evidence. Flag uncertain membership rather than guessing.
+6. **Review effects and songs.** Tag only confirmed participants. A nearby line, lyric credit, or recorded voice does not establish ensemble membership. Leave global/unattributed cues untagged where appropriate. Song tags may remain blank while participation is undecided; record that as an unresolved content decision.
+7. **Export and validate.** Save both CSVs with the exact headers below. Open them in the reader, resolve structural errors, then spot-check speaker names, group membership, and representative passages. Deliver the matching files and a concise list of unresolved content questions. Publishing is a separate operation in the [operations guide](hosted-delivery.md#validate-and-publish-a-production).
 
-## CSV contract
+Do not rewrite dialogue, invent speech or participation, add student assignments, generate translations without a request, or add columns to make an input fit. Keep full production files in ignored `data/`, outside Git, app assets, automated fixtures, and deployment output. The eleven-record excerpt below is explicitly authorized for this guide only; it does not authorize publishing the rest of the script. Automated tests continue to use synthetic content.
 
-Use UTF-8 CSV with exactly these nine headers, in this order:
+## Script CSV requirements
+
+Use exactly these nine headers, in this order:
 
 ```text
 No,Scene,Role,English,Korean,Type,Notes,Tag,Optional
 ```
 
-| Column | Preparation rule |
+| Column | Parser requirement and preparation guidance |
 | --- | --- |
-| `No` | Unique, increasing positive integer in original record order. Preserve existing identifiers; gaps are permitted. For a new conversion, assign increasing identifiers once. |
-| `Scene` | Positive integer identifying the scene. Keep scenes in script order and put a `Title` record at the beginning of each scene. |
-| `Role` | Authored speaker or group label. With a cast loaded, a single tagged character displays its roster name; group labels are preserved. Blank group dialogue labels list roster names; blank group directions remain unlabeled. An untagged `Line` still needs a speaker label. Without a cast, every `Line` needs `Role`. |
-| `English` | Required primary text, including headings and cues. Preserve wording, punctuation, and embedded newlines. |
-| `Korean` | Existing Korean text, or blank. Preserve it; do not generate a translation unless separately requested. |
-| `Type` | One or more approved type tokens separated by semicolons. See below. |
-| `Notes` | Preserve source metadata, or leave blank. Do not invent an application feature or student-assignment system here. |
-| `Tag` | Participating individual character tokens separated by semicolons, or blank when no participant has been assigned. |
-| `Optional` | `Y` or blank. Optional records remain eligible for display; this is metadata, not an instruction to omit them. |
+| `No` | Unique, increasing positive safe integer; gaps are allowed. Preserve identifiers when revising an existing input. |
+| `Scene` | Positive safe integer identifying the scene. Group scenes in performance order and add opening titles as preparation guidance; the parser does not enforce that ordering or require a heading for every scene. |
+| `Role` | Authored speaker/group label. With a cast, tagged dialogue may leave this blank; untagged dialogue must supply a label. Without a cast, every `Line` requires a label. See attribution below. |
+| `English` | Nonblank primary text, including headings and cues. Preserve wording, punctuation, and embedded newlines. |
+| `Korean` | Existing Korean text, or blank. |
+| `Type` | One or more supported, case-sensitive tokens separated by semicolons, without duplicates or empty pieces. |
+| `Notes` | Source metadata, or blank; not an assignment system. |
+| `Tag` | Distinct individual identifiers separated by semicolons, or blank. Each used identifier must exist in the supplied cast. |
+| `Optional` | Exactly `Y` or blank. Metadata only; it does not omit a record from the reader. |
 
-Use a proper CSV reader/writer. Quote cells containing commas, double quotes, or newlines; escape a literal double quote by doubling it. A multiline cell remains part of one source record. Do not split a CSV on physical newlines to parse it. Avoid empty records and extra columns.
+Supported type tokens are `Line`, `StageDirection`, `Title`, `Song`, `SFX`, `Lighting`, and `VFX`. For example, a cell may contain `Line`, `StageDirection`, or `VFX; StageDirection`. The list is not a value to put in every cell. Classify from the authored record's purpose, not keyword matching. Parenthetical directions inside spoken text remain part of that `Line`; they do not require another record.
 
-Approved, case-sensitive type tokens:
+Use a CSV-aware exporter. Quote cells containing commas, double quotes, or newlines, and double any literal quotation marks inside a quoted cell. A multiline cell is still one logical record. Avoid empty records and extra columns. Do not parse CSV by splitting on physical newlines.
 
-```text
-Line; StageDirection; Title; Song; SFX; Lighting; VFX
-```
+## Character identifiers and cast CSV
 
-The list above enumerates the choices, not the required contents of every cell. `Line`, `StageDirection`, and `VFX; StageDirection` are example cell values. `Title` marks a scene heading; `Song` marks a song boundary. Parenthetical actions embedded in a dialogue record do not turn that record into a separate stage direction. Do not identify record types by searching their English text for keywords.
-
-## Individual character tags
-
-- Give each character one stable, case-sensitive token, such as `Iv` for Ivo. Use simple letters and digits for portability; tokens must not contain whitespace or commas. Do not repeat a token within a cell or leave empty pieces such as `Iv;;Te`.
-- Tag a single speaker with their token: `Iv`. Tag a joint contribution with each participant: `Iv; Te`.
-- Expand collective labels such as “both friends,” “guards,” or “everyone” into the explicit individuals participating in that particular record. The reader does not expand aliases or infer participation from `Role` or the script text.
-- Keep identity separate from casting: tokens identify characters, not the students or actors assigned to play them. Preserve separate characters even if one actor plays both.
-- Leave a global or unattributed cue untagged when appropriate. It can still appear as surrounding context. Flag a missing dialogue-participant tag for review rather than silently treating it as complete.
-
-### Companion cast CSV: authoritative identity
-
-Prepare a UTF-8 CSV with these two headers, in this order:
+Use these headers, in this order:
 
 ```text
 Tag,Name
 ```
 
-For unnamed dropdown groups, an optional third column is supported: `Tag,Name,DividerBefore`. Put `Y` on the first character of each new group and leave the other cells blank. This inserts a disabled `────────` option before that character; a divider on the first character is ignored. Keep characters in the intended display order. This metadata does not create a selectable character, name a faction, or affect participation, filtering, or allowances. Existing two-column cast files remain valid.
+Each row maps one individual tag to a nonblank canonical display name. Tags are case-sensitive and must contain no whitespace, commas, semicolons, or control characters; surrounding whitespace is trimmed. Duplicate tags are errors even if the names agree. The three-letter-plus-number convention for ensemble roles is a preparation convention, not a parser restriction: established named-character tags remain valid.
 
-Each record maps one individual token to one canonical display name. `Tag` must be nonempty and contain no whitespace, commas, or semicolons within the token. Whitespace around a token is trimmed, consistently with script tag parsing. `Name` must contain nonblank text and is preserved as supplied. Duplicate tags are errors even when the repeated names agree. Names need not be unique across different tags; the dropdown adds the tag to distinguish identical names.
+In script cells, write `Gua1` for one participant or `Gua1; Gua2` for two. Do not repeat tags or leave empty pieces such as `Gua1;;Gua2`. The reader does not expand group aliases or infer participants from `Role` or dialogue text. Missing dialogue tags need content review even though blank tags can pass parsing.
 
-Every tag used in the script must occur in the cast. Unknown or case-mismatched script tags are errors at the affected **script** record. Invalid cast rows are reported against the **cast** file. Extra cast entries are permitted and selectable; they have no matching passages until the script assigns them participation.
+Every script tag must appear in the cast. Unknown/case-mismatched tags block import. Extra cast entries are permitted and selectable even if they have no matching passages. Names need not be unique; the dropdown adds identifiers where names coincide. Keep cast rows in the intended dropdown order.
 
-The cast supplies dropdown names and individual attributions; the original script cells remain unchanged. An action-only or group-only character can be selected without an identifying dialogue row. Keep group membership explicit in the script `Tag` column; a roster does not define collective aliases or infer participation.
+An optional third header, `DividerBefore`, supports unnamed dropdown groups: `Tag,Name,DividerBefore`. Set it to `Y` on the first member of a new group and leave other cells blank. The reader inserts a disabled divider before that member, except on the first cast row. This does not define group membership or affect filtering.
 
-Use **Open Script** and **Open Cast** in either order, or drop one CSV onto its corresponding control. Either file can be replaced. An invalid supplied cast blocks the import rather than silently falling back to guessed names. **Remove cast** clears it and returns to legacy single-file behavior. Choose the matching production/version: matching identifiers alone cannot prove that two files belong together.
+The cast supplies individual attributions, including action-only or group-only characters without solo dialogue. With a cast loaded, a single tagged character displays its cast name. For multiple participants, an authored `Role` label is retained; if absent, dialogue lists their cast names while directions remain unlabeled. Original script cells are unchanged.
 
-### Legacy single-file compatibility
+## Directions and song participation
 
-Opening the script without a cast remains supported. In that mode, every token needs at least one genuine single-token `Line` row whose nonblank `Role` establishes its name. Conflicting solo speaker labels and tokens without such a row remain validation errors. Do not invent dialogue to work around this; supply a cast instead.
+Expand confirmed group actions into individual tags, including entrances and interactions. The cast contains identities, not permanent participation aliases: not every merchant must join every merchant action. If a direction does not establish the precise members, consult the production's confirmed membership or ask the owner.
 
-## Directions, effects, and songs
+For each song, confirm both who participates and what participation means for that production. Put confirmed individuals in the existing `Tag` cell. Do not invent singer/spectator categories or new columns. A blank song tag is valid while casting is pending; a video link does not establish song participants.
 
-Tag the characters whose participation is explicitly indicated or confirmed by the owner. A cue's presence near a character's line does not establish that character's participation. Recorded voices are not automatically members of a physical ensemble.
+Tags drive selection; surrounding context can include untagged records. Headings and songs are structural records and consume no context entries. For display controls, cue hiding, and print behavior, see the [development and use guide](development.md). Keep data preparation separate from changing reader behavior.
 
-For each song, ask the owner to confirm who participates and what participation means for that production. Do not infer a complete onstage cast from lyric credits, proximity, or a generic group name. Do not invent singer/spectator categories or add participation columns. Put confirmed individual tokens in the existing song `Tag` cell. If the assignment is pending, leave it blank and report it as unresolved; blank song tags are valid.
+## Worked example: Chapter 3
 
-When reviewing the result, remember:
+The first ten records of Chapter 3 are followed immediately by its Butter song marker. This teaching excerpt is numbered **1–11**; the full source retains its original identifiers. Scene values, wording, translations, and participation tags are preserved. The jump to the song is intentional; the example does not represent an uninterrupted passage.
 
-- Dialogue matches select passages for their tagged characters. With **Hide actions & cues** off (the default), tagged non-dialogue can also select passages.
-- By default, selected context includes untagged directions and effects. **Hide actions & cues** removes standalone cues from the displayed/printed result while leaving inline parentheticals in dialogue visible. Each original nonstructural source row still counts as one context entry; hidden cues are not replaced by extra dialogue.
-- Scene and song markers consume no context entries. Context expansion stops at both scene changes and song boundaries.
-- An included scene shows its heading and its song markers. A boundary song belongs to the passage that reaches it; passages sharing that song merge without pulling additional context across it. Omitted source rows and scene changes still separate passages.
-- Korean display uses the existing `Korean` column. Changing interface language does not translate or rewrite script content.
-
-## Synthetic example
-
-The following invented pair uses `Iv` (Ivo), `Te` (Tess), and `Sp` (Silent Sprite). The sprite has an action but no dialogue. Assume the owner explicitly confirmed Ivo and Tess for the group action and song. The first dialogue cell demonstrates a quoted embedded newline.
-
-Cast CSV:
+First build the cast from the individuals referenced by these records, including those present only in directions:
 
 ```csv
 Tag,Name
-Iv,Ivo
-Te,Tess
-Sp,Silent Sprite
+Fri1,Friend Uno
+Fri2,Friend Dos
+Fri3,Friend Tres
+Fri4,Friend Cuattro
+Jas,Jasmine
+Att1,Attendant Alena
+Att2,Attendant Bree
+Att3,Attendant Chloe
+Att4,Attendant Daisy
+Mer1,Merchant Sept
+Mer2,Merchant Huit
+Mer3,Merchant Neuf
+Mer4,Merchant Dix
+Gua1,Guard Eins
+Gua2,Guard Zwei
+Gua3,Guard Drei
+Gua4,Guard Vier
 ```
 
-Script CSV:
+Then prepare the script:
 
 ```csv
 No,Scene,Role,English,Korean,Type,Notes,Tag,Optional
-1,1,,The lantern room,,Title,,,
-2,1,Ivo,"The lantern is ready,
-shall we begin?",등불이 준비됐어요.,Line,,Iv,
-3,1,Tess,Let us open the shutters.,덧문을 열어요.,Line,,Te,
-4,1,Both friends,One small light is enough.,,Line,,Iv; Te,
-5,1,,(Ivo and Tess carry the lantern to the window.),,StageDirection,,Iv; Te,
-6,1,,A distant bell rings.,,SFX,,,
-7,1,,A light for the journey,,Song,,Iv; Te,
-8,1,Ivo,The path is clear now.,,Line,,Iv,Y
-9,2,,The garden gate,,Title,,,
-10,2,Tess,We can leave when you are ready.,,Line,,Te,
-11,2,,(A small sprite lifts the latch.),,StageDirection,,Sp,
+1,3,,Market Mayhem,,Title,,,
+2,3,,"(In the marketplace, merchants are peddling their goods, attendants are shopping, guards are patrolling and princess Jasmine is walking in disguise)","(시끌벅적한 시장; 상인들은 물건들을 팔고, 궁인들은 물건들을 사고, 근위대는 순찰을 하고 있다. 분장한 자스민이 시장을 돌아다닌다.)",StageDirection,,Jas; Att1; Att2; Att3; Att4; Gua1; Gua2; Gua3; Gua4; Mer1; Mer2; Mer3; Mer4,
+3,3,Merchant Sept,Beef! Pork! Chicken! Come get your meat!,소고기! 돼지고기! 닭고기! 고기 사세요!,Line,,Mer1,
+4,3,Merchant Huit,"Fresh fish! We live in the desert, but I’ve got fresh fish!",싱싱한 생선 팝니다! 사막이지만 싱싱한 생선이 있습니다!,Line,,Mer2,
+5,3,Merchant Neuf,Come get your vegetables! 2 dollars each! Three for 7 dollars!,"채소 사소! 하나에 2달러, 3개에 7달러!",Line,,Mer3,
+6,3,,(Aladdin’s friends enter),(친구들 입장),StageDirection,,Fri1; Fri2; Fri3; Fri4,
+7,3,Friend Uno,"Oh, I love the marketplace in the morning.",음~ 아침 시장만큼 좋은 곳이 없지.,Line,,Fri1,
+8,3,Friend Dos,I’m so hungry. Let’s get some breakfast.,"배고프니까, 뭐 좀 먹자.",Line,,Fri2,
+9,3,,(Friends walk over to the merchants),(친구들이 상인에게 말을 건다),StageDirection,,Fri1; Fri2; Fri3; Fri4; Mer1; Mer2; Mer3; Mer4,
+10,3,Friend Tres,"Excuse me, could I have some fruit, please?",실례합니다. 과일 좀 시식해 볼 수 있을까요?,Line,,Fri3,
+11,3,,(Song: Butter),,Song,,,
 ```
 
-## Validation and owner review
+Read the example as a preparation exercise:
 
-Open both files with **Open Script** and **Open Cast**. The reader validates CSV structure, cast identifiers/names, script-to-cast references, numeric source identifiers, required text, supported types, tag syntax, and `Optional` values. Diagnostics identify logical CSV records, including the header as record 1; embedded cell newlines do not change this numbering.
+- Record 1 is a scene title and has no participant tags.
+- Record 2 lists Jasmine plus the confirmed attendants, guards, and merchants. The prose alone does not identify every numbered member; retain the approved membership rather than deriving it from the group words.
+- Records 3–5 map individual merchant names to `Mer1`–`Mer3` through the cast.
+- Record 6 tags all four confirmed friends, including `Fri4`, who has no spoken line in this excerpt.
+- Record 9 expands both participating groups into their individual tags. No collective alias is passed to the reader.
+- Record 11 is `Song`, with participation left blank pending casting. Do not fill that cell merely to make the example look complete.
 
-Also check content decisions the parser cannot establish: correct speakers, missing participants, resolved collective membership, scene placement, and owner-confirmed song participation. Do not hard-code expected record counts or character names from another production.
+### Optional hosted media CSV
 
-For acceptance, sample a character with substantial dialogue, one with sparse dialogue, a character participating in group actions, and relevant scene/song boundaries. Try zero context, asymmetric context, actions/cues OFF and ON, and Korean display where provided. Report unresolved content decisions separately from parser or application failures. Exhaustive manual review of every character in every scene is not required.
+For this example, associate song record **11** with [BTS (방탄소년단) ‘Butter’ Official MV, published by HYBE LABELS](https://www.youtube.com/watch?v=WMweEpGlu_U):
+
+```csv
+No,YouTubeURL
+11,https://www.youtube.com/watch?v=WMweEpGlu_U
+```
+
+The number references the example's song identifier. For a full production, use that production's actual song `No`. Media is a separate hosted-publishing input, not an extra script column or a local-import control. See [media validation and publishing](hosted-delivery.md#validate-and-publish-a-production).
+
+## Validation and review
+
+Open **Script** and **Cast** in either order using their file controls, or drop each CSV onto its corresponding control. Either can be replaced. Check that both belong to the intended production/version; matching identifiers alone cannot prove that.
+
+Structural problems block import: incorrect headers/CSV structure, invalid or duplicate identifiers, missing required text, unsupported types, malformed tags, unknown cast references, and invalid `Optional`/`DividerBefore` values. An invalid supplied cast is not silently discarded. Diagnostics identify logical CSV records, counting the header as record 1; embedded newlines do not change that count.
+
+Content questions require human review: incorrect speakers, missing tags, uncertain group membership, scene placement, and pending song casting. The parser cannot establish those facts. Keep unresolved questions distinct from parser failures; blank song tags do not fail validation.
+
+For manual acceptance, spot-check substantial dialogue, sparse dialogue, group actions, and scene/song boundaries. Try zero and asymmetric context, **Hide actions & cues** off and on, and Korean display where provided. Full review of every character in every scene is not required. Current production UI reviews use Scenes 1–3, with `Gua1` as the default representative role; this is a review sample, not a schema requirement or automated fixture.
+
+## Single-file fallback
+
+Local script import without a cast remains supported. Each token then needs a genuine single-token `Line` record whose nonblank `Role` supplies its name. Missing solo identities and conflicting labels are validation errors. **Remove cast** returns to this fallback. Do not invent dialogue to identify action-only characters; supply the cast instead. Hosted publishing requires both script and cast.
