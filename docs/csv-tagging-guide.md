@@ -14,7 +14,7 @@ This is the standard input format, including for hosted publishing. Single-file 
 6. **Review effects and songs.** Tag only confirmed participants. A nearby line, lyric credit, or recorded voice does not establish ensemble membership. Leave global/unattributed cues untagged where appropriate. Song tags may remain blank while participation is undecided; record that as an unresolved content decision.
 7. **Export and validate.** Save both CSVs with the exact headers below. Open them in the reader, resolve structural errors, then spot-check speaker names, group membership, and representative passages. Deliver the matching files and a concise list of unresolved content questions. Publishing is a separate operation in the [operations guide](hosted-delivery.md#validate-and-publish-a-production).
 
-Do not rewrite dialogue, invent speech or participation, add student assignments, generate translations without a request, or add columns to make an input fit. Keep full production files in ignored `data/`, outside Git, app assets, automated fixtures, and deployment output. The eleven-record excerpt below is explicitly authorized for this guide only; it does not authorize publishing the rest of the script. Automated tests continue to use synthetic content.
+Preserve authored text and confirmed participation. Student assignments are separate from character identities. Translations and schema extensions are separate tasks; they are not prerequisites for preparing these inputs.
 
 ## Script CSV requirements
 
@@ -138,7 +138,7 @@ Structural problems block import: incorrect headers/CSV structure, invalid or du
 
 Content questions require human review: incorrect speakers, missing tags, uncertain group membership, scene placement, and pending song casting. The parser cannot establish those facts. Keep unresolved questions distinct from parser failures; blank song tags do not fail validation.
 
-For manual acceptance, spot-check substantial dialogue, sparse dialogue, group actions, and scene/song boundaries. Try zero and asymmetric context, **Hide actions & cues** off and on, and Korean display where provided. Full review of every character in every scene is not required. Current production UI reviews use Scenes 1–3, with `Gua1` as the default representative role; this is a review sample, not a schema requirement or automated fixture.
+Suggested manual checks include substantial dialogue, sparse dialogue, group actions, scene/song boundaries, zero/asymmetric context, **Hide actions & cues** off and on, and Korean display where provided. Full review of every character in every scene is not required.
 
 ## Single-file fallback
 
