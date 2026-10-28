@@ -15,10 +15,7 @@ npm run dev
 
 ## Documentation
 
-- [Local use, print, offline demo, tests, and contributions](docs/development.md)
+- [Development, architecture, print, and releases](docs/development.md)
 - [Hosting, publishing, and recovery](docs/hosted-delivery.md)
 - [CSV preparation and character tagging](docs/csv-tagging-guide.md)
-- [Security boundaries and exposure checks](docs/security.md)
 - [Release notes](CHANGELOG.md)
-
-Private scripts, cast files, credentials, and review artifacts stay out of Git and application bundles.
