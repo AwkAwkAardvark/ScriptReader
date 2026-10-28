@@ -72,6 +72,24 @@ try {
     assert.equal(await page.locator('.settings-summary').getAttribute('aria-expanded'), 'false');
     assert.equal(await page.locator('#reader-title').isVisible(), false);
     assert.equal(await page.locator('.production-title').evaluate(e => e.clientWidth), 1);
+    // Opening the body must not move/reflow its header or change the panel corners.
+    const headerGeometry = () => page.locator('.controls').evaluate(panel => {
+      const origin = panel.getBoundingClientRect();
+      return { radius: getComputedStyle(panel).borderRadius, boxes: ['.settings-summary', '.settings-title', '.menu-icon'].map(selector => {
+        const rect = panel.querySelector(selector)!.getBoundingClientRect();
+        return { x: rect.x - origin.x, y: rect.y - origin.y, width: rect.width, height: rect.height };
+      }) };
+    });
+    const closedHeader = await headerGeometry();
+    const closedHeight = await page.locator('.controls').evaluate(panel => panel.clientHeight);
+    await page.locator('.settings-summary').click();
+    assert.equal(await page.getByLabel('Character', { exact: true }).isVisible(), true);
+    assert.deepEqual(await headerGeometry(), closedHeader);
+    assert.ok(await page.locator('.controls').evaluate(panel => panel.clientHeight) > closedHeight);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: join(out, `hosted-mobile-expanded-${width}.png`), fullPage: true });
+    await page.locator('.settings-summary').click();
+    assert.deepEqual(await headerGeometry(), closedHeader);
     await page.screenshot({ path: join(out, `hosted-mobile-${width}.png`), fullPage: true });
   }
   async function openSettings() { const summary = page.locator('.settings-summary'); if (await summary.isVisible() && await summary.getAttribute('aria-expanded') === 'false') await summary.click(); }
