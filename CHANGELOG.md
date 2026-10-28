@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.2 — 2026-10-28
+
+- Consolidate shared documentation into preparation, development, and hosting guides; keep operational account and incident notes local.
+- Explain script/cast preparation with an eleven-record Chapter 3 example and the official BTS Butter video association.
+- Document tool-neutral contribution branches, frequent checkpoints, and patch releases; complete the preceding release notes.
+
 ## v0.3.1 — 2026-10-28
 
 Changes since v0.3.0:
