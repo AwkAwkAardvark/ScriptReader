@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1 — 2026-10-28
+
+- Keep mobile settings corners, title wrapping, and menu-icon placement consistent when expanded or collapsed.
+
 ## v0.3.0 — 2026-10-26
 
 - Hosted production links backed by Cloudflare Pages Functions and private Supabase storage, with no student login.
