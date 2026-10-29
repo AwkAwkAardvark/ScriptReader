@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.7 — 2026-10-29
+
+- Replace fictional staff CSV examples with selected Chapter 3 merchant records, their actual cast mappings, and the Butter marker with its official video association; preserve source identifiers.
+- Clarify three-letter tags for new named roles and three-letter-plus-number tags for ensemble members, while preserving established identifiers.
+
 ## v0.3.6 — 2026-10-29
 
 - Move published song-link management to a dedicated Songs page, grouped in one collapsed card per selected production.
