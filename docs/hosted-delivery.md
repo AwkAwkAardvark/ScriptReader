@@ -57,7 +57,7 @@ API calls clean up expired allowance/rate buckets. The retention migration also 
 
 ## Validate and publish a production
 
-Prepare matching script/cast files and an optional complete media file using the [input preparation guide](csv-tagging-guide.md).
+Prepare matching script/cast files and an optional media update file using the [input preparation guide](csv-tagging-guide.md).
 
 ```sh
 npm run publish:script -- --slug paper-garden --title "The paper garden" --script /path/to/script.csv --cast /path/to/cast.csv --media /path/to/media.csv
@@ -73,7 +73,9 @@ No,YouTubeURL
 
 Provide one existing Song record number and an HTTPS YouTube URL per row. Only YouTube watch, short-link, shorts, or embed URLs with valid video IDs are accepted; duplicate song numbers and non-song associations fail validation. Song membership tags are not inferred or changed. URLs identify videos, not permission to stream them: embedding may still be restricted by the uploader or browser, so the reader retains an external link.
 
-After validation, adding `--publish` explicitly performs the publication. Every revision is self-contained: omitting the media file means **no media associations in the new revision**, rather than carrying potentially incorrect record-number mappings from an earlier script.
+After validation, adding `--publish` explicitly performs the publication. Existing links are retained by unique song-title matches after trimming, collapsing whitespace, and ignoring case; record numbers alone never establish a match. Supplied media rows override only the specified songs. New productions begin without associations. Each saved revision still contains a complete resolved snapshot.
+
+The fallback publisher checks existing associations when credentials are configured. Without credentials, it can validate the files but cannot check existing links. Renamed, repeated, or removed linked songs stop publication until mappings have been reviewed and `--acknowledge-unmatched` is explicitly supplied. Use the media CSV to reassign links to new song numbers; `--remove-media 9,17` explicitly removes links from those Song record numbers. Blank URLs are invalid, not a request to delete links. Concurrent changes require revalidation.
 
 New visits use the active revision. An existing reader does not mix revisions: if a later request finds an update, it asks for reload. Previously downloaded text can remain in memory until reload; this is not remote revocation of content already delivered.
 
@@ -97,10 +99,18 @@ For succession, an existing master can promote a successor, the successor can si
 
 ## Manage productions in the browser
 
-Approved admins and masters can open `/admin` to list productions, edit their reader titles and initial context (0–5 lines before/after), and explicitly choose the student homepage. Selecting **Blank / file import** opens `/import`. Publishing does not change the homepage, and previous production links remain usable. Treat each year's production as a separate entry, with its year in the title and new link identifier; updates during that production become revisions of the same entry.
+Open `/admin` for sign-in, account status, and navigation. Approved admins and masters use `/admin/scripts` to select a production from a dropdown, edit its reader title and initial context (0–5 lines before/after), and explicitly choose the student homepage. Selecting **Blank / file import** opens `/import`. Publishing does not change the homepage, and previous production links remain usable. Treat each year's production as a separate entry, with its year in the title and new link identifier; updates during that production become revisions of the same entry.
 
-For a new production, choose **New production** and supply a title, link identifier, script CSV, cast CSV, and optional YouTube mapping CSV. For an existing production, choose **Manage** and upload the complete matching file set. Use **Validate and preview**, review the character view, then explicitly confirm **Publish**. The server validates the files again and atomically creates the revision. Omitting media clears the new revision's video associations. Validation/publication requests must fit within 5 MiB, including request encoding; unfinished uploads are held only in browser memory.
+For a new production, choose **New production** and supply a title, link identifier, script CSV, cast CSV, and optional YouTube mapping CSV. For an existing production, select it from the dropdown and upload matching script and cast files, with optional media updates. The selected production is included in the page URL for refresh and direct links. Use **Validate and preview**, review the character view, then explicitly confirm **Publish**. The server validates the files again and atomically creates the revision. Omitting media retains uniquely matched existing links. The song list shows the resolved associations, and unmatched old links require review before publication. Validation/publication requests must fit within 5 MiB, including request encoding; unfinished uploads are held only in browser memory.
 
 Titles and initial context can be saved without uploading files again. Defaults apply when a reader loads the production; students can still adjust them. Conflicting changes are rejected: refresh the list before editing a production or homepage that another admin has changed. Production link identifiers remain fixed after creation. The local publisher above remains available as a fallback.
 
 Administrative operations check current approved membership, including inside database mutations. The production-management migration adds protected homepage storage and per-production settings. The public homepage API returns only the selected destination, never the directory. Account management remains master-only. Student assignments and full-script staff viewing are separate features.
+
+### Song links and separate admin pages
+
+The Scripts page lists every detected Song record and its current association, independently of the selected preview character. Edit a URL to replace a link, choose **Remove link** to remove it explicitly, or undo the change. **Save song links** creates a new immutable revision without re-uploading the script or cast. Links are scoped to a production; other productions are not searched automatically.
+
+When replacing files, review the new revision's song list. Renamed or repeated titles are not automatically assigned videos: select an existing video or enter a URL for the intended song, revalidate edits, and acknowledge any old linked songs that could not be matched. The preview uses these resolved links, and the server repeats resolution against the checked current revision before publication.
+
+Only masters can open account management at `/admin/accounts`. Approved admins have production controls but no account directory. Navigation and direct routes preserve these permission checks. Full-script staff viewing and student assignments remain separate features.

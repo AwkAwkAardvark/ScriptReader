@@ -207,7 +207,7 @@ function LocalReader() {
 export default function App() {
   const route = readerRoute(window.location.pathname, window.location.protocol, import.meta.env.DEV);
   if (route.kind === 'home') return <Home />;
-  if (route.kind === 'admin') return <AdminPanel />;
+  if (route.kind === 'admin') return <AdminPanel page={route.page} />;
   if (route.kind === 'production') return <HostedReader slug={route.slug} />;
   if (route.kind === 'local') return <LocalReader />;
   return <main className="app-shell"><h1>Page not found</h1><a href="/">Script Reader</a></main>;

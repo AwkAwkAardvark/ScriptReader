@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.5 — 2026-10-29
+
+- Separate administration into account/status, Scripts, and master-only Accounts pages; use a production dropdown with refreshable direct links.
+- Retain song links through unique title matches when replacing scripts; media CSV rows now override only supplied associations.
+- Add song-link inspection, explicit replacement/removal, unmatched-song review, and independent immutable link revisions.
+- Align the fallback publisher, validation/preview, documentation, and browser checks with the new retention behavior.
+
 ## 0.3.4
 
 - Add private production administration with CSV validation, interactive preview, and explicit publication for approved staff.

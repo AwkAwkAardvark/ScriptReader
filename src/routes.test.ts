@@ -8,8 +8,10 @@ describe('reader entry points', () => {
     expect(readerRoute('/p/another-script', 'https:', false)).toEqual({kind:'production',slug:'another-script'});
   });
   it('opens administration only at its explicit hosted route', () => {
-    expect(readerRoute('/admin', 'https:', false)).toEqual({kind:'admin'});
-    expect(readerRoute('/admin/', 'https:', false)).toEqual({kind:'admin'});
+    expect(readerRoute('/admin', 'https:', false)).toEqual({kind:'admin',page:'overview'});
+    expect(readerRoute('/admin/', 'https:', false)).toEqual({kind:'admin',page:'overview'});
+    expect(readerRoute('/admin/scripts','https:',false)).toEqual({kind:'admin',page:'scripts'});
+    expect(readerRoute('/admin/accounts','https:',false)).toEqual({kind:'admin',page:'accounts'});
     expect(readerRoute('/admin/nope', 'https:', false)).toEqual({kind:'not-found'});
     expect(readerRoute('/admin', 'file:', false)).toEqual({kind:'local'});
   });

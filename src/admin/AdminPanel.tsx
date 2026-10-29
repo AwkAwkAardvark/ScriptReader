@@ -6,8 +6,8 @@ import { adminCopy } from './copy';
 import { adminClient, AdminFailure } from './client';
 import type { AdminAccount, AdminAction, AdminError, AdminSession } from './protocol';
 
-export function AdminPanel() {
-  const [locale, setLocale] = useState<Locale>('en');
+export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accounts'}) {
+  const [locale, setLocale] = useState<Locale>(new URLSearchParams(window.location.search).get('lang')==='ko'?'ko':'en');
   const text = adminCopy[locale];
   const [session, setSession] = useState<AdminSession | null>(null);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
@@ -24,7 +24,7 @@ export function AdminPanel() {
     const next = await adminClient.me(signal);
     if (signal?.aborted) return;
     setSession(next);setAccounts([]);setSelected({});
-    if (next.account?.role === 'master' && next.account.status === 'approved') {
+    if (page === 'accounts' && next.account?.role === 'master' && next.account.status === 'approved') {
       const result = await adminClient.accounts(signal);
       if (!signal?.aborted) setAccounts(result.accounts);
     }
@@ -35,7 +35,7 @@ export function AdminPanel() {
     void refresh(controller.signal).catch(value => { if (!controller.signal.aborted) failure(value); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, []);
+  }, [page]);
   useEffect(() => { document.documentElement.lang = locale;document.title = `${copy[locale].app} — ${text.title}`; }, [locale, text.title]);
   useEffect(() => { if (change && !dialog.current?.open) dialog.current?.showModal();else if (!change) dialog.current?.close(); }, [change]);
 
@@ -78,21 +78,23 @@ export function AdminPanel() {
       </div>
     </header>
     <main className="admin-main" aria-busy={loading || busy}>
-      <div className="admin-heading"><h1>{text.title}</h1><a href="/">{text.reader}</a></div>
+      <div className="admin-heading"><h1>{page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='accounts'?text.accounts:text.title}</h1><a href="/">{text.reader}</a></div>
       {error && <p className="admin-error" role="alert">{text.errors[error]}</p>}
       {!error && new URLSearchParams(window.location.search).get('auth') === 'failed' && !session?.user && <p className="admin-error" role="alert">{text.loginFailed}</p>}
       {loading ? <p role="status">{text.loading}</p> : !session?.user ? <section className="admin-card admin-signin">
         {session?.configured === false ? <p role="status">{text.setup}</p> : <button className="admin-primary" disabled={busy} onClick={() => void login()}>{text.login}</button>}
       </section> : <>
-        <section className="admin-card admin-session">
+        <nav className="admin-navigation" aria-label={locale==='ko'?'관리 메뉴':'Administration navigation'}>{([['overview','/admin',text.title],['scripts','/admin/scripts',locale==='ko'?'공연 대본':'Scripts'],...(master?[['accounts','/admin/accounts',text.accounts]]:[])]).filter(([key])=>key==='overview'||session.account?.status==='approved').map(([key,href,label])=><a key={key} href={`${href}${locale==='ko'?'?lang=ko':''}`} aria-current={page===key?'page':undefined}>{label}</a>)}</nav>
+        {(page==='overview'||session.account?.status!=='approved')&&<section className="admin-card admin-session">
           <div className="admin-identity"><strong>{session.user.name}</strong><span>{session.user.email}</span><span className="admin-badge">{session.account ? statusText(session.account) : text.noAccess}</span></div>
           <div className="admin-session-actions">
             {(!session.account || session.account.status === 'revoked') && <button className="admin-primary" disabled={busy} onClick={() => void run(adminClient.request)}>{session.account ? text.requestAgain : text.request}</button>}
             <button className="admin-secondary" disabled={busy} onClick={() => void run(adminClient.logout)}>{text.logout}</button>
           </div>
-        </section>
-        {session.account?.status === 'approved' && <ProductionManager locale={locale} />}
-        {master && <section className="admin-card"><div className="admin-heading"><h2>{text.accounts}</h2><span className="admin-badge">{text.masters(masterCount)}</span></div>
+        </section>}
+        {page==='scripts' && session.account?.status === 'approved' && <ProductionManager locale={locale} />}
+        {page==='accounts' && !master && !error && <p role="alert">{text.errors.forbidden}</p>}
+        {page==='accounts' && master && <section className="admin-card"><div className="admin-heading"><h2>{locale==='ko'?'권한 관리':'Access management'}</h2><span className="admin-badge">{text.masters(masterCount)}</span></div>
           {(['pending', 'approved', 'revoked'] as const).map(status => <section className="admin-account-group" key={status}>
             <h3>{status === 'pending' ? text.requests : status === 'approved' ? text.active : text.removed}</h3>
             {accounts.some(account => account.status === status) ? <ul>{accounts.filter(account => account.status === status).map(row)}</ul> : <p className="admin-empty">{text.empty}</p>}

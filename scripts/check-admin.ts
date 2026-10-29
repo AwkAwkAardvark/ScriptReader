@@ -34,6 +34,7 @@ try {
   await owner.goto(demo.origin + '/admin');
   assert.equal((await owner.request.get(demo.origin + '/api/admin/accounts')).status(), 401);
   await owner.getByRole('button', { name: 'Continue with Google' }).click();
+  await owner.getByRole('link', { name: 'Admin accounts', exact: true }).click();
   await owner.getByRole('heading', { name: 'Admin accounts', exact: true }).waitFor();
   await staff.goto(demo.origin + '/api/admin/auth/callback?code=staff');
   await staff.getByRole('button', { name: 'Request access', exact: true }).click();
@@ -46,6 +47,7 @@ try {
   await staffRow.locator('.admin-badge').filter({ hasText: /^Admin$/ }).waitFor();
   await staff.reload();await staff.getByRole('button', { name: 'Sign out' }).waitFor();
   assert.equal(await staff.getByRole('heading', { name: 'Admin accounts', exact: true }).count(), 0);
+  await staff.getByRole('link',{name:'Scripts',exact:true}).click();
   // Approved staff can publish, but cannot manage accounts. All files are fictional.
   await staff.getByRole('button', { name: 'New production', exact: true }).click();
   await staff.getByLabel('Reader title', { exact: true }).fill('Workshop 2027');
@@ -68,10 +70,11 @@ try {
   await staff.getByRole('button',{name:'ENG',exact:true}).click();
   await staff.getByRole('button',{name:'Publish',exact:true}).click();
   await staff.getByRole('dialog').getByRole('button',{name:'Publish',exact:true}).click();
+  await staff.getByLabel('Choose a production',{exact:true}).locator('option[value=workshop-2027]').waitFor({state:'attached'});
+  await staff.getByLabel('Choose a production',{exact:true}).selectOption('workshop-2027');
   await staff.getByRole('link',{name:'/p/workshop-2027',exact:true}).waitFor();
   await staff.getByLabel('Student homepage',{exact:true}).selectOption('workshop-2027');
-  await staff.getByRole('button',{name:'Save homepage',exact:true}).click();
-  await staff.getByText('Current home',{exact:true}).waitFor();
+  await Promise.all([staff.waitForResponse(r=>r.url().endsWith('/api/admin/home')&&r.request().method()==='PATCH'),staff.getByRole('button',{name:'Save homepage',exact:true}).click()]);
   assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/p/workshop-2027'});
   const reader=await browser.newPage();
   await reader.goto(demo.origin+'/p/workshop-2027');
@@ -83,12 +86,24 @@ try {
   await reader.getByLabel('Character',{exact:true}).selectOption('Mi');
   assert.equal(await reader.getByLabel('Before',{exact:true}).inputValue(),'3');
   await reader.close();
-  await staff.getByRole('button',{name:'Manage: Workshop 2027',exact:true}).click();
+  await staff.getByLabel('Choose a production',{exact:true}).selectOption('workshop-2027');
+  await staff.getByRole('heading',{name:'Workshop 2027',exact:true}).waitFor();
+  await staff.waitForFunction(()=>!document.querySelector<HTMLFieldSetElement>('.production-editor fieldset')?.disabled);
+  assert.ok(staff.url().includes('production=workshop-2027'));
+  await staff.reload();
+  await staff.getByLabel('YouTube URL: 9',{exact:true}).fill('https://youtu.be/abcdefghijk');
+  await staff.getByRole('button',{name:'Save song links',exact:true}).click();
+  await staff.getByRole('dialog').getByRole('button',{name:'Confirm',exact:true}).click();
+  await staff.getByLabel('Choose a production',{exact:true}).selectOption('workshop-2027');
+  await staff.getByLabel('YouTube URL: 9',{exact:true}).waitFor();
+  assert.equal(await staff.getByLabel('YouTube URL: 9',{exact:true}).inputValue(),'https://youtu.be/abcdefghijk');
+  const songMetadata=await (await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/songs')).json();
+  assert.equal(songMetadata.songs.length,3);assert.equal(songMetadata.payload,undefined);
   await staff.getByLabel('Reader title',{exact:true}).fill('Workshop 2027 revised');
   await staff.getByRole('button',{name:'Save production settings',exact:true}).click();
-  await staff.getByRole('button',{name:'Manage: Workshop 2027 revised',exact:true}).waitFor();
+  await staff.getByLabel('Choose a production',{exact:true}).locator('option').filter({hasText:'Workshop 2027 revised'}).waitFor({state:'attached'});
   await staff.getByLabel('Student homepage',{exact:true}).selectOption('');
-  await staff.getByRole('button',{name:'Save homepage',exact:true}).click();
+  await Promise.all([staff.waitForResponse(r=>r.url().endsWith('/api/admin/home')&&r.request().method()==='PATCH'),staff.getByRole('button',{name:'Save homepage',exact:true}).click()]);
   await staff.getByRole('button',{name:'Save homepage',exact:true}).waitFor();
   await staff.waitForFunction(()=>document.querySelector<HTMLButtonElement>('#student-home + button')?.disabled===true);
   assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/import'});
@@ -96,7 +111,7 @@ try {
   await staffRow.getByRole('button', { name: 'Save access' }).click();
   await owner.getByRole('dialog').getByRole('button', { name: 'Confirm', exact: true }).click();
   await staffRow.locator('.admin-badge').filter({ hasText: /^Master$/ }).waitFor();
-  await staff.reload();await staff.getByRole('heading', { name: 'Admin accounts', exact: true }).waitFor();
+  await staff.reload();await staff.getByRole('link',{name:'Admin accounts',exact:true}).click();await staff.getByRole('heading', { name: 'Admin accounts', exact: true }).waitFor();
   for (const width of [320, 390, 1440]) {
     await owner.setViewportSize({ width, height: 1000 });
     assert.ok(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
@@ -122,6 +137,7 @@ try {
   await staff.getByRole('button', { name: '한국어' }).click();
   await staff.getByRole('heading', { name: '관리자 계정' }).waitFor();
   await staff.screenshot({ path: join(out, 'master-ko-390.png'), fullPage: true });
+  await staff.goto(demo.origin+'/admin?lang=ko');
   await staff.getByRole('button', { name: '로그아웃' }).click();
   await staff.getByRole('button', { name: 'Google로 로그인' }).waitFor();
   assert.equal((await staff.request.get(demo.origin + '/api/admin/accounts')).status(), 401);

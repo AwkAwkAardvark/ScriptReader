@@ -27,31 +27,31 @@ afterEach(() => { window.history.replaceState({}, '', '/'); });
 
 describe('administration dashboard', () => {
   it('shows Google sign-in without exposing account data or content controls', async () => {
-    render(<AdminPanel />);await screen.findByRole('button', { name: 'Continue with Google' });
-    expect(adminClient.accounts).not.toHaveBeenCalled();expect(screen.queryByText('Admin accounts')).not.toBeInTheDocument();
+    render(<AdminPanel page="accounts" />);await screen.findByRole('button', { name: 'Continue with Google' });
+    expect(adminClient.accounts).not.toHaveBeenCalled();expect(document.querySelector('.admin-account-group')).toBeNull();
     expect(screen.queryByRole('button', { name: /publish|upload/i })).not.toBeInTheDocument();
   });
   it('shows an honest configuration state and a generic callback error', async () => {
     vi.mocked(adminClient.me).mockResolvedValue({ configured: false, user: null, account: null });
     window.history.replaceState({}, '', '/admin?auth=failed&error_description=private-data');
-    render(<AdminPanel />);await screen.findByText('Google sign-in is not configured yet.');
+    render(<AdminPanel page="accounts" />);await screen.findByText('Google sign-in is not configured yet.');
     expect(screen.getByRole('alert')).toHaveTextContent('Sign-in did not complete.');expect(document.body.textContent).not.toContain('private-data');
   });
   it('submits an access request but cannot claim a role', async () => {
     vi.mocked(adminClient.me).mockResolvedValueOnce(signedIn(null)).mockResolvedValue(signedIn(account(id)));
-    render(<AdminPanel />);fireEvent.click(await screen.findByRole('button', { name: 'Request access' }));
+    render(<AdminPanel page="accounts" />);fireEvent.click(await screen.findByRole('button', { name: 'Request access' }));
     await screen.findByText('Awaiting approval');expect(adminClient.request).toHaveBeenCalledWith();expect(adminClient.change).not.toHaveBeenCalled();
   });
   it('allows revoked users to request again without restoring their old role', async () => {
     vi.mocked(adminClient.me).mockResolvedValueOnce(signedIn(account(id, 'admin', 'revoked'))).mockResolvedValue(signedIn(account(id)));
-    render(<AdminPanel />);fireEvent.click(await screen.findByRole('button', { name: 'Request access again' }));
+    render(<AdminPanel page="accounts" />);fireEvent.click(await screen.findByRole('button', { name: 'Request access again' }));
     await screen.findByText('Awaiting approval');expect(adminClient.accounts).not.toHaveBeenCalled();
   });
   it('lets masters grant roles through a confirmation dialog and renders names safely', async () => {
     const owner = account(id, 'master', 'approved');
     vi.mocked(adminClient.me).mockResolvedValue(signedIn(owner));
     vi.mocked(adminClient.accounts).mockResolvedValue({ accounts: [owner, account(candidate)] });
-    render(<AdminPanel />);await screen.findByText('Admin accounts');
+    render(<AdminPanel page="accounts" />);await screen.findByRole('heading',{name:'Admin accounts'});
     const selector = await screen.findByRole('combobox', { name: 'Access for staff@example.test' });
     fireEvent.change(selector, { target: { value: 'master' } });fireEvent.click(screen.getByRole('button', { name: 'Grant access' }));
     const dialog = screen.getByRole('dialog');expect(dialog).toHaveTextContent('staff@example.test');
@@ -63,41 +63,49 @@ describe('administration dashboard', () => {
   it('does not offer ordinary staff an account directory', async () => {
     vi.mocked(adminClient.me).mockResolvedValue(signedIn(account(id, 'admin', 'approved')));
     render(<AdminPanel />);await screen.findByRole('button', { name: 'Sign out' });
-    expect(adminClient.accounts).not.toHaveBeenCalled();expect(screen.queryByText('Admin accounts')).not.toBeInTheDocument();
+    expect(adminClient.accounts).not.toHaveBeenCalled();expect(document.querySelector('.admin-account-group')).toBeNull();
   });
   it('disables last-master removal and translates the interface', async () => {
     const owner = account(id, 'master', 'approved');
     vi.mocked(adminClient.me).mockResolvedValue(signedIn(owner));vi.mocked(adminClient.accounts).mockResolvedValue({ accounts: [owner] });
-    render(<AdminPanel />);await screen.findByText('Master · Last master');
+    render(<AdminPanel page="accounts" />);await screen.findByText('Master · Last master');
     expect(screen.getByRole('button', { name: 'Revoke' })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'Access for owner@example.test' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: '한국어' }));await screen.findByText('관리자 계정');
+    fireEvent.click(screen.getByRole('button', { name: '한국어' }));await screen.findByRole('heading',{name:'관리자 계정'});
     expect(screen.getByRole('button', { name: '해제' })).toBeDisabled();expect(document.documentElement.lang).toBe('ko');
   });
   it('refreshes privileges and removes the directory after self-demotion', async () => {
     const owner = account(id, 'master', 'approved');const next = account(candidate, 'master', 'approved');
     vi.mocked(adminClient.me).mockResolvedValueOnce(signedIn(owner)).mockResolvedValue(signedIn(account(id, 'admin', 'approved')));
     vi.mocked(adminClient.accounts).mockResolvedValue({ accounts: [owner, next] });
-    render(<AdminPanel />);const selector = await screen.findByRole('combobox', { name: 'Access for owner@example.test' });
+    render(<AdminPanel page="accounts" />);const selector = await screen.findByRole('combobox', { name: 'Access for owner@example.test' });
     fireEvent.change(selector, { target: { value: 'admin' } });fireEvent.click(within(selector.closest('li')!).getByRole('button', { name: 'Save access' }));
     expect(screen.getByRole('dialog')).toHaveTextContent('This will change your own access.');
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirm' }));
-    await waitFor(() => expect(screen.queryByText('Admin accounts')).not.toBeInTheDocument());
+    await waitFor(() => expect(document.querySelector('.admin-account-group')).toBeNull());
   });
   it('shows permission failures without retaining the account directory', async () => {
     const owner = account(id, 'master', 'approved');
     vi.mocked(adminClient.me).mockResolvedValueOnce(signedIn(owner)).mockResolvedValue(signedIn(account(id, 'admin', 'revoked')));
     vi.mocked(adminClient.accounts).mockResolvedValue({ accounts: [owner, account(candidate)] });
     vi.mocked(adminClient.change).mockRejectedValueOnce(new AdminFailure('forbidden'));
-    render(<AdminPanel />);fireEvent.click(await screen.findByRole('button', { name: 'Grant access' }));
+    render(<AdminPanel page="accounts" />);fireEvent.click(await screen.findByRole('button', { name: 'Grant access' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirm' }));
-    await screen.findByRole('alert');await waitFor(() => expect(screen.queryByText('Admin accounts')).not.toBeInTheDocument());
+    await screen.findByRole('alert');await waitFor(() => expect(document.querySelector('.admin-account-group')).toBeNull());
   });
   it('ignores an aborted initial load', async () => {
     let resolve!: (value: AdminSession) => void;
     vi.mocked(adminClient.me).mockImplementation(() => new Promise(done => { resolve = done; }));
-    const view = render(<AdminPanel />);view.unmount();
+    const view = render(<AdminPanel page="accounts" />);view.unmount();
     await act(async () => resolve({ configured: true, user: null, account: null }));
     expect(adminClient.accounts).not.toHaveBeenCalled();
   });
+});
+it('keeps the overview separate from master account loading and links to dedicated pages',async()=>{
+ vi.mocked(adminClient.me).mockResolvedValue(signedIn(account(id,'master','approved')));
+ render(<AdminPanel/>);await screen.findByText('Master');
+ expect(adminClient.accounts).not.toHaveBeenCalled();
+ expect(screen.getByRole('link',{name:'Scripts'})).toHaveAttribute('href','/admin/scripts');
+ expect(screen.getByRole('link',{name:'Admin accounts'})).toHaveAttribute('href','/admin/accounts');
+ expect(document.querySelector('.admin-account-group')).toBeNull();
 });
