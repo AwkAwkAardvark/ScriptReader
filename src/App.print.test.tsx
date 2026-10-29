@@ -54,6 +54,7 @@ describe('print readiness and current view', () => {
     const button = screen.getByRole('button', { name: 'Print / Save PDF' });
     await waitFor(() => expect(button).toBeEnabled());
     await user.upload(screen.getByLabelText('Cast file'), new File(['Tag,Name\nRo,Rowan\nMi,Mira\nUn,Unused'], 'cast.csv', { type: 'text/csv' }));
+    await screen.findByRole('option', { name: 'Unused', exact: true });
     await user.selectOptions(screen.getByLabelText('Character'), 'Un');
     expect(button).toBeDisabled();
     await user.upload(screen.getByLabelText('Script file'), new File(['broken'], 'bad.csv', { type: 'text/csv' }));
