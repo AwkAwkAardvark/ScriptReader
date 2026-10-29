@@ -62,6 +62,10 @@ Hosted headers restrict scripts/connections to the same origin, allow YouTube fr
 
 `npm run check:exposure` scans source and existing build artifacts for recognized credentials and unexpected development/private deployment artifacts. It reports paths and rule names without matched values. Opaque tokens and arbitrary passwords may escape detection; a passing scan is not proof of absence. `npm audit` reports known dependency advisories. Neither tool is a substitute for reviewing a change.
 
+### Roster interface preview
+
+Approved staff can try `/admin/roster-preview`, linked from Assignments. The prototype uses fictional students and roles; changes stay in component memory and reset on reload. It does not load or save production casting. Duplicate names remain separate, with class/current-role context and optional staff-defined distinguishing labels. Labels and roster editing are interface proposals, not extensions to the current assignment CSV contract or database schema.
+
 ### Private teacher viewer
 
 `/admin/viewer` renders the full script for approved staff, without consuming the anonymous character allowance. `/admin/assignments` manages an optional student-assignment CSV independently of script/cast publication. The public character roster contains character names only.

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.11 — 2026-10-30
+
+- Add a staff-only, isolated roster interface preview with fictional students, role/performance selection, duplicate-name context, optional distinguishing labels, search, undo and sample change review.
+- Preview a compact app header, persistent desktop sidebar and collapsible mobile navigation, plus a consolidated CSV help pattern. Existing roster data and editing APIs remain unchanged.
+
 ## v0.3.10 — 2026-10-30
 
 - Keep expanded assignment CSV examples within their cards on mobile, with horizontal scrolling for long rows.
