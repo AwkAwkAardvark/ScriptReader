@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.13 — 2026-10-30
+
+- Apply muted orange shading to multiple-role students throughout the roster preview, including their role cards and picker choices; shared-name asterisks remain a separate cue.
+- Align the teacher viewer’s compact settings strip, hamburger, typography, panel spacing and Korean-display toggle with the student reader using a shared settings label.
+- Preserve teaching highlights, real casting and view-setting behavior.
+
 ## v0.3.12 — 2026-10-30
 
 - Keep reader and teacher settings reachable while scrolling; compact mobile panels open over the page without moving script content, with bounded scrolling and keyboard dismissal.
