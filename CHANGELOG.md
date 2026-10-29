@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.8 — 2026-10-29
+
+- Lead song editing with clean title headings and subdued italic line references beside the video action; retain unavailable actions in a faded disabled state.
+- Remove routine link-status rows, keep pending-removal feedback, and make Remove/Undo controls quieter.
+- Move the upload publication note beside validation as compact italic helper text.
+- Rename personal account navigation to My Account and master-only staff controls to Access Management, with matching page titles.
+
 ## v0.3.7 — 2026-10-29
 
 - Replace fictional staff CSV examples with selected Chapter 3 merchant records, their actual cast mappings, and the Butter marker with its official video association; preserve source identifiers.

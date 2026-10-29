@@ -1,6 +1,6 @@
 export const adminCopy = {
   en: {
-    title: 'Administration', accounts: 'Admin accounts', login: 'Continue with Google', logout: 'Sign out', reader: 'Open reader',
+    title: 'My Account', accounts: 'Access Management', login: 'Continue with Google', logout: 'Sign out', reader: 'Open reader',
     loading: 'Loading…', setup: 'Google sign-in is not configured yet.', loginFailed: 'Sign-in did not complete. Please try again.',
     request: 'Request access', requestAgain: 'Request access again', pending: 'Awaiting approval', approved: 'Access approved', revoked: 'Access revoked',
     noAccess: 'Request administrative access to this app.', requests: 'Access requests', active: 'Approved accounts', removed: 'Revoked accounts',
@@ -13,7 +13,7 @@ export const adminCopy = {
       unavailable: 'Unable to complete the request. Please retry.', auth_not_ready: 'Google sign-in is not configured yet.' },
   },
   ko: {
-    title: '관리', accounts: '관리자 계정', login: 'Google로 로그인', logout: '로그아웃', reader: '대본 보기',
+    title: '내 계정', accounts: '권한 관리', login: 'Google로 로그인', logout: '로그아웃', reader: '대본 보기',
     loading: '불러오는 중…', setup: 'Google 로그인 설정이 아직 완료되지 않았습니다.', loginFailed: '로그인을 완료하지 못했습니다. 다시 시도해 주세요.',
     request: '관리 권한 요청', requestAgain: '관리 권한 다시 요청', pending: '승인 대기 중', approved: '승인됨', revoked: '권한 해제됨',
     noAccess: '이 앱의 관리 권한을 요청하세요.', requests: '권한 요청', active: '승인된 계정', removed: '권한이 해제된 계정',
