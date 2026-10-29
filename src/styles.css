@@ -438,8 +438,9 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 }
 
 .roster-name-marker { margin-left: 2px; text-decoration: none; font-weight: 700; }
-.roster-student-options li.roster-multi-role { background: #f0edf8; border-radius: 10px; }
-.roster-multi-role .roster-student-option:hover { background: #e7e1f3; border-radius: 10px; }
+.roster-preview-shell .roster-multi-role { background: #fbefdf; border-color: #dec4a3; border-radius: 10px; }
+.roster-cast-button.roster-multi-role { border-radius: 13px; }
+.roster-multi-role .roster-student-option:hover, .roster-cast-button.roster-multi-role:hover { background: #f5e2ca; }
 
 /* Keep view settings in reach without pinning the full masthead. */
 @media screen {
@@ -466,3 +467,20 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
  .teacher-settings-body fieldset { min-width: 0; }
 }
 .teacher-settings > summary:focus-visible { outline: 3px solid #3c8056; outline-offset: 3px; border-radius: 10px; }
+
+
+/* Teacher and student views share the same compact settings affordance. */
+.teacher-settings { padding: 4px 12px; border-radius: 18px; }
+.teacher-settings > .settings-summary { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; gap: 12px; padding: 0; color: #283c2c; font-size: 14px; font-weight: 600; text-align: left; }
+.teacher-settings .settings-title { min-width: 0; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap; }
+.teacher-settings > .settings-summary .menu-icon { flex-shrink: 0; font-size: 22px; line-height: 1; font-weight: 400; color: inherit; }
+.teacher-settings-body { max-height: calc(100dvh - 76px); padding: 12px 20px 20px; }
+.teacher-performance, .teacher-classes { border-top: 1px solid #e7eae5; margin: 18px 0 0; padding: 16px 0 0; }
+.teacher-settings-body .control-label { margin-bottom: 8px; }
+.teacher-settings-body .teacher-korean { display: flex; margin-top: 16px; }
+.teacher-view .teacher-korean input[type=checkbox] { position: absolute; z-index: 1; left: 0; margin: 0; width: 38px; height: 32px; opacity: 0; }
+.teacher-settings-body > .admin-action-link { margin-top: 16px; }
+.teacher-settings-body .control-label { margin-bottom: 12px; }
+.teacher-performance label, .teacher-classes label { font-size: 13px; }
+.teacher-settings-body input { accent-color: #315e44; }
+.settings-summary:focus-visible { border-radius: 10px; }
