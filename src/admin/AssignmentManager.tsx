@@ -97,6 +97,7 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
     {list && <section className="admin-card"><label htmlFor="assignments-production">{ko ? '공연 선택' : 'Choose a production'}</label><select id="assignments-production" value={selected} disabled={busy} onChange={e => void choose(e.target.value)}><option value="">{ko ? '공연 선택' : 'Choose a production'}</option>{list.productions.map(p => <option key={p.slug} value={p.slug}>{p.title}</option>)}</select></section>}
     {context && <>
       <section className="admin-card"><div className="admin-heading"><h2>{context.title}</h2><AdminActionLink href={`/admin/viewer?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '교사용 대본 열기' : 'Open teacher viewer'}</AdminActionLink></div>
+        <p><AdminActionLink href={`/admin/roster-preview${ko ? '?lang=ko' : ''}`}>{ko ? '배역 편집 체험' : 'Try roster preview'}</AdminActionLink></p>
         <p>{ko ? `배정 ${context.assignments.length}개` : `${context.assignments.length} assignments`}</p>
         {!!context.assignments.length && <details><summary>{ko ? '현재 배정' : 'Current assignments'}</summary>{table(context.assignments)}</details>}
         <label htmlFor="assignment-file">{ko ? '배역 배정 CSV' : 'Assignment CSV'}</label><input ref={input} id="assignment-file" type="file" accept=".csv,text/csv" disabled={busy} onChange={e => void file(e.target.files?.[0])} />

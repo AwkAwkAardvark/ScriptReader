@@ -1,3 +1,4 @@
+import { RosterPreview } from './RosterPreview';
 import { TeacherViewer } from './TeacherViewer';
 import { AssignmentManager } from './AssignmentManager';
 import { AdminActionLink } from './AdminActionLink';
@@ -10,10 +11,10 @@ import { adminCopy } from './copy';
 import { adminClient, AdminFailure } from './client';
 import type { AdminAccount, AdminAction, AdminError, AdminSession } from './protocol';
 
-export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accounts'|'songs'|'viewer'|'assignments'}) {
+export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accounts'|'songs'|'viewer'|'assignments'|'roster-preview'}) {
   const [locale, setLocale] = useState<Locale>(new URLSearchParams(window.location.search).get('lang')==='ko'?'ko':'en');
   const text = adminCopy[locale];
-  const pageTitle = page==='viewer'?(locale==='ko'?'교사용 대본':'Teacher Viewer'):page==='assignments'?(locale==='ko'?'배역 배정':'Assignments'):page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title;
+  const pageTitle = page==='roster-preview'?(locale==='ko'?'배역 편집 미리보기':'Roster preview'):page==='viewer'?(locale==='ko'?'교사용 대본':'Teacher Viewer'):page==='assignments'?(locale==='ko'?'배역 배정':'Assignments'):page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title;
   const [session, setSession] = useState<AdminSession | null>(null);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +76,7 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
       </div>
     </li>;
   }
+  if (page==='roster-preview' && session?.account?.status==='approved') return <RosterPreview locale={locale} onLocale={setLocale} master={Boolean(master)}/>;
   return <div className={`app-shell admin-shell ${page==='viewer'?'teacher-shell':''}`}>
     <header className="masthead"><a className="brand" href="/"><BrandMark /><span>{copy[locale].app}</span></a>
       <div className="language-switch" role="group" aria-label={copy[locale].interfaceLanguage}>

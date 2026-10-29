@@ -13,6 +13,7 @@ describe('reader entry points', () => {
     expect(readerRoute('/admin/scripts','https:',false)).toEqual({kind:'admin',page:'scripts'});
     expect(readerRoute('/admin/songs','https:',false)).toEqual({kind:'admin',page:'songs'});
     expect(readerRoute('/admin/viewer','https:',false)).toEqual({kind:'admin',page:'viewer'});
+    expect(readerRoute('/admin/roster-preview','https:',false)).toEqual({kind:'admin',page:'roster-preview'});
     expect(readerRoute('/admin/assignments','https:',false)).toEqual({kind:'admin',page:'assignments'});
     expect(readerRoute('/admin/accounts','https:',false)).toEqual({kind:'admin',page:'accounts'});
     expect(readerRoute('/admin/nope', 'https:', false)).toEqual({kind:'not-found'});
