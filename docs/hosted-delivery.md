@@ -114,3 +114,12 @@ The separate Songs page at `/admin/songs` lists every detected Song record and i
 When replacing files on the Scripts page, a single collapsed song-review card appears at the bottom, after the YouTube mapping CSV and preview. Review the new revision's song list there; this keeps unsaved uploads on the same page. Renamed or repeated titles are not automatically assigned videos: select an existing video or enter a URL for the intended song, revalidate edits, and acknowledge any old linked songs that could not be matched. The preview uses these resolved links, and the server repeats resolution against the checked current revision before publication.
 
 **Access Management** at `/admin/accounts` is master-only and controls staff requests, approvals, roles, and revocation. This is separate from My Account, which concerns the signed-in person. Approved admins have production controls but no account directory. Navigation and direct routes preserve these permission checks. Full-script staff viewing and student assignments remain separate features.
+
+
+## Staff rehearsal viewer and assignments
+
+Approved admins and masters can open **Teacher Viewer** at `/admin/viewer`. It shows the complete script, both performance casts, and independent class/performance highlighting; settings collapse to conserve mobile space. **Assignments** at `/admin/assignments` accepts a separate optional CSV, described in the [input guide](csv-tagging-guide.md#optional-student-assignments-staff-only). Neither page changes the public student reader or grants access to pending accounts.
+
+Assignment updates require validation, preview and explicit confirmation. Replacement/deletion affects only that production's current private assignments, without republishing the script or changing homepage/defaults. The database rejects changes against stale assignment or production versions. Publishing a character roster that removes assigned tags requires updating or removing affected assignments first, including when using the local publisher.
+
+Apply the teacher-viewer migration before deploying this release. No new secret bindings or authentication providers are required. Assignment endpoints and their RPC/table remain server-only; do not add grants or policies for anonymous or signed-in browser roles. Deletion clears the application assignment set; backup retention follows the project's provider configuration.

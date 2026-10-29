@@ -78,6 +78,12 @@ export async function handleProductionAdmin(request: Request, env: Environment, 
       if (typeof body.script !== 'string' || typeof body.cast !== 'string' || body.media !== undefined && typeof body.media !== 'string') return error('invalid_request', 400);
       try {
         const parsed=preparePublication(body.script, body.cast, body.media as string | undefined);
+        if (context?.version) {
+          const staffContext = await rpc('reader_staff_context', {p_slug:slug ?? body.slug,p_actor:user.id}) as {assignments?: {tag:string}[];error?:string};
+          if (staffContext.error) return error('forbidden',403);
+          const tags = new Set(parsed.script.characters.map(character=>character.tag));
+          if (staffContext.assignments?.some(assignment=>!tags.has(assignment.tag))) return json({error:'validation',diagnostics:'Update or remove assignments before removing assigned character tags.'},422);
+        }
         const resolved=resolveSongLinks(parsed,context?.songs,edits as MediaEdits);
         payload=resolved.payload;
         if(validate)return json({records:payload.script.records.length,characters:payload.script.characters.length,videos:Object.keys(payload.media).length,media:payload.media,songs:resolved.songs,baselineSongs:resolveSongLinks(parsed,context?.songs).songs,unmatched:resolved.unmatched});

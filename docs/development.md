@@ -62,6 +62,16 @@ Hosted headers restrict scripts/connections to the same origin, allow YouTube fr
 
 `npm run check:exposure` scans source and existing build artifacts for recognized credentials and unexpected development/private deployment artifacts. It reports paths and rule names without matched values. Opaque tokens and arbitrary passwords may escape detection; a passing scan is not proof of absence. `npm audit` reports known dependency advisories. Neither tool is a substitute for reviewing a change.
 
+### Private teacher viewer
+
+`/admin/viewer` renders the full script for approved staff, without consuming the anonymous character allowance. `/admin/assignments` manages an optional student-assignment CSV independently of script/cast publication. The public character roster contains character names only.
+
+Assignment sets are stored separately from immutable script revisions. Protected APIs under `/api/admin/productions/:slug/viewer` and `/assignments` verify the Google identity and current membership in database operations. Assignment updates use same-origin JSON requests, bounded bodies, shared client/server validation, and expected assignment/production versions. Publication and assignment updates lock production state to prevent orphaned tags. The browser holds viewer data in memory; responses use `private, no-store`, and the viewer rechecks access when returning to the tab.
+
+The assignment table has RLS enabled, no browser-role policies or grants, and a server-only RPC. Student data must never be added to public revision payloads, browser storage, logs, samples, or offline exports. Replacement/deletion retains only the current assignment set and a non-personal concurrency token, not application-level historical copies. Provider backups may retain prior data according to the project's backup configuration; logical deletion does not promise immediate backup erasure.
+
+Automated tests use synthetic students and verify denied access for anonymous/unapproved/revoked users, direct database restrictions, stale writes, tag removal, full-script highlighting, and safe rendering. Public API checks and artifact scanning use a synthetic student marker to detect accidental inclusion; these checks supplement code review rather than prove that every possible disclosure is impossible.
+
 ## Releases and contributions
 
 See the [changelog](../CHANGELOG.md) for released versions.

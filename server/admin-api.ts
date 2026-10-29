@@ -1,3 +1,4 @@
+import { handleTeacherApi } from './teacher-api';
 import { handleProductionAdmin } from './production-admin-api';
 import type { AdminAccount, AdminError } from '../src/admin/protocol';
 import type { Environment } from './api';
@@ -10,6 +11,7 @@ const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 type AccessResult = { account?: AdminAccount | null; accounts?: AdminAccount[]; error?: AdminError };
 
 export async function handleAdminApi(request: Request, env: Environment, rpcOverride?: Rpc, authFactory: AdminAuthFactory = createAdminAuth): Promise<Response> {
+  if (/^\/api\/admin\/productions\/[^/]+\/(viewer|assignments)(?:\/|$)/.test(new URL(request.url).pathname)) return handleTeacherApi(request, env, rpcOverride, authFactory);
   if (/^\/api\/admin\/(productions(?:\/|$)|home$)/.test(new URL(request.url).pathname)) return handleProductionAdmin(request, env, rpcOverride, authFactory);
   const headers = new Headers({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'private, no-store',
     Pragma: 'no-cache', Vary: 'Cookie', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff',

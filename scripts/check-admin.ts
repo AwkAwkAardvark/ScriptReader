@@ -129,6 +129,48 @@ try {
   await staff.getByRole('button',{name:'Save homepage',exact:true}).waitFor();
   await staff.waitForFunction(()=>document.querySelector<HTMLButtonElement>('#student-home + button')?.disabled===true);
   assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/import'});
+  // Private rehearsal workflow: synthetic assignments only, separate from script revisions.
+  await staff.goto(demo.origin+'/admin/assignments?production=workshop-2027');
+  const assignmentCsv='StudentId,StudentName,Class,Performance,Tag\ns1,PRIVATE_STUDENT_FIXTURE,Class A,1부,Ro\ns1,PRIVATE_STUDENT_FIXTURE,Class A,2부,Ro\ns2,Example Student Two,Class B,2부,Mi';
+  await staff.getByLabel('Assignment CSV',{exact:true}).setInputFiles({name:'assignments.csv',mimeType:'text/csv',buffer:Buffer.from(assignmentCsv)});
+  await staff.getByRole('button',{name:'Validate and preview',exact:true}).click();
+  await staff.getByRole('heading',{name:'Assignment preview',exact:true}).waitFor();
+  await staff.getByRole('button',{name:'Save assignments',exact:true}).click();
+  await staff.getByRole('dialog').getByRole('button',{name:'Confirm',exact:true}).click();
+  await staff.getByText('Saved.',{exact:true}).waitFor();
+  await staff.getByRole('link',{name:'Open teacher viewer',exact:true}).click();
+  await staff.locator('.teacher-view .script-entry').first().waitFor();
+  assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
+  assert.equal(await staff.locator('.teacher-view .script-entry.highlighted').count(),0);
+  const recordCount=await staff.locator('.teacher-view [data-record]').count();
+  assert.equal(recordCount,17); // three scene headings are outside data-record entries
+  await staff.locator('.teacher-settings > summary').click();
+  await staff.getByRole('checkbox',{name:'Class A',exact:true}).check();
+  assert.ok(await staff.locator('.teacher-view .script-entry[data-record="2"]').evaluate(e=>e.classList.contains('highlighted')));
+  await staff.getByRole('checkbox',{name:'Class B',exact:true}).check();
+  await staff.getByRole('radio',{name:'1부',exact:true}).check();
+  assert.ok(await staff.locator('.teacher-view .script-entry[data-record="4"]').evaluate(e=>!e.classList.contains('highlighted')));
+  assert.equal(await staff.locator('.teacher-view [data-record]').count(),recordCount);
+  await staff.locator('.teacher-settings > summary').click();
+  for(const width of [320,390,1440]) {await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`teacher-${width}.png`),fullPage:true});}
+  await staff.getByRole('button',{name:'한국어',exact:true}).click();
+  await staff.getByRole('heading',{name:'교사용 대본',exact:true}).waitFor();
+  await staff.screenshot({path:join(out,'teacher-ko.png'),fullPage:true});
+  const privateResponse=await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/viewer');
+  assert.equal(privateResponse.headers()['cache-control'],'private, no-store');
+  const anonymous=await browser.newPage();
+  assert.equal((await anonymous.request.get(demo.origin+'/api/admin/productions/workshop-2027/viewer')).status(),401);
+  await anonymous.goto(demo.origin+'/p/workshop-2027');
+  await anonymous.getByLabel('Character',{exact:true}).selectOption('Ro');
+  await anonymous.locator('.script-entry').first().waitFor();
+  assert.ok(!(await anonymous.locator('body').innerText()).includes('PRIVATE_STUDENT_FIXTURE'));
+  await anonymous.close();
+  await staff.goto(demo.origin+'/admin/assignments?production=workshop-2027');
+  await staff.getByText('Delete assignments',{exact:true}).click();
+  await staff.getByRole('button',{name:'Delete all assignments',exact:true}).click();
+  await staff.getByRole('dialog').getByRole('button',{name:'Confirm',exact:true}).click();
+  await staff.getByText('Saved.',{exact:true}).waitFor();
+  assert.equal((await (await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/assignments')).json()).assignments.length,0);
   await staffRow.getByRole('combobox').selectOption('master');
   await staffRow.getByRole('button', { name: 'Save access' }).click();
   await owner.getByRole('dialog').getByRole('button', { name: 'Confirm', exact: true }).click();

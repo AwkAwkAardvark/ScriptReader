@@ -299,3 +299,47 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .upload-note { flex: 1 1 160px; font-size: 12px; line-height: 1.5; color: #627168; }
 
 .production-manager .song-meta-row button.admin-action-link { padding: 9px 16px; border-color: #bdcbb9; border-radius: 999px; font-size: 14px; font-weight: 600; line-height: 1.35; }
+
+/* Staff rehearsal view: controls collapse, source order never changes. */
+.teacher-shell { max-width: 1240px; }
+.teacher-settings { padding: .65rem .9rem; }
+.teacher-settings > summary { display: flex; justify-content: space-between; gap: .7rem; cursor: pointer; font-size: .85rem; }
+.teacher-settings > summary > span:first-child { overflow-wrap: anywhere; }
+.teacher-settings > summary > span:last-child { color: var(--muted, #65716a); flex-shrink: 0; }
+.teacher-settings[open] > summary { margin-bottom: .8rem; }
+.teacher-performance, .teacher-classes { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin: .8rem 0; border: 0; padding: 0; }
+.teacher-performance label, .teacher-classes label, .teacher-korean { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; }
+.teacher-view input[type=checkbox], .teacher-view input[type=radio] { width: 1.1rem; height: 1.1rem; margin: 0; }
+.teacher-view .script-entry { display: grid; grid-template-columns: minmax(0, 1fr) 5rem 5rem; gap: .3rem .5rem; padding: .5rem .65rem; }
+.teacher-view .entry-name { min-width: 0; font-size: .8rem; overflow-wrap: anywhere; }
+.teacher-view .entry-text { grid-column: 1 / -1; }
+.teacher-cast { display: flex; flex-direction: column; align-items: center; font-size: .8rem; min-width: 0; overflow-wrap: anywhere; }
+.teacher-unassigned { opacity: .4; }
+.teacher-role-selected, .teacher-student-selected { color: #164c35; font-weight: 750; background: #cfecd9; border-radius: .2rem; }
+.teacher-student-selected { padding: 0 .2rem; }
+.teacher-view .script-entry.highlighted { background: #edf6ef; border-left-color: #438260; }
+.teacher-column-key { display: grid; grid-template-columns: minmax(0,1fr) 5rem 5rem; gap: .5rem; padding: .3rem .65rem; font-size: .7rem; color: #65716a; }
+.teacher-column-key span:not(:first-child) { text-align: center; }
+.teacher-view .song-marker { display: grid; grid-template-columns: 1rem minmax(0,1fr) 5rem 5rem; gap: .3rem; }
+.teacher-view .song-marker .entry-text { grid-column: 1 / -1; }
+.teacher-view .song-marker .video-toggle { grid-column: 4; }
+.teacher-view .passage-window { margin-bottom: .7rem; }
+.assignment-table-wrap { overflow-x: auto; max-height: 28rem; margin: .6rem 0; }
+.assignment-table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+.assignment-table th, .assignment-table td { padding: .45rem .6rem; text-align: left; border-bottom: 1px solid #dce4de; white-space: nowrap; }
+.song-links-editor legend .song-title { display: inline; margin-right: .65rem; }
+.song-links-editor legend .song-line-reference { display: inline; white-space: nowrap; font-weight: 400; }
+@media (min-width: 800px) {
+ .teacher-view .script-entry { grid-template-columns: 9rem 6rem 6rem minmax(0,1fr); align-items: start; }
+ .teacher-view .script-entry .entry-text { grid-column: 4; }
+ .teacher-column-key { grid-template-columns: 9rem 6rem 6rem minmax(0,1fr); }
+}
+@media (max-width: 600px) {
+ .teacher-shell { padding-left: .5rem; padding-right: .5rem; }
+ .teacher-shell .masthead { margin-bottom: .5rem; }
+ .teacher-shell .admin-heading h1 { font-size: 1.25rem; }
+ .teacher-shell .admin-navigation { flex-wrap: nowrap; overflow-x: auto; padding-bottom: .25rem; margin-bottom: .5rem; }
+ .teacher-shell .admin-navigation a { flex-shrink: 0; }
+ .teacher-view .scene-heading { margin-top: .8rem; }
+ .teacher-view .entry-text p { margin-top: .15rem; margin-bottom: .15rem; }
+}

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.9 — 2026-10-30
+
+- Add a private full-script Teacher Viewer with both performance casts, independent class/performance highlighting, and compact collapsed controls for mobile.
+- Add validated student-assignment CSV uploads, preview, confirmed replacement/deletion, and stale-update protection separate from public script revisions.
+- Prevent script replacements from removing assigned character tags and test student-data isolation from anonymous reader responses and public artifacts.
+- Place song line references beside their titles rather than beside the video buttons.
+
 ## v0.3.8 — 2026-10-29
 
 - Lead song editing with clean title headings and subdued italic line references beside the video action; retain unavailable actions in a faded disabled state.
