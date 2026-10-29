@@ -1,0 +1,28 @@
+export const adminCopy = {
+  en: {
+    title: 'Administration', accounts: 'Admin accounts', login: 'Continue with Google', logout: 'Sign out', reader: 'Open reader',
+    loading: 'Loading…', setup: 'Google sign-in is not configured yet.', loginFailed: 'Sign-in did not complete. Please try again.',
+    request: 'Request access', requestAgain: 'Request access again', pending: 'Awaiting approval', approved: 'Access approved', revoked: 'Access revoked',
+    noAccess: 'Request administrative access to this app.', requests: 'Access requests', active: 'Approved accounts', removed: 'Revoked accounts',
+    empty: 'No accounts.', admin: 'Admin', master: 'Master', save: 'Save access', approve: 'Grant access', restore: 'Restore access', revoke: 'Revoke',
+    confirm: 'Confirm', cancel: 'Cancel', confirmation: 'Change access', accessFor: 'Access for', last: 'Last master',
+    confirmationText: 'Apply this access change?', selfChange: 'This will change your own access.',
+    masters: (n: number) => `${n}/3 masters`,
+    errors: { unauthorized: 'Please sign in again.', forbidden: 'You do not have permission for this action.', invalid_request: 'Check the request and try again.',
+      not_found: 'Account not found.', last_master: 'At least one master must remain.', master_limit: 'There can be at most three masters.',
+      unavailable: 'Unable to complete the request. Please retry.', auth_not_ready: 'Google sign-in is not configured yet.' },
+  },
+  ko: {
+    title: '관리', accounts: '관리자 계정', login: 'Google로 로그인', logout: '로그아웃', reader: '대본 보기',
+    loading: '불러오는 중…', setup: 'Google 로그인 설정이 아직 완료되지 않았습니다.', loginFailed: '로그인을 완료하지 못했습니다. 다시 시도해 주세요.',
+    request: '관리 권한 요청', requestAgain: '관리 권한 다시 요청', pending: '승인 대기 중', approved: '승인됨', revoked: '권한 해제됨',
+    noAccess: '이 앱의 관리 권한을 요청하세요.', requests: '권한 요청', active: '승인된 계정', removed: '권한이 해제된 계정',
+    empty: '계정이 없습니다.', admin: '관리자', master: '마스터', save: '권한 저장', approve: '권한 부여', restore: '권한 복구', revoke: '해제',
+    confirm: '확인', cancel: '취소', confirmation: '권한 변경', accessFor: '계정 권한', last: '마지막 마스터',
+    confirmationText: '이 계정의 권한을 변경할까요?', selfChange: '본인의 권한이 변경됩니다.',
+    masters: (n: number) => `마스터 ${n}/3명`,
+    errors: { unauthorized: '다시 로그인해 주세요.', forbidden: '이 작업을 수행할 권한이 없습니다.', invalid_request: '요청 내용을 확인하고 다시 시도해 주세요.',
+      not_found: '계정을 찾을 수 없습니다.', last_master: '마스터는 최소 한 명이어야 합니다.', master_limit: '마스터는 최대 세 명까지 가능합니다.',
+      unavailable: '요청을 완료하지 못했습니다. 다시 시도해 주세요.', auth_not_ready: 'Google 로그인 설정이 아직 완료되지 않았습니다.' },
+  },
+};

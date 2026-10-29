@@ -1,6 +1,6 @@
 {
   "name": "script-reader",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "type": "module",
   "engines": {
@@ -19,9 +19,12 @@
     "dev:hosted": "tsx scripts/dev-hosted.ts",
     "preview:cloudflare": "wrangler pages dev dist",
     "test:hosted-browser": "tsx scripts/check-hosted.ts",
-    "check:exposure": "node scripts/check-exposure.mjs"
+    "check:exposure": "node scripts/check-exposure.mjs",
+    "test:admin-browser": "tsx scripts/check-admin.ts"
   },
   "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.118.0",
     "papaparse": "^5.5.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

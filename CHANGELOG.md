@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.3 — 2026-10-29
+
+- Add Google sign-in support through Supabase Auth and a bilingual `/admin` account-management interface.
+- Add access requests, approvals, role changes, revocation and re-requests, backed by server-only membership operations.
+- Support equal masters with transactional protection against a fourth master or removal of the last master, including self-service handover.
+- Keep authentication in server-managed browser-session cookies and preserve anonymous student reading.
+- Add authentication, permission, concurrency and browser workflow tests. Google provider configuration and trusted first-master setup are installation steps.
+
 ## v0.3.2 — 2026-10-28
 
 - Consolidate shared documentation into preparation, development, and hosting guides; keep operational account and incident notes local.

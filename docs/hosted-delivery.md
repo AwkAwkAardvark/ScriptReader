@@ -27,7 +27,7 @@ Routine content updates do not recreate infrastructure or rerun applied migratio
 
 ### Database migrations
 
-The checked-in SQL migrations create four RLS-protected tables and two server-only RPC functions. Apply the migrations once to your intended Supabase project, using Supabase's migration tools or the connected Supabase integration. Keep the remote migration history aligned with the checked-in version. Do not run the SQL again on an already-migrated project.
+The initial reader migrations create four RLS-protected tables and two server-only RPC functions. Admin membership is added by the later migration described below. Apply the migrations once to your intended Supabase project, using Supabase's migration tools or the connected Supabase integration. Keep the remote migration history aligned with the checked-in version. Do not run the SQL again on an already-migrated project.
 
 `reader_publish` validates its basic payload contract and creates a complete revision in one transaction, then changes the active pointer. `reader_fetch` performs throttling and character admission in one transaction and returns metadata or the private revision **only to the trusted server**. It uses row locking for count-and-admit and separate allowances for each production/day.
 
@@ -84,3 +84,13 @@ Each publication saves a complete script/cast/media snapshot and atomically swit
 Keeping a production's slug stable updates that production; choosing another slug creates a separate production with its own revision and allowances. To roll back content, confirm that an earlier revision belongs to the intended production, then transactionally set its `active_revision` to that revision through a trusted administrator connection. Verify metadata and a representative selected view. Restoring the pointer does not require editing stored snapshots or changing database grants.
 
 Application rollback is separate: select a known-good Cloudflare deployment and reconcile the code with a normal revert commit so the next deployment preserves the correction. Existing tags and source history can remain intact.
+
+## Admin authentication setup
+
+Enable Google in the project's Supabase Auth provider settings using a Google Web OAuth client. Register the Supabase project's `/auth/v1/callback` as Google's redirect URI and the application's `/api/admin/auth/callback` in Supabase's redirect allowlist. The application uses identity scopes only. Google client credentials belong in the provider settings, not frontend configuration.
+
+The server additionally needs `SUPABASE_PUBLISHABLE_KEY` for its authentication client and `ADMIN_ORIGIN` set to the exact canonical HTTPS origin. The privileged database adapter continues to use its separate server key. Authenticated responses are not cached. Routine deployments retain the existing cookie-signing and database secrets.
+
+The admin-membership migration adds two RLS-protected tables and server-only operations. Neither `anon` nor `authenticated` receives membership-table or RPC privileges; the server checks the verified user ID against current membership. Do not derive roles from user-editable profile metadata. `reader_admin_bootstrap` is a trusted, one-time setup operation after the intended first account's Google identity has been verified. There is no HTTP bootstrap endpoint or automatic first-user promotion.
+
+For succession, an existing master can promote a successor, the successor can sign in and verify access, and the predecessor can then demote or revoke their own access. Membership changes do not transfer ownership of Google Cloud, Cloudflare, Supabase, or GitHub, and do not delete the person's login identity.

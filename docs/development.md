@@ -79,3 +79,11 @@ The GitHub Actions `CI` workflow runs on pull requests targeting `main`, pushes 
 Cloudflare automatically builds and publishes `main` with `npm run build` and output directory `dist`. Other branches do not deploy automatically. Cloudflare does not independently wait for the push-triggered CI run, so verify PR checks before merging and the production deployment afterward. See the [operations guide](hosted-delivery.md) for publishing and recovery.
 
 Script publication is independent of application deployment; see the [hosting guide](hosted-delivery.md#validate-and-publish-a-production).
+
+## Admin interface
+
+`/admin` uses Google sign-in through Supabase Auth. Pages Functions perform the OAuth code exchange, maintain HttpOnly browser-session cookies, and verify identity before checking current database membership. Authentication SDKs run on the server; the frontend does not read access or refresh tokens.
+
+Signed-in users can request access. Masters approve requests, assign admin/master roles, and revoke access. All masters have equal powers. Database transactions serialize changes, allow at most three active masters, and prevent removing the last one. A revoked user can request again but returns to pending without regaining their previous privileges. These app roles do not grant access to provider dashboards. In this release, approved staff see their status; content-management controls are not included.
+
+For automated admin UI/API checks, run `npm run test:admin-browser` with the same Chromium setup described above. It uses synthetic identities through a local-only injected authentication fixture. Production entrypoints use Supabase Auth and do not install that fixture. The unit suite also exercises the real authentication library against mocked Auth HTTP responses, including PKCE, expiry/refresh, invalid credentials, and cookie attributes. Real Google sign-in requires the configured provider and an interactive account login.

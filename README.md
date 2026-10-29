@@ -1,6 +1,6 @@
 # Script Reader
 
-A mobile-friendly rehearsal reader with character selection, context controls, bilingual display, YouTube embeds, and Print / Save PDF. Hosted reading requires no student login; local CSV import is also available.
+A mobile-friendly rehearsal reader with character selection, context controls, bilingual display, YouTube embeds, and Print / Save PDF. Hosted reading requires no student login; local CSV import is also available. Google-authenticated administration is at `/admin`.
 
 Hosted `/` opens the main production. CSV import is at `/import`; the offline HTML demo remains available.
 

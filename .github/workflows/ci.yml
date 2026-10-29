@@ -41,6 +41,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Check fictional hosted workflow
         run: npm run test:hosted-browser
+      - name: Check admin access workflow
+        run: npm run test:admin-browser
       - name: Check import, offline reader and printing
         shell: bash
         run: |
