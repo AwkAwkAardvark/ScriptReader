@@ -1,4 +1,5 @@
 import { applyActionVisibility } from './action-visibility';
+import { AdminPanel } from './admin/AdminPanel';
 import { BrandMark } from './BrandMark';
 import { DEFAULT_CONTEXT } from './context';
 import { readerRoute } from './routes';
@@ -204,6 +205,7 @@ function LocalReader() {
 
 export default function App() {
   const route = readerRoute(window.location.pathname, window.location.protocol, import.meta.env.DEV);
+  if (route.kind === 'admin') return <AdminPanel />;
   if (route.kind === 'production') return <HostedReader slug={route.slug} />;
   if (route.kind === 'local') return <LocalReader />;
   return <main className="app-shell"><h1>Page not found</h1><a href="/">Script Reader</a></main>;

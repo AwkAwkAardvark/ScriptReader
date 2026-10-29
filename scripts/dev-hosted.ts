@@ -4,9 +4,11 @@ import { pathToFileURL } from 'node:url';
 import { localDatabase } from '../server/local-database';
 import { preparePublication } from '../server/publishing';
 import { handleApi } from '../server/api';
+import { handleAdminApi } from '../server/admin-api';
+import type { AdminAuthFactory } from '../server/admin-auth';
 import { csvFor } from '../src/test/fixtures';
 
-export async function startHostedDemo(apiPort = 8788, webPort = 5173) {
+export async function startHostedDemo(apiPort = 8788, webPort = 5173, options: { adminAuthFactory?: AdminAuthFactory } = {}) {
   const { db, rpc } = await localDatabase();
   const payload = preparePublication(csvFor(), 'Tag,Name,DividerBefore\nRo,Rowan Reed,\nMi,Mira Moss,Y\nA1,Visitor One,\nA2,Visitor Two,\nA3,Visitor Three,\nA4,Visitor Four,', 'No,YouTubeURL\n9,https://youtu.be/abcdefghijk\n17,https://youtu.be/lmnopqrstuv');
   await rpc('reader_publish', { p_slug: 'synthetic-garden', p_title: 'Workshop Musical 2026: The Paper Garden', p_payload: payload });
@@ -20,8 +22,13 @@ export async function startHostedDemo(apiPort = 8788, webPort = 5173) {
     const host = [`127.0.0.1:${webPort}`, `localhost:${webPort}`].includes(req.headers.host ?? '')
       ? req.headers.host : `127.0.0.1:${webPort}`;
     const request = new Request(`http://${host}${req.url}`, { method, headers, ...(method !== 'GET' && method !== 'HEAD' ? { body: Buffer.concat(parts) } : {}) });
-    const response = await handleApi(request, { SUPABASE_URL: 'https://unused.invalid', SUPABASE_SECRET_KEY: 'local-only', BROWSER_COOKIE_SECRET: 'synthetic-development-cookie-secret-ONLY' }, rpc);
-    res.writeHead(response.status, Object.fromEntries(response.headers)); res.end(Buffer.from(await response.arrayBuffer()));
+    const env = { SUPABASE_URL: 'https://unused.invalid', SUPABASE_SECRET_KEY: 'local-only', BROWSER_COOKIE_SECRET: 'synthetic-development-cookie-secret-ONLY',
+      ...(options.adminAuthFactory ? { SUPABASE_PUBLISHABLE_KEY: 'synthetic-auth-only' } : {}) };
+    const response = new URL(request.url).pathname.startsWith('/api/admin/')
+      ? await handleAdminApi(request, env, rpc, options.adminAuthFactory) : await handleApi(request, env, rpc);
+    const cookies = response.headers.getSetCookie();
+    res.writeHead(response.status, { ...Object.fromEntries(response.headers), ...(cookies.length ? { 'set-cookie': cookies } : {}) });
+    res.end(Buffer.from(await response.arrayBuffer()));
   });
   await new Promise<void>(resolve => server.listen(apiPort, '127.0.0.1', resolve));
   const vite = await createViteServer({ server: { host: '127.0.0.1', port: webPort, strictPort: true, proxy: { '/api': { target: `http://127.0.0.1:${apiPort}`, changeOrigin: false } } } });

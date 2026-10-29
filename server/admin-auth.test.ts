@@ -79,6 +79,13 @@ describe('server-only Google OAuth', () => {
     stub();const headers = await login();stub({ validUser: false });
     expect(await createAdminAuth(makeRequest(cookieHeader(headers)), env, new Headers()).user()).toBeNull();
   });
+  it('requires a confirmed Google identity even with an otherwise valid session', async () => {
+    stub();const headers = await login();
+    for (const changed of [{ ...user, identities: [] }, { ...user, email_confirmed_at: null }]) {
+      vi.stubGlobal('fetch', vi.fn(async () => Response.json(changed)));
+      expect(await createAdminAuth(makeRequest(cookieHeader(headers)), env, new Headers()).user()).toBeNull();
+    }
+  });
   it('refreshes expired sessions while keeping their cookies nonpersistent', async () => {
     const fetcher = stub();const refreshed = new Headers();
     const expired = 'base64-' + Buffer.from(JSON.stringify(session(Math.floor(Date.now() / 1000) - 10))).toString('base64url');

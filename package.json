@@ -19,7 +19,8 @@
     "dev:hosted": "tsx scripts/dev-hosted.ts",
     "preview:cloudflare": "wrangler pages dev dist",
     "test:hosted-browser": "tsx scripts/check-hosted.ts",
-    "check:exposure": "node scripts/check-exposure.mjs"
+    "check:exposure": "node scripts/check-exposure.mjs",
+    "test:admin-browser": "tsx scripts/check-admin.ts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
