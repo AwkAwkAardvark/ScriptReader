@@ -3,8 +3,8 @@ import { MAX_CONTEXT, validContextCount, type Context } from './context';
 import type { Copy } from './i18n';
 export type { Context } from './context';
 
-export function ContextPicker({ value, onChange, disabled, text }: {
-  value: Context; onChange: (counts: Context) => void; disabled: boolean; text: Copy;
+export function ContextPicker({ value, onChange, disabled, text, idPrefix='context', legend }: {
+  value: Context; onChange: (counts: Context) => void; disabled: boolean; text: Copy; idPrefix?: string; legend?: string;
 }) {
   const [draft, setDraft] = useState(value);
   const latest = useRef(value);
@@ -18,10 +18,10 @@ export function ContextPicker({ value, onChange, disabled, text }: {
   };
   const cancel = () => { dragging.current = false; latest.current = value; setDraft(value); };
   return <fieldset className="context-picker" disabled={disabled}>
-    <legend>{text.context}</legend>
+    <legend>{legend ?? text.context}</legend>
     <div className="context-sliders">{(['before', 'after'] as const).map(side => <div className="context-slider" key={side}>
-      <div className="context-slider-heading"><label htmlFor={`context-${side}`}>{text[side]}</label><output aria-hidden="true">{draft[side]}</output></div>
-      <input id={`context-${side}`} type="range" min="0" max={MAX_CONTEXT} step="1" value={draft[side]}
+      <div className="context-slider-heading"><label htmlFor={`${idPrefix}-${side}`}>{text[side]}</label><output aria-hidden="true">{draft[side]}</output></div>
+      <input id={`${idPrefix}-${side}`} type="range" min="0" max={MAX_CONTEXT} step="1" value={draft[side]}
         onPointerDown={event => { dragging.current = true; event.currentTarget.setPointerCapture?.(event.pointerId); }}
         onPointerUp={commit} onPointerCancel={cancel} onLostPointerCapture={() => { if (dragging.current) cancel(); }}
         onChange={event => {

@@ -269,3 +269,14 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
 
 .production-editor .song-links-editor fieldset { display: block; }
 .song-links-editor p { margin: 8px 0; }
+.upload-card, .song-review { margin-top: 20px; }
+.upload-card > summary, .song-review > summary, .songs-card > summary, .csv-example > summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+.upload-card > fieldset { margin-top: 14px; }
+.csv-upload { min-width: 0; }
+.csv-example { margin-top: 8px; font-size: .85rem; }
+.csv-example pre { max-width: 100%; overflow-x: auto; padding: 12px; border-radius: 8px; background: #f2f6f3; }
+.production-editor input[type=range] { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.production-editor .context-picker { display: block; margin: 16px 0; }
+.songs-manager select, .songs-manager input[type=url] { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px; border: 1px solid #bdcdc1; border-radius: 8px; background: white; }
+.songs-card .song-links-editor fieldset { min-width: 0; border: 0; border-bottom: 1px solid #dce5df; border-radius: 0; padding: 12px 0; }
+.songs-card .song-links-editor h3 { display: none; }
