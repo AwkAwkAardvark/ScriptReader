@@ -351,3 +351,88 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .assignment-manager input[type=file], .assignment-manager select { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; }
 .assignment-manager .admin-heading { flex-wrap: wrap; }
 .assignment-manager .admin-heading h2 { min-width: 0; overflow-wrap: anywhere; }
+
+/* Isolated roster prototype: adaptive navigation and compact task controls. */
+.roster-preview-shell { max-width: 1440px; margin: auto; }
+.roster-skip { position: absolute; left: 12px; top: -100px; z-index: 10; padding: 12px; background: white; }
+.roster-skip:focus { top: 8px; }
+.roster-appbar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 10px 24px; background: #f1f4f1f5; border-bottom: 1px solid #dce5dc; }
+.roster-appbar h1 { font-size: 21px; margin: 0; font-weight: 650; flex: 1; }
+.roster-brand { display: inline-flex; }
+.roster-brand .brand-mark { height: 38px; }
+.roster-menu-button { display: none; background: transparent; border: 0; min-width: 44px; min-height: 44px; border-radius: 50%; font-size: 22px; color: #315e44; }
+.roster-layout { display: grid; grid-template-columns: 220px minmax(0,1fr); }
+.roster-sidebar { padding: 22px 12px; border-right: 1px solid #dce5dc; }
+.roster-sidebar > p { color: #657168; font-size: 11px; padding: 0 14px; margin: 0 0 12px; }
+.roster-sidebar nav { display: grid; gap: 4px; position: sticky; top: 94px; }
+.roster-sidebar a { color: #3f5144; text-decoration: none; padding: 13px 16px; border-radius: 24px; font-size: 14px; }
+.roster-sidebar a:hover { background: #e8eee8; }
+.roster-sidebar a[aria-current=page] { background: #dcecdf; color: #204d34; font-weight: 650; }
+.roster-main { min-width: 0; max-width: 960px; padding: 20px 28px 0; }
+.roster-preview-notice { font-size: 12px; color: #626e65; margin: 0 0 20px; line-height: 1.5; }
+.roster-production { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.roster-production small { font-size: 11px; color: #69746a; }
+.roster-production h2 { font-size: 24px; margin: 4px 0 0; }
+.roster-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 18px; }
+.roster-filters > label:first-child { flex: 1 1 220px; }
+.roster-filters input[type=search], .roster-dialog input:not([type=checkbox]) { width: 100%; min-height: 44px; border: 1px solid #bdcbbf; border-radius: 12px; background: white; color: #253d2d; padding: 10px 12px; }
+.roster-unassigned-filter { display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 13px; }
+.roster-unassigned-filter input { width: 18px; height: 18px; accent-color: #315e44; }
+.roster-cards { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.roster-role-card { min-width: 0; background: white; padding: 18px; border: 1px solid #dfe7df; border-radius: 18px; }
+.roster-role-card h3 { margin: 0 0 14px; font-size: 16px; }
+.roster-performances { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.roster-slot-heading { display: flex; justify-content: space-between; gap: 4px; font-size: 12px; color: #657369; margin-bottom: 6px; }
+.roster-slot-heading small { font-size: 10px; color: #725c29; }
+.roster-cast-button { min-width: 0; width: 100%; min-height: 88px; text-align: left; border: 1px solid #d1ded1; border-radius: 13px; background: #f8faf7; padding: 12px; display: flex; flex-direction: column; gap: 6px; color: #294a34; overflow-wrap: anywhere; }
+.roster-cast-button:hover { border-color: #72947c; background: #eef5ee; }
+.roster-cast-button strong { font-size: 15px; }
+.roster-cast-button > span { font-size: 11px; }
+.roster-cast-button.is-empty { border-style: dashed; background: white; }
+.roster-edit-hint { margin-top: auto; color: #708075; }
+.roster-csv-help { border: 1px solid #dfe7df; border-radius: 16px; background: white; margin: 20px 0; min-width: 0; }
+.roster-csv-help summary { padding: 15px 18px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.roster-help-body { padding: 0 18px 18px; min-width: 0; font-size: 13px; }
+.roster-help-body p { line-height: 1.5; }
+.roster-help-body pre { width: 100%; overflow-x: auto; padding: 12px; font-size: 12px; background: #f2f6f3; border-radius: 8px; }
+.roster-help-body a { color: #315e44; }
+.roster-helper { font-size: 12px; line-height: 1.5; color: #657167; }
+.roster-savebar { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 12px 0; background: #f1f4f1; border-top: 1px solid #dce5dc; }
+.roster-savebar > span { margin-right: auto; color: #657167; font-size: 12px; }
+.roster-undo { min-height: 44px; border: 0; background: transparent; color: #315e44; padding: 8px; }
+.roster-dialog { width: min(520px,calc(100vw - 24px)); max-height: calc(100dvh - 32px); overflow-y: auto; border: 1px solid #d6e0d1; border-radius: 20px; padding: 20px; color: #243d2b; }
+.roster-dialog::backdrop { background: #18291f66; }
+.roster-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.roster-dialog-heading h2 { margin: 0; font-size: 19px; }
+.roster-dialog-heading > button { width: 44px; height: 44px; border: 0; border-radius: 50%; background: #f0f4ef; font-size: 24px; color: #435d48; flex-shrink: 0; }
+.roster-student-options { list-style: none; margin: 12px 0; padding: 0; }
+.roster-student-options li { display: grid; grid-template-columns: minmax(0,1fr) 52px; border-top: 1px solid #e2e9e0; }
+.roster-student-option { display: flex; flex-direction: column; gap: 5px; min-width: 0; text-align: left; background: transparent; border: 0; color: #304b38; padding: 14px 8px; overflow-wrap: anywhere; }
+.roster-student-option:hover { background: #edf5ed; }
+.roster-student-option span { font-size: 12px; }
+.roster-student-option small { color: #657168; line-height: 1.5; }
+.roster-student-option .roster-ambiguity { color: #806326; }
+.roster-student-edit { border: 0; background: transparent; color: #315e44; min-height: 44px; padding: 8px; }
+.roster-dialog form > label { display: grid; gap: 6px; margin: 12px 0; font-size: 13px; }
+.roster-dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.roster-dialog-actions > button:not(.admin-primary):not(.admin-secondary) { border: 0; border-radius: 20px; background: #f0f4ef; color: #315e44; padding: 10px 16px; min-height: 44px; }
+.roster-change-list { padding-left: 20px; font-size: 13px; }
+.roster-change-list li { padding: 10px 0; }
+.roster-change-list span { display: block; margin-top: 6px; line-height: 1.5; overflow-wrap: anywhere; }
+@media (max-width: 1040px) { .roster-cards { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 760px) {
+ .roster-appbar { min-height: 64px; padding: 8px 12px; gap: 10px; }
+ .roster-menu-button { display: block; }
+ .roster-brand { display: none; }
+ .roster-appbar h1 { font-size: 19px; }
+ .roster-layout { display: block; }
+ .roster-sidebar { display: none; padding: 12px; border-right: 0; border-bottom: 1px solid #dce5dc; }
+ .roster-sidebar.is-open { display: block; }
+ .roster-sidebar nav { position: static; }
+ .roster-main { padding: 14px 12px 0; }
+ .roster-preview-notice { margin-bottom: 14px; font-size: 11px; }
+ .roster-production h2 { font-size: 22px; }
+ .roster-role-card { padding: 14px; }
+ .roster-savebar > span { font-size: 11px; }
+ .roster-savebar .admin-primary { padding: 10px 12px; font-size: 12px; }
+}
