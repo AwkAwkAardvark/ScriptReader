@@ -1,3 +1,4 @@
+vi.mock('./ProductionManager', () => ({ ProductionManager: () => <div>Production management</div> }));
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeAll, beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { AdminPanel } from './AdminPanel';

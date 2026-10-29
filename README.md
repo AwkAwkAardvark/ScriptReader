@@ -19,3 +19,5 @@ npm run dev
 - [Hosting, publishing, and recovery](docs/hosted-delivery.md)
 - [CSV preparation and character tagging](docs/csv-tagging-guide.md)
 - [Release notes](CHANGELOG.md)
+
+Approved staff can manage productions and choose the student homepage at `/admin`. See [browser publication](docs/hosted-delivery.md#manage-productions-in-the-browser).

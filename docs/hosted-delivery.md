@@ -1,6 +1,6 @@
 # Hosted deployment and publishing
 
-The hosted reader uses Cloudflare Pages with Pages Functions and Supabase Postgres. Student links use `/p/<slug>`; local-file import is at `/import`. App deployment and script publication are independent. For local use, automated checks, and the security model, see the [development guide](development.md).
+The hosted reader uses Cloudflare Pages with Pages Functions and Supabase Postgres. Student links use `/p/<slug>`; local-file import is at `/import`. The root opens the production or blank importer selected by an approved administrator; the production directory is private. App deployment and script publication are independent. For local use, automated checks, and the security model, see the [development guide](development.md).
 
 ## Local development and checks
 
@@ -94,3 +94,13 @@ The server additionally needs `SUPABASE_PUBLISHABLE_KEY` for its authentication 
 The admin-membership migration adds two RLS-protected tables and server-only operations. Neither `anon` nor `authenticated` receives membership-table or RPC privileges; the server checks the verified user ID against current membership. Do not derive roles from user-editable profile metadata. `reader_admin_bootstrap` is a trusted, one-time setup operation after the intended first account's Google identity has been verified. There is no HTTP bootstrap endpoint or automatic first-user promotion.
 
 For succession, an existing master can promote a successor, the successor can sign in and verify access, and the predecessor can then demote or revoke their own access. Membership changes do not transfer ownership of Google Cloud, Cloudflare, Supabase, or GitHub, and do not delete the person's login identity.
+
+## Manage productions in the browser
+
+Approved admins and masters can open `/admin` to list productions, edit their reader titles and initial context (0–5 lines before/after), and explicitly choose the student homepage. Selecting **Blank / file import** opens `/import`. Publishing does not change the homepage, and previous production links remain usable. Treat each year's production as a separate entry, with its year in the title and new link identifier; updates during that production become revisions of the same entry.
+
+For a new production, choose **New production** and supply a title, link identifier, script CSV, cast CSV, and optional YouTube mapping CSV. For an existing production, choose **Manage** and upload the complete matching file set. Use **Validate and preview**, review the character view, then explicitly confirm **Publish**. The server validates the files again and atomically creates the revision. Omitting media clears the new revision's video associations. Validation/publication requests must fit within 5 MiB, including request encoding; unfinished uploads are held only in browser memory.
+
+Titles and initial context can be saved without uploading files again. Defaults apply when a reader loads the production; students can still adjust them. Conflicting changes are rejected: refresh the list before editing a production or homepage that another admin has changed. Production link identifiers remain fixed after creation. The local publisher above remains available as a fallback.
+
+Administrative operations check current approved membership, including inside database mutations. The production-management migration adds protected homepage storage and per-production settings. The public homepage API returns only the selected destination, never the directory. Account management remains master-only. Student assignments and full-script staff viewing are separate features.

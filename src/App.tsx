@@ -1,3 +1,4 @@
+import { Home } from './Home';
 import { applyActionVisibility } from './action-visibility';
 import { AdminPanel } from './admin/AdminPanel';
 import { BrandMark } from './BrandMark';
@@ -205,6 +206,7 @@ function LocalReader() {
 
 export default function App() {
   const route = readerRoute(window.location.pathname, window.location.protocol, import.meta.env.DEV);
+  if (route.kind === 'home') return <Home />;
   if (route.kind === 'admin') return <AdminPanel />;
   if (route.kind === 'production') return <HostedReader slug={route.slug} />;
   if (route.kind === 'local') return <LocalReader />;

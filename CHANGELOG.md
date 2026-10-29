@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4
+
+- Add private production administration with CSV validation, interactive preview, and explicit publication for approved staff.
+- Add independent reader-title and per-production context defaults, with conflict protection for concurrent updates.
+- Allow staff to choose a published production or blank importer as the homepage, preserving existing direct links and keeping the production directory private.
+- Keep annual productions separate and retain the current Aladdin 2026 title, content revision, and homepage during rollout.
+
 ## v0.3.3 — 2026-10-29
 
 - Add Google sign-in support through Supabase Auth and a bilingual `/admin` account-management interface.

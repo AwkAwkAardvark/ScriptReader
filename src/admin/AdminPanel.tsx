@@ -1,3 +1,4 @@
+import { ProductionManager } from './ProductionManager';
 import { useEffect, useRef, useState } from 'react';
 import { BrandMark } from '../BrandMark';
 import { copy, type Locale } from '../i18n';
@@ -90,6 +91,7 @@ export function AdminPanel() {
             <button className="admin-secondary" disabled={busy} onClick={() => void run(adminClient.logout)}>{text.logout}</button>
           </div>
         </section>
+        {session.account?.status === 'approved' && <ProductionManager locale={locale} />}
         {master && <section className="admin-card"><div className="admin-heading"><h2>{text.accounts}</h2><span className="admin-badge">{text.masters(masterCount)}</span></div>
           {(['pending', 'approved', 'revoked'] as const).map(status => <section className="admin-account-group" key={status}>
             <h3>{status === 'pending' ? text.requests : status === 'approved' ? text.active : text.removed}</h3>

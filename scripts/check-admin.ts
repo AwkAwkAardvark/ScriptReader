@@ -1,3 +1,4 @@
+import { csvFor } from '../src/test/fixtures';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
@@ -45,6 +46,52 @@ try {
   await staffRow.locator('.admin-badge').filter({ hasText: /^Admin$/ }).waitFor();
   await staff.reload();await staff.getByRole('button', { name: 'Sign out' }).waitFor();
   assert.equal(await staff.getByRole('heading', { name: 'Admin accounts', exact: true }).count(), 0);
+  // Approved staff can publish, but cannot manage accounts. All files are fictional.
+  await staff.getByRole('button', { name: 'New production', exact: true }).click();
+  await staff.getByLabel('Reader title', { exact: true }).fill('Workshop 2027');
+  await staff.getByLabel('Default before', { exact: true }).fill('5');
+  await staff.getByLabel('Default after', { exact: true }).fill('0');
+  await staff.getByLabel('Script CSV', { exact: true }).setInputFiles({name:'script.csv',mimeType:'text/csv',buffer:Buffer.from(csvFor())});
+  await staff.getByLabel('Cast CSV', { exact: true }).setInputFiles({name:'cast.csv',mimeType:'text/csv',buffer:Buffer.from('Tag,Name\nRo,Rowan\nMi,Mira\nA1,One\nA2,Two\nA3,Three\nA4,Four')});
+  await staff.getByRole('button', {name:'Validate and preview',exact:true}).click();
+  await staff.getByRole('heading', {name:'Validation passed',exact:true}).waitFor();
+  assert.ok(await staff.locator('.production-preview .script-entry').count()>0);
+  for(const width of [320,390,1440]) {
+    await staff.setViewportSize({width,height:1000});
+    assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await staff.screenshot({path:join(out,`production-preview-${width}.png`),fullPage:true});
+  }
+  await staff.getByRole('button',{name:'한국어',exact:true}).click();
+  await staff.getByRole('heading',{name:'검사 완료',exact:true}).waitFor();
+  await staff.setViewportSize({width:390,height:1000});
+  await staff.screenshot({path:join(out,'production-preview-ko.png'),fullPage:true});
+  await staff.getByRole('button',{name:'ENG',exact:true}).click();
+  await staff.getByRole('button',{name:'Publish',exact:true}).click();
+  await staff.getByRole('dialog').getByRole('button',{name:'Publish',exact:true}).click();
+  await staff.getByRole('link',{name:'/p/workshop-2027',exact:true}).waitFor();
+  await staff.getByLabel('Student homepage',{exact:true}).selectOption('workshop-2027');
+  await staff.getByRole('button',{name:'Save homepage',exact:true}).click();
+  await staff.getByText('Current home',{exact:true}).waitFor();
+  assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/p/workshop-2027'});
+  const reader=await browser.newPage();
+  await reader.goto(demo.origin+'/p/workshop-2027');
+  await reader.getByLabel('Character',{exact:true}).selectOption('Ro');
+  await reader.locator('.script-entry').first().waitFor();
+  assert.equal(await reader.getByLabel('Before',{exact:true}).inputValue(),'5');
+  assert.equal(await reader.getByLabel('After',{exact:true}).inputValue(),'0');
+  await reader.getByLabel('Before',{exact:true}).fill('3');
+  await reader.getByLabel('Character',{exact:true}).selectOption('Mi');
+  assert.equal(await reader.getByLabel('Before',{exact:true}).inputValue(),'3');
+  await reader.close();
+  await staff.getByRole('button',{name:'Manage: Workshop 2027',exact:true}).click();
+  await staff.getByLabel('Reader title',{exact:true}).fill('Workshop 2027 revised');
+  await staff.getByRole('button',{name:'Save production settings',exact:true}).click();
+  await staff.getByRole('button',{name:'Manage: Workshop 2027 revised',exact:true}).waitFor();
+  await staff.getByLabel('Student homepage',{exact:true}).selectOption('');
+  await staff.getByRole('button',{name:'Save homepage',exact:true}).click();
+  await staff.getByRole('button',{name:'Save homepage',exact:true}).waitFor();
+  await staff.waitForFunction(()=>document.querySelector<HTMLButtonElement>('#student-home + button')?.disabled===true);
+  assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/import'});
   await staffRow.getByRole('combobox').selectOption('master');
   await staffRow.getByRole('button', { name: 'Save access' }).click();
   await owner.getByRole('dialog').getByRole('button', { name: 'Confirm', exact: true }).click();
@@ -79,5 +126,5 @@ try {
   await staff.getByRole('button', { name: 'Google로 로그인' }).waitFor();
   assert.equal((await staff.request.get(demo.origin + '/api/admin/accounts')).status(), 401);
   assert.deepEqual(errors, []);
-  console.log('Admin browser checks passed: login, requests, approval, handover, revocation/re-request, last-master protection, Korean, mobile/desktop and logout.');
+  console.log('Admin browser checks passed: publishing/preview, defaults, homepage, settings, login, requests, approval, handover, revocation/re-request, last-master protection, Korean, mobile/desktop and logout.');
 } finally { await browser.close();await demo.close(); }

@@ -40,6 +40,21 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
+  const entryUrl = process.env.APP_URL ?? 'http://127.0.0.1:4174/import';
+  // Exercise the built homepage router without publishing any production data.
+  await page.route('**/api/home', route => route.fulfill({json:{destination:'/import'}}));
+  await page.goto(new URL('/',entryUrl).href);
+  await page.waitForURL('**/import');
+  await page.unroute('**/api/home');
+  await page.route('**/api/home', route => route.fulfill({json:{destination:'/p/synthetic-2027'}}));
+  await page.goto(new URL('/',entryUrl).href);
+  await page.waitForURL('**/p/synthetic-2027');
+  await page.unroute('**/api/home');
+  await page.route('**/api/home', route => route.fulfill({json:{destination:'https://example.test/untrusted'}}));
+  await page.goto(new URL('/',entryUrl).href);
+  await page.getByRole('alert').waitFor();
+  assert.equal(new URL(page.url()).origin,new URL(entryUrl).origin);
+  await page.unroute('**/api/home');
   await page.goto(process.env.APP_URL ?? 'http://127.0.0.1:4174/import');
   assert.equal(await page.getByRole('button', { name: buttonName }).isDisabled(), true);
   await load(page, short);

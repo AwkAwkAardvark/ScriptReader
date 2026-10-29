@@ -3,6 +3,7 @@ import { beforeAll, afterAll, expect, it } from 'vitest';
 import { localDatabase } from './local-database';
 import { csvFor } from '../src/test/fixtures';
 import { handleAdminApi } from './admin-api';
+import { handleApi } from './api';
 import type { AdminAuthFactory } from './admin-auth';
 let local: Awaited<ReturnType<typeof localDatabase>>;
 const owner = '00000000-0000-4000-8000-000000000001';
@@ -60,6 +61,20 @@ it('publishes whole snapshots, clears omitted media, and serializes competing up
  const responses=await Promise.all([api('productions/'+p.slug+'/publish','POST',{...files,expected:next.version}),api('productions/'+p.slug+'/publish','POST',{...files,expected:next.version})]);
  expect(responses.map(r=>r.status).sort()).toEqual([200,409]);
  expect((await manage('list')).productions[0].mediaCount).toBe(0);
+});
+it('keeps the anonymous homepage response minimal and all content management server-only',async()=>{
+ const response=await handleApi(new Request('https://reader.test/api/home'),env,local.rpc);
+ expect(response.status).toBe(200);expect(response.headers.get('Cache-Control')).toBe('no-store');
+ expect(await response.json()).toEqual({destination:'/import'});
+ await local.db.exec('set role service_role');
+ try {
+  expect((await manage('list')).productions).toHaveLength(1);expect(await local.rpc('reader_home',{})).toEqual({destination:'/import'});
+  expect((await api('productions','POST',{...files,slug:'service-2027'})).status).toBe(200);
+  const state=await manage('list');const p=state.productions.find((p:any)=>p.slug==='service-2027');
+  expect((await api('productions/service-2027','PATCH',{title:p.title,before:3,after:2,expected:p.version})).status).toBe(200);
+  expect((await api('home','PATCH',{slug:null,expected:state.home.version})).status).toBe(200);
+ }
+ finally{await local.db.exec('reset role');}
 });
 it('enforces current access inside mutations and denies direct browser database access',async()=>{
  await local.rpc('reader_admin_access',{p_action:'change',p_actor:owner,p_target:staff,p_role:'revoked'});

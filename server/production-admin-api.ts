@@ -8,7 +8,7 @@ export const ADMIN_UPLOAD_LIMIT = 5 * 1024 * 1024;
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 export async function handleProductionAdmin(request: Request, env: Environment, rpcOverride?: Rpc, authFactory: AdminAuthFactory = createAdminAuth) {
   const headers = new Headers({ 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', Pragma: 'no-cache', Vary: 'Cookie',
-    'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; frame-ancestors none" });
+    'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'" });
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers });
   const error = (code: string, status: number) => json({ error: code }, status);
   const url = new URL(request.url);
@@ -29,7 +29,10 @@ export async function handleProductionAdmin(request: Request, env: Environment, 
     const rpc = rpcOverride ?? supabaseRpc(env.SUPABASE_URL, env.SUPABASE_SECRET_KEY);
     const membership = await rpc('reader_admin_access', { p_action: 'me', p_actor: user.id }) as { account?: { status: string } };
     if (membership.account?.status !== 'approved') return error('forbidden', 403);
-    if (request.method === 'GET') return json(await rpc('reader_manage_productions', { p_action: 'list', p_actor: user.id }));
+    if (request.method === 'GET') {
+      const listing = await rpc('reader_manage_productions', { p_action: 'list', p_actor: user.id }) as { error?: string };
+      return listing.error ? error('forbidden', 403) : json(listing);
+    }
     if (!request.headers.get('Content-Type')?.startsWith('application/json')) return error('invalid_request', 400);
     const reader = request.body?.getReader();if (!reader) return error('invalid_request', 400);
     const chunks: Uint8Array[] = [];let size = 0;
