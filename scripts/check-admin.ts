@@ -51,8 +51,11 @@ try {
   // Approved staff can publish, but cannot manage accounts. All files are fictional.
   await staff.getByRole('button', { name: 'New production', exact: true }).click();
   await staff.getByLabel('Reader title', { exact: true }).fill('Workshop 2027');
-  await staff.getByLabel('Default before', { exact: true }).fill('5');
-  await staff.getByLabel('Default after', { exact: true }).fill('0');
+  await staff.getByRole('group',{name:'Default context',exact:true}).getByRole('slider',{name:'Before',exact:true}).fill('5');
+  await staff.getByRole('group',{name:'Default context',exact:true}).getByRole('slider',{name:'After',exact:true}).fill('0');
+  const sampleDownload=staff.waitForEvent('download');
+  await staff.getByRole('button',{name:'Download example',exact:true}).first().click();
+  assert.equal((await sampleDownload).suggestedFilename(),'script-example.csv');
   await staff.getByLabel('Script CSV', { exact: true }).setInputFiles({name:'script.csv',mimeType:'text/csv',buffer:Buffer.from(csvFor())});
   await staff.getByLabel('Cast CSV', { exact: true }).setInputFiles({name:'cast.csv',mimeType:'text/csv',buffer:Buffer.from('Tag,Name\nRo,Rowan\nMi,Mira\nA1,One\nA2,Two\nA3,Three\nA4,Four')});
   await staff.getByRole('button', {name:'Validate and preview',exact:true}).click();
@@ -72,7 +75,7 @@ try {
   await staff.getByRole('dialog').getByRole('button',{name:'Publish',exact:true}).click();
   await staff.getByLabel('Choose a production',{exact:true}).locator('option[value=workshop-2027]').waitFor({state:'attached'});
   await staff.getByLabel('Choose a production',{exact:true}).selectOption('workshop-2027');
-  await staff.getByRole('link',{name:'/p/workshop-2027',exact:true}).waitFor();
+  await staff.getByRole('link',{name:'Open student reader',exact:true}).waitFor();
   await staff.getByLabel('Student homepage',{exact:true}).selectOption('workshop-2027');
   await Promise.all([staff.waitForResponse(r=>r.url().endsWith('/api/admin/home')&&r.request().method()==='PATCH'),staff.getByRole('button',{name:'Save homepage',exact:true}).click()]);
   assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/p/workshop-2027'});
@@ -90,15 +93,28 @@ try {
   await staff.getByRole('heading',{name:'Workshop 2027',exact:true}).waitFor();
   await staff.waitForFunction(()=>!document.querySelector<HTMLFieldSetElement>('.production-editor fieldset')?.disabled);
   assert.ok(staff.url().includes('production=workshop-2027'));
-  await staff.reload();
+  assert.equal(await staff.locator('.upload-card').getAttribute('open'),null);
+  await staff.locator('.upload-card > summary').click();
+  assert.equal(await staff.locator('.csv-example[open]').count(),0);
+  assert.ok(await staff.getByLabel('Script CSV',{exact:true}).isVisible());
+  await staff.goto(demo.origin+'/admin/songs?production=workshop-2027');
+  await staff.locator('.songs-card').waitFor({state:'attached'});
+  assert.equal(await staff.locator('.songs-card').getAttribute('open'),null);
+  await staff.locator('.songs-card > summary').click();
   await staff.getByLabel('YouTube URL: 9',{exact:true}).fill('https://youtu.be/abcdefghijk');
   await staff.getByRole('button',{name:'Save song links',exact:true}).click();
   await staff.getByRole('dialog').getByRole('button',{name:'Confirm',exact:true}).click();
-  await staff.getByLabel('Choose a production',{exact:true}).selectOption('workshop-2027');
-  await staff.getByLabel('YouTube URL: 9',{exact:true}).waitFor();
+  await staff.getByText('Saved.',{exact:true}).waitFor();
+  await staff.reload();await staff.locator('.songs-card').waitFor({state:'attached'});
+  if(!await staff.locator('.songs-card').evaluate(e=>e.hasAttribute('open')))await staff.locator('.songs-card > summary').click();
   assert.equal(await staff.getByLabel('YouTube URL: 9',{exact:true}).inputValue(),'https://youtu.be/abcdefghijk');
+  for(const width of [320,390,1440]){await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`songs-${width}.png`),fullPage:true});}
   const songMetadata=await (await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/songs')).json();
   assert.equal(songMetadata.songs.length,3);assert.equal(songMetadata.payload,undefined);
+  await staff.goto(demo.origin+'/admin/scripts?production=workshop-2027');
+  await staff.getByLabel('Reader title',{exact:true}).waitFor();
+  assert.equal(await staff.locator('.upload-card').getAttribute('open'),null);
+  assert.equal(await staff.getByLabel('Link identifier',{exact:true}).count(),0);
   await staff.getByLabel('Reader title',{exact:true}).fill('Workshop 2027 revised');
   await staff.getByRole('button',{name:'Save production settings',exact:true}).click();
   await staff.getByLabel('Choose a production',{exact:true}).locator('option').filter({hasText:'Workshop 2027 revised'}).waitFor({state:'attached'});

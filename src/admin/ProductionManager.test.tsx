@@ -14,7 +14,7 @@ it('saves blank home explicitly and edits defaults independently of file publica
  fireEvent.click(screen.getByRole('button',{name:'Save homepage'}));
  await waitFor(()=>expect(productionCall).toHaveBeenCalledWith('home','PATCH',{slug:null,expected:'h1'}));
  fireEvent.change(screen.getByLabelText('Choose a production'),{target:{value:'paper-2026'}});await waitFor(()=>expect(screen.getByLabelText('Reader title')).not.toBeDisabled());
- fireEvent.change(screen.getByLabelText('Default before'),{target:{value:'5'}});
+ fireEvent.change(within(screen.getByRole('group',{name:'Default context'})).getByRole('slider',{name:'Before'}),{target:{value:'5'}});
  fireEvent.click(screen.getByRole('button',{name:'Save production settings'}));
  await waitFor(()=>expect(productionCall).toHaveBeenCalledWith('productions/paper-2026','PATCH',{title:'Paper 2026',before:5,after:1,expected:'v1'}));
 });
@@ -22,9 +22,9 @@ it('requires validation and confirmation, then invalidates preview after a file 
  render(<ProductionManager locale="en"/>);fireEvent.change(await screen.findByLabelText('Choose a production'),{target:{value:'paper-2026'}});await waitFor(()=>expect(screen.getByLabelText('Reader title')).not.toBeDisabled());
  const upload=async(label:string,text:string)=>{const file=new File([text],'synthetic.csv',{type:'text/csv'});Object.defineProperty(file,'text',{value:async()=>text});fireEvent.change(screen.getByLabelText(label),{target:{files:[file]}});await waitFor(()=>expect(screen.getByLabelText(label)).not.toBeDisabled());};
  await upload('Script CSV',csvFor());await upload('Cast CSV','Tag,Name\nRo,Rowan\nMi,Mira\nA1,One\nA2,Two\nA3,Three\nA4,Four');
- expect(screen.getByText('Existing link')).toBeInTheDocument();
+ expect(screen.queryByText('Existing link')).not.toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Validate and preview'}));await screen.findByText('Validation passed');
- fireEvent.click(screen.getByRole('button',{name:'Publish'}));expect(screen.getByRole('dialog')).toHaveTextContent('/p/paper-2026');
+ fireEvent.click(screen.getByRole('button',{name:'Publish'}));expect(screen.getByRole('dialog')).toHaveTextContent('Paper 2026');
  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Cancel'}));
  expect(vi.mocked(productionCall).mock.calls.some(([path])=>path.endsWith('/publish'))).toBe(false);
  fireEvent.change(screen.getByLabelText('Reader title'),{target:{value:'Changed'}});
@@ -38,13 +38,22 @@ it('shows conflicts and removes loaded production data after access is revoked',
  fireEvent.click(screen.getByRole('button',{name:'공연 설정 저장'}));await waitFor(()=>expect(screen.queryByRole('button',{name:'새 공연'})).not.toBeInTheDocument());
  expect(screen.queryByRole('link',{name:'/p/paper-2026'})).not.toBeInTheDocument();
 });
-it('requires confirmation for explicit link removal and preserves the selected-production URL',async()=>{
+it('collapses existing uploads, hides link identifiers and uses the student sliders at the top',async()=>{
  render(<ProductionManager locale="en"/>);
  fireEvent.change(await screen.findByLabelText('Choose a production'),{target:{value:'paper-2026'}});
- await screen.findByText('Existing link');expect(window.location.search).toContain('production=paper-2026');
- fireEvent.click(screen.getByRole('button',{name:'Remove link'}));
- fireEvent.click(screen.getByRole('button',{name:'Save song links'}));
- expect(vi.mocked(productionCall).mock.calls.filter(([,method])=>method==='PATCH')).toHaveLength(0);
- fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Confirm'}));
- await waitFor(()=>expect(productionCall).toHaveBeenCalledWith('productions/paper-2026/songs','PATCH',{expected:'v1',mediaEdits:{9:null}}));
+ await waitFor(()=>expect(screen.getByLabelText('Reader title')).not.toBeDisabled());
+ expect(document.querySelector('.upload-card')).not.toHaveAttribute('open');
+ expect(screen.queryByLabelText('Link identifier')).not.toBeInTheDocument();
+ const sliders=screen.getByRole('group',{name:'Default context'});
+ expect(within(sliders).getByRole('slider',{name:'Before'})).toHaveValue('2');
+ expect(within(sliders).getByRole('slider',{name:'After'})).toHaveValue('1');
+ expect(sliders.compareDocumentPosition(screen.getByLabelText('Reader title')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+ expect(screen.getByRole('link',{name:'Manage songs'})).toHaveAttribute('href','/admin/songs?production=paper-2026');
+});
+it('opens examples for a new production and generates the link automatically',async()=>{
+ render(<ProductionManager locale="en"/>);fireEvent.click(await screen.findByRole('button',{name:'New production'}));
+ fireEvent.change(screen.getByLabelText('Reader title'),{target:{value:'New Musical 2027'}});
+ expect(document.querySelector('.upload-card')).toHaveAttribute('open');
+ expect(document.querySelectorAll('.csv-example[open]')).toHaveLength(3);
+ expect(screen.queryByLabelText('Link identifier')).not.toBeInTheDocument();
 });

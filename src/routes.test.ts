@@ -11,6 +11,7 @@ describe('reader entry points', () => {
     expect(readerRoute('/admin', 'https:', false)).toEqual({kind:'admin',page:'overview'});
     expect(readerRoute('/admin/', 'https:', false)).toEqual({kind:'admin',page:'overview'});
     expect(readerRoute('/admin/scripts','https:',false)).toEqual({kind:'admin',page:'scripts'});
+    expect(readerRoute('/admin/songs','https:',false)).toEqual({kind:'admin',page:'songs'});
     expect(readerRoute('/admin/accounts','https:',false)).toEqual({kind:'admin',page:'accounts'});
     expect(readerRoute('/admin/nope', 'https:', false)).toEqual({kind:'not-found'});
     expect(readerRoute('/admin', 'file:', false)).toEqual({kind:'local'});
