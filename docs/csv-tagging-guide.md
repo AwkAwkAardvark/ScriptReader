@@ -151,3 +151,22 @@ Media CSV rows use the existing `No,YouTubeURL` format. Supply rows only for son
 ## Downloadable examples in administration
 
 The input helpers use selected actual Chapter 3 records: its heading (`107`), merchant lines (`109`, `110`), and Butter marker (`142`). The matching cast sample uses `Mer1` / Merchant Sept and `Mer2` / Merchant Huit. The media sample maps `142` to the official BTS video linked above. This short excerpt intentionally skips intervening records and preserves the original identifiers and authored cells. It is a preparation example, not a continuous scene or the full production.
+
+
+## Optional student assignments (staff only)
+
+The character cast roster continues to map `Tag,Name` to **characters**. Student casting is a separate optional CSV uploaded at **Assignments** (`/admin/assignments`), after publishing a production. It is never part of public script publication or local-import demos.
+
+Required headers, in this order:
+
+```text
+StudentId,StudentName,Class,Performance,Tag
+```
+
+Use a stable, opaque student code local to this production: 1–64 letters, digits, underscores or hyphens. Generate a code instead of using an LMS identifier. Repeat the same code for all roles and both performances belonging to one student. Names need not be unique: different students with the same name require different codes; validation warns so staff can confirm their identities.
+
+`StudentName` is required; `Class` may be blank until known. Both have a 100-character limit. A student's name and class must agree across all rows with the same code. `Performance` is `1부` or `2부`. `Tag` must exactly match the published character roster, following the preparation conventions above. One row assigns one character in one performance. Each character can have only one student per performance; a student may hold multiple roles and appear in both performances. Split genuinely shared roles into distinct character tags rather than listing multiple names in one cell.
+
+Upload a complete CSV of at most 5 MiB and 5,000 rows, validate, inspect the preview/warnings, then confirm **Save assignments**. Changed files invalidate the preview. Saving replaces the complete list for that production; **Delete assignments** clears it without removing the script. Stale changes fail rather than overwrite another staff member's updates. Update or remove affected assignments before publishing a cast roster that drops assigned tags.
+
+The Teacher Viewer keeps the full script and both casting columns visible. It opens without highlighting. Choose a performance to highlight its assignments; selecting one or more classes restricts highlighting to those classes within the chosen performance(s). Names, character labels and corresponding dialogue are highlighted, while other lines remain visible for teachers to cover. Joint lines highlight if any tagged participant matches; individual student names highlight only when they match. Unknown classes stay blank and are not inferred by the app.
