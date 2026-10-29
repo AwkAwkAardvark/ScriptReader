@@ -43,3 +43,11 @@ it('provides disclosure navigation with Escape support and Korean text',()=>{
  fireEvent.keyDown(screen.getByRole('navigation'),{key:'Escape'});expect(toggle).toHaveAttribute('aria-expanded','false');expect(toggle).toHaveFocus();
  expect(screen.queryByRole('menu')).not.toBeInTheDocument();fireEvent.click(screen.getByRole('button',{name:'ENG'}));expect(onLocale).toHaveBeenCalledWith('en');
 });
+
+it('does not invent a change when clearing an already empty role',()=>{
+ render(<RosterPreview locale="en" onLocale={vi.fn()}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Merchant One · 2부: Unassigned'}));
+ fireEvent.click(screen.getByRole('button',{name:'Clear assignment'}));
+ expect(screen.getByRole('button',{name:'Review changes'})).toBeDisabled();
+ expect(screen.getByRole('button',{name:'Undo'})).toBeDisabled();
+});

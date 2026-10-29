@@ -40,10 +40,10 @@ export function RosterPreview({ locale, onLocale, master = false }: { locale: Lo
   const identity = (s?: Student) => s ? [s.name, s.className, s.label].filter(Boolean).join(' · ') : ko ? '미배정' : 'Unassigned';
   const assignedRoles = (id: string) => roles.flatMap(role => performances.filter(p => draft.casting[slotKey({role:role.tag,performance:p})] === id).map(p => `${p} ${roleName(role.tag)}`)).join(', ');
   const ambiguous = (s: Student) => draft.students.some(other => other.id !== s.id && other.name === s.name && other.className === s.className && other.label === s.label);
-  function change(next: Draft) { setHistory(values => [...values.slice(-19), draft]); setDraft(next); setMessage(''); }
+  function change(next: Draft) { if (JSON.stringify(next) === JSON.stringify(draft)) return; setHistory(values => [...values.slice(-19), draft]); setDraft(next); setMessage(''); }
   function openPicker(slot: Slot) { setPickerSearch(''); setError(''); setModal({ kind: 'pick', slot }); }
   function openStudent(value?: Student, slot?: Slot) { setName(value?.name ?? ''); setClassName(value?.className ?? ''); setLabel(value?.label ?? ''); setError(''); setModal({ kind: 'student', id: value?.id, slot }); }
-  function assign(slot: Slot, id: string) { change({ ...draft, casting: { ...draft.casting, [slotKey(slot)]: id } }); setModal(null); }
+  function assign(slot: Slot, id: string) { const casting = { ...draft.casting }; if (id) casting[slotKey(slot)] = id; else delete casting[slotKey(slot)]; change({ ...draft, casting }); setModal(null); }
   function saveStudent() {
     if (!name.trim()) { setError(ko ? '이름을 입력하세요.' : 'Enter a name.'); return; }
     if (modal?.kind !== 'student') return;
