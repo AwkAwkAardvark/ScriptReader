@@ -1,7 +1,7 @@
 import { attribution, type FilteredScript, type Script } from './script';
 
 export type ReadingEntry = {
-  no: number; scene: number; english: string; korean: string; speaker: string;
+  tags?: readonly string[]; no: number; scene: number; english: string; korean: string; speaker: string;
   kind: 'scene' | 'song' | 'dialogue' | 'cue'; highlighted: boolean; stageDirection: boolean;
 };
 export type ReadingBlock = { kind: 'scene'; entry: ReadingEntry } |
