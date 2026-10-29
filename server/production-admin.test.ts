@@ -69,9 +69,9 @@ it('keeps the anonymous homepage response minimal and all content management ser
  await local.db.exec('set role service_role');
  try {
   expect((await manage('list')).productions).toHaveLength(1);expect(await local.rpc('reader_home',{})).toEqual({destination:'/import'});
-  expect((await api('productions','POST',{...files,slug:'service-2027'})).status).toBe(200);
-  const state=await manage('list');const p=state.productions.find((p:any)=>p.slug==='service-2027');
-  expect((await api('productions/service-2027','PATCH',{title:p.title,before:3,after:2,expected:p.version})).status).toBe(200);
+  expect((await api('productions','POST',{...files,slug:'validate'})).status).toBe(200);
+  const state=await manage('list');const p=state.productions.find((p:any)=>p.slug==='validate');
+  expect((await api('productions/validate','PATCH',{title:p.title,before:3,after:2,expected:p.version})).status).toBe(200);
   expect((await api('home','PATCH',{slug:null,expected:state.home.version})).status).toBe(200);
  }
  finally{await local.db.exec('reset role');}

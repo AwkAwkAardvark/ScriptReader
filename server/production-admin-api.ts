@@ -14,7 +14,7 @@ export async function handleProductionAdmin(request: Request, env: Environment, 
   const url = new URL(request.url);
   const home = url.pathname === '/api/admin/home';
   const collection = url.pathname === '/api/admin/productions';
-  const validate = url.pathname === '/api/admin/productions/validate';
+  const validate = url.pathname === '/api/admin/productions/validate' && request.method === 'POST';
   const match = validate ? null : url.pathname.match(/^\/api\/admin\/productions\/([a-z0-9]+(?:-[a-z0-9]+)*)(\/publish)?$/);
   const slug = match?.[1];
   const publish = collection && request.method === 'POST' || Boolean(match?.[2]);
