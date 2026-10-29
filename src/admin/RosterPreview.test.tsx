@@ -8,7 +8,10 @@ it('keeps same-name students distinct using classes and existing role context wi
  render(<RosterPreview locale="en" onLocale={vi.fn()}/>);
  fireEvent.click(screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPG'}));
  const dialog=screen.getByRole('dialog');expect(within(dialog).getAllByText('김민준')).toHaveLength(2);
- expect(within(dialog).getAllByText('Same name and class — check current roles')).toHaveLength(2);
+ expect(dialog.querySelectorAll('.roster-name-marker')).toHaveLength(4);
+ expect(dialog.querySelectorAll('.roster-multi-role')).toHaveLength(1);
+ expect(dialog.querySelector('.roster-multi-role')).toHaveTextContent('김민준');
+ expect(dialog).not.toHaveTextContent('Matching names stay separate.');
  expect(dialog.textContent).not.toContain('sample-a');
  fireEvent.click(within(dialog).getByRole('button',{name:/김민준 · EPI · 2부 Guard One/}));
  expect(screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPI'})).toBeInTheDocument();
@@ -50,4 +53,13 @@ it('does not invent a change when clearing an already empty role',()=>{
  fireEvent.click(screen.getByRole('button',{name:'Clear assignment'}));
  expect(screen.getByRole('button',{name:'Review changes'})).toBeDisabled();
  expect(screen.getByRole('button',{name:'Undo'})).toBeDisabled();
+});
+
+it('shades only distinct multiple-role students in the picker, not multiple performances of one role',()=>{
+ render(<RosterPreview locale="en" onLocale={vi.fn()}/>);
+ expect(document.querySelectorAll('.roster-multi-role')).toHaveLength(0);
+ fireEvent.click(screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPG'}));
+ fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'김민준 · EPI · 2부 Guard One'}));
+ fireEvent.click(screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPI'}));
+ expect(document.querySelectorAll('.roster-multi-role')).toHaveLength(0);
 });
