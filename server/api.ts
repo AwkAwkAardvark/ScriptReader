@@ -5,6 +5,7 @@ import { supabaseRpc, type FetchArgs, type FetchResult, type Rpc } from './datab
 
 export type Environment = {
   SUPABASE_URL: string; SUPABASE_SECRET_KEY: string; BROWSER_COOKIE_SECRET: string;
+  SUPABASE_PUBLISHABLE_KEY?: string; ADMIN_ORIGIN?: string;
   BROWSER_REQUESTS_PER_MINUTE?: string; IP_REQUESTS_PER_MINUTE?: string; NEW_IDENTITIES_PER_MINUTE?: string;
 };
 const encoder = new TextEncoder();
