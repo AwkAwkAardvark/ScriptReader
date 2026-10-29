@@ -1,7 +1,8 @@
+import type { MediaEdits } from '../song-links';
 export type ManagedProduction = { slug: string; title: string; revision: string; version: string; before: number; after: number; publishedAt: string; mediaCount: number };
 export type HomeSetting = { slug: string | null; version: string };
 export type ProductionList = { productions: ManagedProduction[]; home: HomeSetting };
-export type Upload = { slug: string; title: string; before: number; after: number; expected: string | null; script: string; cast: string; media?: string };
+export type Upload = { slug: string; title: string; before: number; after: number; expected: string | null; script: string; cast: string; media?: string; mediaEdits?: MediaEdits; acknowledgeUnmatched?: boolean };
 export class ProductionFailure extends Error {
  constructor(public code: string, public diagnostics?: string) { super(code); }
 }

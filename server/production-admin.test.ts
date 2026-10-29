@@ -66,6 +66,19 @@ it('retains omitted media, supports explicit removal, and serializes competing u
  expect((await api('productions/'+p.slug+'/songs','PATCH',{expected:metadata.version,mediaEdits:{9:'https://youtu.be/abcdefghijk'}})).status).toBe(409);
  expect((await manage('list')).productions[0].mediaCount).toBe(0);
 });
+it('requires review of renamed linked songs and permits explicit reassignment',async()=>{
+ const path='productions/paper-2026';
+ expect((await api(path+'/songs','GET',undefined,null)).status).toBe(401);
+ expect((await api(path+'/songs','GET',undefined,pending)).status).toBe(403);
+ let context=await (await api(path+'/songs')).json();
+ expect((await api(path+'/songs','PATCH',{expected:context.version,mediaEdits:{9:'https://youtu.be/abcdefghijk'}})).status).toBe(200);
+ context=await (await api(path+'/songs')).json();
+ const input={...files,expected:context.version,script:files.script.replace('A little time to wonder','A renamed song')};
+ const preview=await (await api('productions/validate','POST',input)).json();expect(preview.unmatched).toHaveLength(1);expect(preview.media).toEqual({});
+ expect((await api(path+'/publish','POST',input)).status).toBe(409);
+ expect((await api(path+'/publish','POST',{...input,acknowledgeUnmatched:true,mediaEdits:{9:'https://youtu.be/abcdefghijk'}})).status).toBe(200);
+ expect((await (await api(path+'/songs')).json()).songs.find((s:any)=>s.no===9)).toMatchObject({title:'A renamed song',video:'abcdefghijk'});
+});
 it('keeps the anonymous homepage response minimal and all content management server-only',async()=>{
  const response=await handleApi(new Request('https://reader.test/api/home'),env,local.rpc);
  expect(response.status).toBe(200);expect(response.headers.get('Cache-Control')).toBe('no-store');

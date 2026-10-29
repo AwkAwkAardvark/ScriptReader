@@ -77,9 +77,10 @@ export async function handleProductionAdmin(request: Request, env: Environment, 
     if (validate || publish) {
       if (typeof body.script !== 'string' || typeof body.cast !== 'string' || body.media !== undefined && typeof body.media !== 'string') return error('invalid_request', 400);
       try {
-        const resolved=resolveSongLinks(preparePublication(body.script, body.cast, body.media as string | undefined),context?.songs,edits as MediaEdits);
+        const parsed=preparePublication(body.script, body.cast, body.media as string | undefined);
+        const resolved=resolveSongLinks(parsed,context?.songs,edits as MediaEdits);
         payload=resolved.payload;
-        if(validate)return json({records:payload.script.records.length,characters:payload.script.characters.length,videos:Object.keys(payload.media).length,media:payload.media,songs:resolved.songs,unmatched:resolved.unmatched});
+        if(validate)return json({records:payload.script.records.length,characters:payload.script.characters.length,videos:Object.keys(payload.media).length,media:payload.media,songs:resolved.songs,baselineSongs:resolveSongLinks(parsed,context?.songs).songs,unmatched:resolved.unmatched});
         if(resolved.unmatched.length && body.acknowledgeUnmatched!==true)return json({error:'needs_review',diagnostics:'Review unmatched existing songs before publishing.'},409);
       }
       catch (value) { return json({ error: 'validation', diagnostics: value instanceof PublicationError ? value.message : 'Invalid CSV files.' }, 422); }

@@ -259,3 +259,10 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
 .production-manager button:disabled { opacity: .5; cursor: default; }
 .production-preview > label:has(input[type=checkbox]) { display: flex; align-items: center; gap: 10px; }
 .production-preview input[type=checkbox] { width: 18px; height: 18px; accent-color: #315b44; }
+.admin-navigation { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 22px; }
+.admin-navigation a { border: 1px solid #bdcdc1; padding: 10px 16px; border-radius: 999px; color: #315b44; text-decoration: none; }
+.admin-navigation a[aria-current=page] { background: #315b44; color: white; }
+#managed-production { width: 100%; margin: 12px 0; }
+.song-links-editor fieldset { border: 1px solid #dce5df; padding: 12px; border-radius: 12px; margin: 14px 0; }
+.song-links-editor legend { overflow-wrap: anywhere; max-width: 100%; padding: 0 4px; }
+.song-links-editor label { display: grid; gap: 8px; margin: 10px 0; }
