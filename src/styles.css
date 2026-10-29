@@ -343,3 +343,11 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
  .teacher-view .scene-heading { margin-top: .8rem; }
  .teacher-view .entry-text p { margin-top: .15rem; margin-bottom: .15rem; }
 }
+
+
+/* Allow private assignment cards to shrink below their CSV/table contents. */
+.assignment-manager, .assignment-manager > .admin-card, .assignment-manager .csv-example { min-width: 0; max-width: 100%; }
+.assignment-manager .csv-example pre { width: 100%; box-sizing: border-box; }
+.assignment-manager input[type=file], .assignment-manager select { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; }
+.assignment-manager .admin-heading { flex-wrap: wrap; }
+.assignment-manager .admin-heading h2 { min-width: 0; overflow-wrap: anywhere; }
