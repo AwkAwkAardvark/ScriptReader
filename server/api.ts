@@ -41,6 +41,11 @@ export async function handleApi(request: Request, env: Environment, rpcOverride?
   try {
     if (!env.BROWSER_COOKIE_SECRET || env.BROWSER_COOKIE_SECRET.length < 32) return problem('unavailable');
     const url = new URL(request.url);
+    if (url.pathname === '/api/home') {
+      if (request.method !== 'GET' || url.search) return problem('invalid_request');
+      const rpc = rpcOverride ?? supabaseRpc(env.SUPABASE_URL, env.SUPABASE_SECRET_KEY);
+      return respond(await rpc('reader_home', {}));
+    }
     const route = url.pathname.match(/^\/api\/productions\/([a-z0-9]+(?:-[a-z0-9]+)*)(\/passages)?$/);
     if (!route || route[1].length > 80) return problem('not_found');
     if (request.method !== 'POST') return respond({ error: 'invalid_request' }, 405);

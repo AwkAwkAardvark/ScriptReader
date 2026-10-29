@@ -89,7 +89,7 @@ describe('database admissions and revisions', () => {
   });
   it('denies anonymous table/function access and explicitly enables RLS', async () => {
     const rls = await local.db.query<{ relrowsecurity: boolean }>("select relrowsecurity from pg_class where relname like 'reader_%' and relkind = 'r'");
-    expect(rls.rows).toHaveLength(6); expect(rls.rows.every(row => row.relrowsecurity)).toBe(true);
+    expect(rls.rows).toHaveLength(7); expect(rls.rows.every(row => row.relrowsecurity)).toBe(true);
     for (const role of ['anon', 'authenticated']) {
       await local.db.exec(`set role ${role}`);
       try {
