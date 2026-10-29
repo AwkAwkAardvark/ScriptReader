@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.12 — 2026-10-30
+
+- Keep reader and teacher settings reachable while scrolling; compact mobile panels open over the page without moving script content, with bounded scrolling and keyboard dismissal.
+- Use Korean placeholder names consistently in roster and assignment examples, mark shared names with an asterisk, and shade students holding multiple distinct roles only within the roster picker.
+- Remove redundant roster helper text while preserving the desktop sidebar and existing teaching highlights.
+
 ## v0.3.11 — 2026-10-30
 
 - Add a staff-only, isolated roster interface preview with fictional students, role/performance selection, duplicate-name context, optional distinguishing labels, search, undo and sample change review.

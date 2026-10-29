@@ -22,6 +22,8 @@ npm run preview
 
 The hosted root opens the main production; use `/import` for CSV import in a production preview. Local Vite development at `/` and the portable file demo retain their import entry points. The preview serves only the built application. Private script files are never included in it.
 
+Reader controls remain reachable while scrolling: the desktop sidebar stays in view, and the compact mobile settings strip opens a bounded panel without moving the script. Escape closes the mobile panel and returns focus to its settings button.
+
 Balanced parentheses within dialogue, including nested or multiline actions, are italicized on screen and in print. The original text is preserved; unmatched parentheses and square brackets remain literal text. Structural headings and songs are not parsed as dialogue.
 
 Actions and cues are shown by default. **Hide actions & cues** removes standalone direction/effect rows and stops tagged nonverbal actions from initiating windows. Inline parentheticals in spoken lines stay visible. Songs and scene headings remain for included scenes. Context still counts original source rows, so hiding a cue does not pull in a replacement dialogue row. Screen and print use the same reduced view.
@@ -64,7 +66,7 @@ Hosted headers restrict scripts/connections to the same origin, allow YouTube fr
 
 ### Roster interface preview
 
-Approved staff can try `/admin/roster-preview`, linked from Assignments. The prototype uses fictional students and roles; changes stay in component memory and reset on reload. It does not load or save production casting. Duplicate names remain separate, with class/current-role context and optional staff-defined distinguishing labels. Labels and roster editing are interface proposals, not extensions to the current assignment CSV contract or database schema.
+Approved staff can try `/admin/roster-preview`, linked from Assignments. The prototype uses fictional students and roles; changes stay in component memory and reset on reload. It does not load or save production casting. Duplicate names remain separate, with class/current-role context and optional staff-defined distinguishing labels. Shared names carry an asterisk; distinct multiple-role students have a different shade only in the roster picker. Playing the same role in both performances does not count as multiple roles. Labels and roster editing are interface proposals, not extensions to the current assignment CSV contract or database schema.
 
 ### Private teacher viewer
 
