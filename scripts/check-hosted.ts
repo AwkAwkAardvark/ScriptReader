@@ -72,7 +72,11 @@ try {
     assert.equal(await page.locator('.settings-summary').getAttribute('aria-expanded'), 'false');
     assert.equal(await page.locator('#reader-title').isVisible(), false);
     assert.equal(await page.locator('.production-title').evaluate(e => e.clientWidth), 1);
-    // Opening the body must not move/reflow its header or change the panel corners.
+    await page.evaluate(()=>window.scrollTo(0,500));
+    await page.waitForTimeout(100);
+    const floating=await page.locator('.controls').boundingBox();assert.ok(floating && floating.y>=0 && floating.y<=10);assert.ok(floating.height<=64);
+    const readingPosition=await page.evaluate(()=>document.querySelector('.reader')!.getBoundingClientRect().top);
+    // Floating settings do not move the script or change header geometry/corners.
     const headerGeometry = () => page.locator('.controls').evaluate(panel => {
       const origin = panel.getBoundingClientRect();
       return { radius: getComputedStyle(panel).borderRadius, boxes: ['.settings-summary', '.settings-title', '.menu-icon'].map(selector => {
@@ -85,10 +89,13 @@ try {
     await page.locator('.settings-summary').click();
     assert.equal(await page.getByLabel('Character', { exact: true }).isVisible(), true);
     assert.deepEqual(await headerGeometry(), closedHeader);
-    assert.ok(await page.locator('.controls').evaluate(panel => panel.clientHeight) > closedHeight);
+    assert.equal(await page.locator('.controls').evaluate(panel => panel.clientHeight),closedHeight);
+    assert.ok(Math.abs(await page.evaluate(()=>document.querySelector('.reader')!.getBoundingClientRect().top)-readingPosition)<2);
+    const settingsBox=await page.locator('#settings-body').boundingBox();assert.ok(settingsBox&&settingsBox.y>=0&&settingsBox.y+settingsBox.height<=844);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: join(out, `hosted-mobile-expanded-${width}.png`), fullPage: true });
-    await page.locator('.settings-summary').click();
+    await page.getByLabel('Character',{exact:true}).focus();await page.keyboard.press('Escape');
+    assert.equal(await page.locator('.settings-summary').getAttribute('aria-expanded'),'false');
     assert.deepEqual(await headerGeometry(), closedHeader);
     await page.screenshot({ path: join(out, `hosted-mobile-${width}.png`), fullPage: true });
   }

@@ -31,3 +31,11 @@ describe('responsive settings', () => {
     expect(screen.getByLabelText('Character')).toBeVisible();
   });
 });
+
+it('closes floating mobile settings with Escape and returns focus without losing the character',()=>{
+ viewport(true);render(panel('Ro'));
+ const summary=screen.getByRole('button',{name:'Workshop Musical 2026: Paper Garden — Settings'});
+ fireEvent.click(summary);fireEvent.keyDown(screen.getByLabelText('Character'),{key:'Escape'});
+ expect(summary).toHaveAttribute('aria-expanded','false');expect(summary).toHaveFocus();
+ expect(summary.closest('aside')).toHaveClass('controls-reading');
+});

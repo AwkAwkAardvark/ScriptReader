@@ -20,7 +20,7 @@ export function ControlsPanel({ character, title, text, children }: {
     else if (mobile) { setExpanded(false); summary.current?.focus({ preventScroll: true }); }
   }, [character, mobile]);
   const open = !mobile || expanded;
-  return <aside className={`controls${open ? '' : ' controls-collapsed'}`} aria-label={text.settings}>
+  return <aside className={`controls${open ? '' : ' controls-collapsed'}${character ? ' controls-reading' : ''}`} aria-label={text.settings} onKeyDown={event => { if (event.key === 'Escape' && mobile && character && expanded) { event.preventDefault(); setExpanded(false); summary.current?.focus({ preventScroll: true }); } }}>
     <button ref={summary} className="settings-summary" aria-label={`${title || text.app} — ${text.settingsButton}`} aria-expanded={open} aria-controls="settings-body" onClick={() => setExpanded(value => !value)}>
       <span className="settings-title">{title || text.app}</span><span className="menu-icon" aria-hidden="true">☰</span>
     </button>

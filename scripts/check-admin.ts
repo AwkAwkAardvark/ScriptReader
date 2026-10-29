@@ -134,7 +134,7 @@ try {
   await staff.getByText('CSV format',{exact:true}).click();
   const csvExample=staff.getByLabel('Assignment CSV example',{exact:true});
   await csvExample.waitFor();
-  assert.ok((await csvExample.innerText()).includes('Alex Kim'));
+  assert.ok((await csvExample.innerText()).includes('김민준'));
   for(const width of [320,390,1440]) {
     await staff.setViewportSize({width,height:1000});
     assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
@@ -169,6 +169,16 @@ try {
   assert.equal(await staff.locator('.teacher-view [data-record]').count(),recordCount);
   await staff.locator('.teacher-settings > summary').click();
   for(const width of [320,390,1440]) {await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`teacher-${width}.png`),fullPage:true});}
+  await staff.setViewportSize({width:390,height:700});
+  await staff.evaluate(()=>window.scrollTo(0,800));await staff.waitForTimeout(100);
+  const viewerBar=await staff.locator('.teacher-settings').boundingBox();assert.ok(viewerBar&&viewerBar.y>=0&&viewerBar.y<=10&&viewerBar.height<80);
+  const anchorTop=await staff.locator('.teacher-view [data-record="10"]').evaluate(e=>e.getBoundingClientRect().top);
+  await staff.locator('.teacher-settings > summary').click();
+  assert.ok(Math.abs(await staff.locator('.teacher-view [data-record="10"]').evaluate(e=>e.getBoundingClientRect().top)-anchorTop)<2);
+  await staff.getByRole('radio',{name:'2부',exact:true}).check();assert.ok(await staff.evaluate(()=>window.scrollY>200));
+  await staff.keyboard.press('Escape');assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
+  await staff.screenshot({path:join(out,'teacher-floating-390.png')});
+  await staff.evaluate(()=>window.scrollTo(0,0));
   await staff.getByRole('button',{name:'한국어',exact:true}).click();
   await staff.getByRole('heading',{name:'교사용 대본',exact:true}).waitFor();
   await staff.screenshot({path:join(out,'teacher-ko.png'),fullPage:true});
@@ -204,7 +214,9 @@ try {
   await staff.setViewportSize({width:390,height:1000});
   await staff.getByRole('button',{name:'Guard One · 1부: 김민준 · EPG',exact:true}).click();
   await staff.getByRole('dialog').getByRole('button',{name:'김민준 · EPI · 2부 Guard One',exact:true}).waitFor();
-  assert.equal(await staff.getByText('Same name and class — check current roles',{exact:true}).count(),2);
+  assert.equal(await staff.getByRole('dialog').locator('.roster-name-marker').count(),4);
+  assert.equal(await staff.getByRole('dialog').locator('.roster-multi-role').count(),1);
+  assert.equal(await staff.getByText('Matching names stay separate. Check the class and current roles.',{exact:true}).count(),0);
   await staff.screenshot({path:join(out,'roster-duplicate-picker-390.png')});
   await staff.getByRole('dialog').getByRole('button',{name:'김민준 · EPI · 2부 Guard One',exact:true}).click();
   await staff.getByRole('button',{name:'Review changes',exact:true}).click();
