@@ -3,6 +3,7 @@
 ## v0.3.7 — 2026-10-29
 
 - Replace fictional staff CSV examples with selected Chapter 3 merchant records, their actual cast mappings, and the Butter marker with its official video association; preserve source identifiers.
+- Style reader, song-management, and video links as consistent secondary actions with visible keyboard focus and external-link indicators.
 - Clarify three-letter tags for new named roles and three-letter-plus-number tags for ensemble members, while preserving established identifiers.
 
 ## v0.3.6 — 2026-10-29

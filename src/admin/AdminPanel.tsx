@@ -1,3 +1,4 @@
+import { AdminActionLink } from './AdminActionLink';
 import { SongManager } from './SongManager';
 import { ProductionManager } from './ProductionManager';
 import { useEffect, useRef, useState } from 'react';
@@ -79,7 +80,7 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
       </div>
     </header>
     <main className="admin-main" aria-busy={loading || busy}>
-      <div className="admin-heading"><h1>{page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title}</h1><a href="/">{text.reader}</a></div>
+      <div className="admin-heading"><h1>{page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title}</h1><AdminActionLink href="/">{text.reader}</AdminActionLink></div>
       {error && <p className="admin-error" role="alert">{text.errors[error]}</p>}
       {!error && new URLSearchParams(window.location.search).get('auth') === 'failed' && !session?.user && <p className="admin-error" role="alert">{text.loginFailed}</p>}
       {loading ? <p role="status">{text.loading}</p> : !session?.user ? <section className="admin-card admin-signin">
