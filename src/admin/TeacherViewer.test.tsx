@@ -20,6 +20,12 @@ it('opens with collapsed settings and both casting columns, highlights dialogue 
  render(<TeacherViewer locale="en"/>);
  await screen.findAllByText('Student Two');
  expect(document.querySelector('.teacher-settings')).not.toHaveAttribute('open');
+ const summary=document.querySelector('.teacher-settings > summary')!;
+ expect(summary.querySelector('.settings-title')).toHaveTextContent('Workshop');
+ expect(summary.querySelector('.menu-icon')).toHaveTextContent('☰');
+ expect(summary).toHaveAttribute('aria-label','Workshop · Both — Settings');
+ expect(screen.getByLabelText('Display Korean lines').parentElement).toHaveClass('toggle-row');
+ expect(document.querySelectorAll('.teacher-view .roster-multi-role')).toHaveLength(0);
  expect(document.querySelectorAll('.script-entry.highlighted')).toHaveLength(0);
  const initial=document.querySelectorAll('[data-record]').length;
  fireEvent.click(document.querySelector('.teacher-settings > summary')!);

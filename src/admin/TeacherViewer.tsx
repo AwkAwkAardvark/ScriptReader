@@ -1,3 +1,4 @@
+import { SettingsLabel } from '../SettingsLabel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PERFORMANCES, assignmentMatches, type ViewerSelection } from '../assignments';
 import { ReadingContent } from '../ReadingContent';
@@ -59,12 +60,12 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
   const both = ko ? '전체 공연' : 'Both';
   const summary = `${context?.title ?? (ko ? '공연 선택' : 'Production')} · ${selection.performance === 'both' ? both : selection.performance}${selection.classes.length ? ' · ' + selection.classes.join(', ') : ''}`;
   return <section className="teacher-view" aria-busy={loading}>
-    <details ref={settings} className="admin-card teacher-settings" onKeyDown={event => { if (event.key === 'Escape' && settings.current?.open) { event.preventDefault(); settings.current.open = false; settings.current.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true }); } }}><summary title={summary}><span>{summary}</span><span>{ko ? '설정' : 'Settings'}</span></summary>
-      <div className="teacher-settings-body"><label htmlFor="viewer-production">{ko ? '공연' : 'Production'}</label>
+    <details ref={settings} className="admin-card teacher-settings" onKeyDown={event => { if (event.key === 'Escape' && settings.current?.open) { event.preventDefault(); settings.current.open = false; settings.current.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true }); } }}><summary className="settings-summary" title={summary} aria-label={`${summary} — ${ko ? '설정' : 'Settings'}`}><SettingsLabel title={context?.title ?? (ko ? '공연 선택' : 'Production')}/></summary>
+      <div className="teacher-settings-body"><label className="control-label" htmlFor="viewer-production">{ko ? '공연' : 'Production'}</label>
       <select id="viewer-production" value={selected} onChange={e => setSelected(e.target.value)}><option value="">{ko ? '공연 선택' : 'Choose a production'}</option>{list?.productions.map(p => <option value={p.slug} key={p.slug}>{p.title}</option>)}</select>
-      <fieldset className="teacher-performance"><legend>{ko ? '공연 회차' : 'Performance'}</legend>{(['both', ...PERFORMANCES] as const).map(value => <label key={value}><input type="radio" name="performance" value={value} checked={selection.performance === value} onChange={() => setSelection(s => ({ ...s, performance: value }))} />{value === 'both' ? both : value}</label>)}</fieldset>
-      <fieldset className="teacher-classes"><legend>{ko ? '반' : 'Classes'}</legend>{classes.map(value => <label key={value}><input type="checkbox" checked={selection.classes.includes(value)} onChange={() => setSelection(s => ({ ...s, classes: s.classes.includes(value) ? s.classes.filter(c => c !== value) : [...s.classes, value] }))} />{value}</label>)}{!classes.length && <small>{ko ? '등록된 반이 없습니다.' : 'No classes assigned.'}</small>}</fieldset>
-      <label className="teacher-korean"><input type="checkbox" checked={showKorean} onChange={e => setShowKorean(e.target.checked)} />{ko ? '한국어 표기' : 'Display Korean lines'}</label>
+      <fieldset className="teacher-performance"><legend className="control-label">{ko ? '공연 회차' : 'Performance'}</legend>{(['both', ...PERFORMANCES] as const).map(value => <label key={value}><input type="radio" name="performance" value={value} checked={selection.performance === value} onChange={() => setSelection(s => ({ ...s, performance: value }))} />{value === 'both' ? both : value}</label>)}</fieldset>
+      <fieldset className="teacher-classes"><legend className="control-label">{ko ? '반' : 'Classes'}</legend>{classes.map(value => <label key={value}><input type="checkbox" checked={selection.classes.includes(value)} onChange={() => setSelection(s => ({ ...s, classes: s.classes.includes(value) ? s.classes.filter(c => c !== value) : [...s.classes, value] }))} />{value}</label>)}{!classes.length && <small>{ko ? '등록된 반이 없습니다.' : 'No classes assigned.'}</small>}</fieldset>
+      <label className="toggle-row teacher-korean"><input type="checkbox" checked={showKorean} onChange={e => setShowKorean(e.target.checked)} /><span className="toggle-track" aria-hidden="true"/><span>{ko ? '한국어 표기' : 'Display Korean lines'}</span></label>
       {selected && <AdminActionLink href={`/admin/assignments?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 배정 관리' : 'Manage assignments'}</AdminActionLink>}
       </div>
     </details>

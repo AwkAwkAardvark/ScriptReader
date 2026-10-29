@@ -55,11 +55,21 @@ it('does not invent a change when clearing an already empty role',()=>{
  expect(screen.getByRole('button',{name:'Undo'})).toBeDisabled();
 });
 
-it('shades only distinct multiple-role students in the picker, not multiple performances of one role',()=>{
+it('shades distinct multiple-role students across roster cards and picker, not repeated performances',()=>{
  render(<RosterPreview locale="en" onLocale={vi.fn()}/>);
- expect(document.querySelectorAll('.roster-multi-role')).toHaveLength(0);
+ expect(document.querySelectorAll('.roster-cast-button.roster-multi-role')).toHaveLength(2);
  fireEvent.click(screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPG'}));
  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'김민준 · EPI · 2부 Guard One'}));
  fireEvent.click(screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPI'}));
  expect(document.querySelectorAll('.roster-multi-role')).toHaveLength(0);
+});
+
+it('updates every affected role card and Undo restores multi-role shading',()=>{
+ render(<RosterPreview locale="en" onLocale={vi.fn()}/>);
+ const card=screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPG'});expect(card).toHaveClass('roster-multi-role');
+ expect(screen.getByRole('button',{name:'Merchant Two · 1부: 김민준 · EPG'})).toHaveClass('roster-multi-role');
+ expect(screen.getByRole('button',{name:'Guard One · 2부: 김민준 · EPI'})).not.toHaveClass('roster-multi-role');
+ fireEvent.click(card);fireEvent.click(screen.getByRole('button',{name:'Clear assignment'}));
+ expect(screen.getByRole('button',{name:'Merchant Two · 1부: 김민준 · EPG'})).not.toHaveClass('roster-multi-role');
+ fireEvent.click(screen.getByRole('button',{name:'Undo'}));expect(screen.getByRole('button',{name:'Merchant Two · 1부: 김민준 · EPG'})).toHaveClass('roster-multi-role');
 });

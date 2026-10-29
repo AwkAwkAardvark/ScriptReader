@@ -157,6 +157,8 @@ try {
   await staff.getByRole('link',{name:'Open teacher viewer',exact:true}).click();
   await staff.locator('.teacher-view .script-entry').first().waitFor();
   assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
+  assert.equal(await staff.locator('.teacher-settings .menu-icon').innerText(),'☰');
+  assert.equal(await staff.locator('.teacher-settings .settings-title').innerText(),'Workshop 2027 revised');
   assert.equal(await staff.locator('.teacher-view .script-entry.highlighted').count(),0);
   const recordCount=await staff.locator('.teacher-view [data-record]').count();
   assert.equal(recordCount,17); // three scene headings are outside data-record entries
@@ -171,9 +173,10 @@ try {
   for(const width of [320,390,1440]) {await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`teacher-${width}.png`),fullPage:true});}
   await staff.setViewportSize({width:390,height:700});
   await staff.evaluate(()=>window.scrollTo(0,800));await staff.waitForTimeout(100);
-  const viewerBar=await staff.locator('.teacher-settings').boundingBox();assert.ok(viewerBar&&viewerBar.y>=0&&viewerBar.y<=10&&viewerBar.height<80);
+  const viewerBar=await staff.locator('.teacher-settings').boundingBox();assert.ok(viewerBar&&viewerBar.y>=0&&viewerBar.y<=10&&viewerBar.height<=64);
   const anchorTop=await staff.locator('.teacher-view [data-record="10"]').evaluate(e=>e.getBoundingClientRect().top);
   await staff.locator('.teacher-settings > summary').click();
+  await staff.screenshot({path:join(out,'teacher-floating-expanded-390.png')});
   assert.ok(Math.abs(await staff.locator('.teacher-view [data-record="10"]').evaluate(e=>e.getBoundingClientRect().top)-anchorTop)<2);
   await staff.getByRole('radio',{name:'2부',exact:true}).check();assert.ok(await staff.evaluate(()=>window.scrollY>200));
   await staff.keyboard.press('Escape');assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
@@ -199,6 +202,8 @@ try {
   assert.equal((await (await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/assignments')).json()).assignments.length,0);
   await staff.getByRole('link',{name:'Try roster preview',exact:true}).click();
   await staff.getByRole('heading',{name:'Roster',exact:true}).waitFor();
+  assert.equal(await staff.locator('.roster-cast-button.roster-multi-role').count(),2);
+  assert.ok(await staff.getByRole('button',{name:'Guard One · 1부: 김민준 · EPG',exact:true}).evaluate(e=>getComputedStyle(e).backgroundColor==='rgb(251, 239, 223)'));
   const writes:string[]=[];const recordWrites=(request:import('playwright').Request)=>{if(request.url().includes('/api/admin/')&&['POST','PATCH','DELETE'].includes(request.method()))writes.push(request.url());};
   staff.on('request',recordWrites);
   for(const width of [320,390,1440]) {
