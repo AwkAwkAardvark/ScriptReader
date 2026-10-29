@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.6 — 2026-10-29
+
+- Move published song-link management to a dedicated Songs page, grouped in one collapsed card per selected production.
+- Place default context sliders first, matching the student reader; generate production link identifiers automatically.
+- Collapse existing-production file uploads, add small downloadable CSV examples, and keep replacement-song review together at the bottom of the upload workflow.
+
 ## v0.3.5 — 2026-10-29
 
 - Separate administration into account/status, Scripts, and master-only Accounts pages; use a production dropdown with refreshable direct links.
