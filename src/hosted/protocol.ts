@@ -3,7 +3,7 @@ import type { ReadingBlock, ReadingDocument, ReadingEntry } from '../reading-doc
 
 export type Counts = { before: number; after: number; includeNonDialogue: boolean };
 export const viewKey = (counts: Counts) => `${counts.before}:${counts.after}:${Number(counts.includeNonDialogue)}`;
-export type Production = { slug: string; title: string; revision: string; characters: Character[]; used: number; resetAt: string };
+export type Production = { slug: string; title: string; revision: string; defaults?: { before: number; after: number }; characters: Character[]; used: number; resetAt: string };
 type BlockReferences = { kind: 'scene'; no: number } | { kind: 'passage'; passage: number; entries: number[] };
 export type View = { context: Counts; blocks: BlockReferences[]; sceneCount: number; contributionCount: number };
 export type PassageBundle = {

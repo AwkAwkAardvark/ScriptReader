@@ -14,7 +14,7 @@ export async function startHostedDemo(apiPort = 8788, webPort = 5173, options: {
   await rpc('reader_publish', { p_slug: 'synthetic-garden', p_title: 'Workshop Musical 2026: The Paper Garden', p_payload: payload });
   const server = createHttpServer(async (req, res) => {
     const parts: Buffer[] = []; let length = 0;
-    for await (const part of req) { length += part.length; if (length > 4096) { res.writeHead(413); res.end(); return; } parts.push(part); }
+    for await (const part of req) { length += part.length; if (length > 5 * 1024 * 1024) { res.writeHead(413); res.end(); return; } parts.push(part); }
     const headers = new Headers();
     for (const [key, value] of Object.entries(req.headers)) if (value) headers.set(key, Array.isArray(value) ? value.join(',') : value);
     const method = req.method ?? 'GET';

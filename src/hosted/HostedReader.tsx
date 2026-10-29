@@ -28,7 +28,7 @@ export function HostedReader({ slug }: { slug: string }) {
   useEffect(() => {
     let active = true; const abort = new AbortController();
     setProduction(null); setCharacter(''); setProblem(null); setResult(null); cache.current.clear();
-    void loadProduction(slug, abort.signal).then(value => { if (active) setProduction(value); }, error => {
+    void loadProduction(slug, abort.signal).then(value => { if (active) { setProduction(value);setCounts(value.defaults ?? DEFAULT_CONTEXT); } }, error => {
       if (active) setProblem(error instanceof ApiFailure ? error.problem : { error: 'unavailable' });
     });
     return () => { active = false; abort.abort(); };

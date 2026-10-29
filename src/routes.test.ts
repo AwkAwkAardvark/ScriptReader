@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readerRoute } from './routes';
 
 describe('reader entry points', () => {
-  it('opens the main production at the hosted root and preserves production links', () => {
-    expect(readerRoute('/', 'https:', false)).toEqual({kind:'production',slug:'aladdin'});
+  it('resolves the configured homepage at the hosted root and preserves production links', () => {
+    expect(readerRoute('/', 'https:', false)).toEqual({kind:'home'});
     expect(readerRoute('/p/aladdin-pilot/', 'https:', false)).toEqual({kind:'production',slug:'aladdin-pilot'});
     expect(readerRoute('/p/another-script', 'https:', false)).toEqual({kind:'production',slug:'another-script'});
   });
