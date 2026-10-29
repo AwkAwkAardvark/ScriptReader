@@ -131,6 +131,22 @@ try {
   assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/import'});
   // Private rehearsal workflow: synthetic assignments only, separate from script revisions.
   await staff.goto(demo.origin+'/admin/assignments?production=workshop-2027');
+  await staff.getByText('CSV format',{exact:true}).click();
+  const csvExample=staff.getByLabel('Assignment CSV example',{exact:true});
+  await csvExample.waitFor();
+  assert.ok((await csvExample.innerText()).includes('Alex Kim'));
+  for(const width of [320,390,1440]) {
+    await staff.setViewportSize({width,height:1000});
+    assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    if(width===320) assert.ok(await csvExample.evaluate(e=>e.scrollWidth>e.clientWidth));
+    await csvExample.focus();
+    await staff.screenshot({path:join(out,`assignment-example-${width}.png`),fullPage:true});
+  }
+  await staff.setViewportSize({width:390,height:1000});
+  await staff.getByRole('button',{name:'한국어',exact:true}).click();
+  await staff.getByLabel('배역 배정 CSV 예시',{exact:true}).waitFor();
+  assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await staff.getByRole('button',{name:'ENG',exact:true}).click();
   const assignmentCsv='StudentId,StudentName,Class,Performance,Tag\ns1,PRIVATE_STUDENT_FIXTURE,Class A,1부,Ro\ns1,PRIVATE_STUDENT_FIXTURE,Class A,2부,Ro\ns2,Example Student Two,Class B,2부,Mi';
   await staff.getByLabel('Assignment CSV',{exact:true}).setInputFiles({name:'assignments.csv',mimeType:'text/csv',buffer:Buffer.from(assignmentCsv)});
   await staff.getByRole('button',{name:'Validate and preview',exact:true}).click();

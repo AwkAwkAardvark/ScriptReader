@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.10 — 2026-10-30
+
+- Keep expanded assignment CSV examples within their cards on mobile, with horizontal scrolling for long rows.
+- Include two or three fictional students using the selected production’s valid character tags.
+
 ## v0.3.9 — 2026-10-30
 
 - Add a private full-script Teacher Viewer with both performance casts, independent class/performance highlighting, and compact collapsed controls for mobile.
