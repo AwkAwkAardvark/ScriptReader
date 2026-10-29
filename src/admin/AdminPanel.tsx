@@ -11,6 +11,7 @@ import type { AdminAccount, AdminAction, AdminError, AdminSession } from './prot
 export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accounts'|'songs'}) {
   const [locale, setLocale] = useState<Locale>(new URLSearchParams(window.location.search).get('lang')==='ko'?'ko':'en');
   const text = adminCopy[locale];
+  const pageTitle = page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title;
   const [session, setSession] = useState<AdminSession | null>(null);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,7 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [page]);
-  useEffect(() => { document.documentElement.lang = locale;document.title = `${copy[locale].app} — ${text.title}`; }, [locale, text.title]);
+  useEffect(() => { document.documentElement.lang = locale;document.title = `${copy[locale].app} — ${pageTitle}`; }, [locale, pageTitle]);
   useEffect(() => { if (change && !dialog.current?.open) dialog.current?.showModal();else if (!change) dialog.current?.close(); }, [change]);
 
   async function run(operation: () => Promise<unknown>) {
@@ -80,7 +81,7 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
       </div>
     </header>
     <main className="admin-main" aria-busy={loading || busy}>
-      <div className="admin-heading"><h1>{page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title}</h1><AdminActionLink href="/">{text.reader}</AdminActionLink></div>
+      <div className="admin-heading"><h1>{pageTitle}</h1><AdminActionLink href="/">{text.reader}</AdminActionLink></div>
       {error && <p className="admin-error" role="alert">{text.errors[error]}</p>}
       {!error && new URLSearchParams(window.location.search).get('auth') === 'failed' && !session?.user && <p className="admin-error" role="alert">{text.loginFailed}</p>}
       {loading ? <p role="status">{text.loading}</p> : !session?.user ? <section className="admin-card admin-signin">
@@ -97,7 +98,7 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
         {page==='scripts' && session.account?.status === 'approved' && <ProductionManager locale={locale} />}
         {page==='songs' && session.account?.status === 'approved' && <SongManager locale={locale} />}
         {page==='accounts' && !master && !error && <p role="alert">{text.errors.forbidden}</p>}
-        {page==='accounts' && master && <section className="admin-card"><div className="admin-heading"><h2>{locale==='ko'?'권한 관리':'Access management'}</h2><span className="admin-badge">{text.masters(masterCount)}</span></div>
+        {page==='accounts' && master && <section className="admin-card"><div className="admin-heading"><h2>{locale==='ko'?'직원 계정':'Staff accounts'}</h2><span className="admin-badge">{text.masters(masterCount)}</span></div>
           {(['pending', 'approved', 'revoked'] as const).map(status => <section className="admin-account-group" key={status}>
             <h3>{status === 'pending' ? text.requests : status === 'approved' ? text.active : text.removed}</h3>
             {accounts.some(account => account.status === status) ? <ul>{accounts.filter(account => account.status === status).map(row)}</ul> : <p className="admin-empty">{text.empty}</p>}

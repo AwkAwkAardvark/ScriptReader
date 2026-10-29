@@ -51,7 +51,7 @@ describe('administration dashboard', () => {
     const owner = account(id, 'master', 'approved');
     vi.mocked(adminClient.me).mockResolvedValue(signedIn(owner));
     vi.mocked(adminClient.accounts).mockResolvedValue({ accounts: [owner, account(candidate)] });
-    render(<AdminPanel page="accounts" />);await screen.findByRole('heading',{name:'Admin accounts'});
+    render(<AdminPanel page="accounts" />);await screen.findByRole('heading',{name:'Access Management'});
     const selector = await screen.findByRole('combobox', { name: 'Access for staff@example.test' });
     fireEvent.change(selector, { target: { value: 'master' } });fireEvent.click(screen.getByRole('button', { name: 'Grant access' }));
     const dialog = screen.getByRole('dialog');expect(dialog).toHaveTextContent('staff@example.test');
@@ -71,7 +71,7 @@ describe('administration dashboard', () => {
     render(<AdminPanel page="accounts" />);await screen.findByText('Master · Last master');
     expect(screen.getByRole('button', { name: 'Revoke' })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'Access for owner@example.test' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: '한국어' }));await screen.findByRole('heading',{name:'관리자 계정'});
+    fireEvent.click(screen.getByRole('button', { name: '한국어' }));await screen.findByRole('heading',{name:'권한 관리'});
     expect(screen.getByRole('button', { name: '해제' })).toBeDisabled();expect(document.documentElement.lang).toBe('ko');
   });
   it('refreshes privileges and removes the directory after self-demotion', async () => {
@@ -105,7 +105,9 @@ it('keeps the overview separate from master account loading and links to dedicat
  vi.mocked(adminClient.me).mockResolvedValue(signedIn(account(id,'master','approved')));
  render(<AdminPanel/>);await screen.findByText('Master');
  expect(adminClient.accounts).not.toHaveBeenCalled();
+ expect(screen.getByRole('heading',{name:'My Account'})).toBeInTheDocument();
+ expect(screen.getByRole('link',{name:'My Account'})).toHaveAttribute('href','/admin');
  expect(screen.getByRole('link',{name:'Scripts'})).toHaveAttribute('href','/admin/scripts');
- expect(screen.getByRole('link',{name:'Admin accounts'})).toHaveAttribute('href','/admin/accounts');
+ expect(screen.getByRole('link',{name:'Access Management'})).toHaveAttribute('href','/admin/accounts');
  expect(document.querySelector('.admin-account-group')).toBeNull();
 });

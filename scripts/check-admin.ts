@@ -34,8 +34,8 @@ try {
   await owner.goto(demo.origin + '/admin');
   assert.equal((await owner.request.get(demo.origin + '/api/admin/accounts')).status(), 401);
   await owner.getByRole('button', { name: 'Continue with Google' }).click();
-  await owner.getByRole('link', { name: 'Admin accounts', exact: true }).click();
-  await owner.getByRole('heading', { name: 'Admin accounts', exact: true }).waitFor();
+  await owner.getByRole('link', { name: 'Access Management', exact: true }).click();
+  await owner.getByRole('heading', { name: 'Access Management', exact: true }).waitFor();
   await staff.goto(demo.origin + '/api/admin/auth/callback?code=staff');
   await staff.getByRole('button', { name: 'Request access', exact: true }).click();
   await staff.getByText('Awaiting approval', { exact: true }).waitFor();
@@ -46,7 +46,7 @@ try {
   await owner.getByRole('dialog').getByRole('button', { name: 'Confirm', exact: true }).click();
   await staffRow.locator('.admin-badge').filter({ hasText: /^Admin$/ }).waitFor();
   await staff.reload();await staff.getByRole('button', { name: 'Sign out' }).waitFor();
-  assert.equal(await staff.getByRole('heading', { name: 'Admin accounts', exact: true }).count(), 0);
+  assert.equal(await staff.getByRole('heading', { name: 'Access Management', exact: true }).count(), 0);
   await staff.getByRole('link',{name:'Scripts',exact:true}).click();
   // Approved staff can publish, but cannot manage accounts. All files are fictional.
   await staff.getByRole('button', { name: 'New production', exact: true }).click();
@@ -108,6 +108,11 @@ try {
   await staff.reload();await staff.locator('.songs-card').waitFor({state:'attached'});
   if(!await staff.locator('.songs-card').evaluate(e=>e.hasAttribute('open')))await staff.locator('.songs-card > summary').click();
   assert.equal(await staff.getByLabel('YouTube URL: 9',{exact:true}).inputValue(),'https://youtu.be/abcdefghijk');
+  assert.ok(await staff.getByRole('heading',{name:'A little time to wonder',exact:true}).isVisible());
+  assert.ok(await staff.getByText('Line 9',{exact:true}).isVisible());
+  assert.equal(await staff.getByRole('link',{name:'Open current video',exact:true}).count(),1);
+  const unavailable=staff.getByRole('button',{name:'Open current video',exact:true});assert.equal(await unavailable.count(),2);assert.ok(await unavailable.first().isDisabled());
+
   for(const width of [320,390,1440]){await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`songs-${width}.png`),fullPage:true});}
   const songMetadata=await (await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/songs')).json();
   assert.equal(songMetadata.songs.length,3);assert.equal(songMetadata.payload,undefined);
@@ -128,7 +133,7 @@ try {
   await staffRow.getByRole('button', { name: 'Save access' }).click();
   await owner.getByRole('dialog').getByRole('button', { name: 'Confirm', exact: true }).click();
   await staffRow.locator('.admin-badge').filter({ hasText: /^Master$/ }).waitFor();
-  await staff.reload();await staff.getByRole('link',{name:'Admin accounts',exact:true}).click();await staff.getByRole('heading', { name: 'Admin accounts', exact: true }).waitFor();
+  await staff.reload();await staff.getByRole('link',{name:'Access Management',exact:true}).click();await staff.getByRole('heading', { name: 'Access Management', exact: true }).waitFor();
   for (const width of [320, 390, 1440]) {
     await owner.setViewportSize({ width, height: 1000 });
     assert.ok(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
@@ -152,7 +157,7 @@ try {
   const last = staff.locator('.admin-account').filter({ hasText: people.staff.email });
   assert.ok(await last.getByRole('button', { name: 'Revoke', exact: true }).isDisabled());
   await staff.getByRole('button', { name: '한국어' }).click();
-  await staff.getByRole('heading', { name: '관리자 계정' }).waitFor();
+  await staff.getByRole('heading', { name: '권한 관리' }).waitFor();
   await staff.screenshot({ path: join(out, 'master-ko-390.png'), fullPage: true });
   await staff.goto(demo.origin+'/admin?lang=ko');
   await staff.getByRole('button', { name: '로그아웃' }).click();
