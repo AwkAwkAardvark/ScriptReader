@@ -33,7 +33,10 @@ for (const path of files) {
   }
 }
 for (const path of artifacts) {
+  if (readFileSync(path).includes(Buffer.from('PRIVATE_STUDENT_FIXTURE'))) findings.push({ path, rule: 'Student fixture in public artifact' });
   if (/\.(?:map|csv|tsv|xlsx?|sql|tsx?)$/i.test(path) || /(?:^|\/)\.(?:env|git)(?:[./]|$)/.test(path)) findings.push({ path, rule: 'Private or development artifact' });
 }
+const demo = '.agent-local/demo/ScriptReader-demo.html';
+try { if (readFileSync(demo).includes(Buffer.from('PRIVATE_STUDENT_FIXTURE'))) findings.push({ path: demo, rule: 'Student fixture in offline demo' }); } catch (error) { if (error.code !== 'ENOENT') throw error; }
 if (findings.length) { console.error(JSON.stringify({ exposureFindings: findings }, null, 2)); process.exitCode = 1; }
 else console.log(`Exposure check passed (${files.size} source/artifact files; no recognized credentials or private deployment artifacts).`);

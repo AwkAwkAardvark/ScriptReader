@@ -1,3 +1,5 @@
+import { TeacherViewer } from './TeacherViewer';
+import { AssignmentManager } from './AssignmentManager';
 import { AdminActionLink } from './AdminActionLink';
 import { SongManager } from './SongManager';
 import { ProductionManager } from './ProductionManager';
@@ -8,10 +10,10 @@ import { adminCopy } from './copy';
 import { adminClient, AdminFailure } from './client';
 import type { AdminAccount, AdminAction, AdminError, AdminSession } from './protocol';
 
-export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accounts'|'songs'}) {
+export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accounts'|'songs'|'viewer'|'assignments'}) {
   const [locale, setLocale] = useState<Locale>(new URLSearchParams(window.location.search).get('lang')==='ko'?'ko':'en');
   const text = adminCopy[locale];
-  const pageTitle = page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title;
+  const pageTitle = page==='viewer'?(locale==='ko'?'교사용 대본':'Teacher Viewer'):page==='assignments'?(locale==='ko'?'배역 배정':'Assignments'):page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title;
   const [session, setSession] = useState<AdminSession | null>(null);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +75,7 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
       </div>
     </li>;
   }
-  return <div className="app-shell admin-shell">
+  return <div className={`app-shell admin-shell ${page==='viewer'?'teacher-shell':''}`}>
     <header className="masthead"><a className="brand" href="/"><BrandMark /><span>{copy[locale].app}</span></a>
       <div className="language-switch" role="group" aria-label={copy[locale].interfaceLanguage}>
         <button lang="en" aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>ENG</button>
@@ -87,7 +89,7 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
       {loading ? <p role="status">{text.loading}</p> : !session?.user ? <section className="admin-card admin-signin">
         {session?.configured === false ? <p role="status">{text.setup}</p> : <button className="admin-primary" disabled={busy} onClick={() => void login()}>{text.login}</button>}
       </section> : <>
-        <nav className="admin-navigation" aria-label={locale==='ko'?'관리 메뉴':'Administration navigation'}>{([['overview','/admin',text.title],['scripts','/admin/scripts',locale==='ko'?'공연 대본':'Scripts'],['songs','/admin/songs',locale==='ko'?'노래':'Songs'],...(master?[['accounts','/admin/accounts',text.accounts]]:[])]).filter(([key])=>key==='overview'||session.account?.status==='approved').map(([key,href,label])=><a key={key} href={`${href}${locale==='ko'?'?lang=ko':''}`} aria-current={page===key?'page':undefined}>{label}</a>)}</nav>
+        <nav className="admin-navigation" aria-label={locale==='ko'?'관리 메뉴':'Administration navigation'}>{([['overview','/admin',text.title],['scripts','/admin/scripts',locale==='ko'?'공연 대본':'Scripts'],['songs','/admin/songs',locale==='ko'?'노래':'Songs'],['viewer','/admin/viewer',locale==='ko'?'교사용 대본':'Teacher Viewer'],['assignments','/admin/assignments',locale==='ko'?'배역 배정':'Assignments'],...(master?[['accounts','/admin/accounts',text.accounts]]:[])]).filter(([key])=>key==='overview'||session.account?.status==='approved').map(([key,href,label])=><a key={key} href={`${href}${locale==='ko'?'?lang=ko':''}`} aria-current={page===key?'page':undefined}>{label}</a>)}</nav>
         {(page==='overview'||session.account?.status!=='approved')&&<section className="admin-card admin-session">
           <div className="admin-identity"><strong>{session.user.name}</strong><span>{session.user.email}</span><span className="admin-badge">{session.account ? statusText(session.account) : text.noAccess}</span></div>
           <div className="admin-session-actions">
@@ -97,6 +99,8 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
         </section>}
         {page==='scripts' && session.account?.status === 'approved' && <ProductionManager locale={locale} />}
         {page==='songs' && session.account?.status === 'approved' && <SongManager locale={locale} />}
+        {page==='viewer' && session.account?.status === 'approved' && <TeacherViewer locale={locale} />}
+        {page==='assignments' && session.account?.status === 'approved' && <AssignmentManager locale={locale} />}
         {page==='accounts' && !master && !error && <p role="alert">{text.errors.forbidden}</p>}
         {page==='accounts' && master && <section className="admin-card"><div className="admin-heading"><h2>{locale==='ko'?'직원 계정':'Staff accounts'}</h2><span className="admin-badge">{text.masters(masterCount)}</span></div>
           {(['pending', 'approved', 'revoked'] as const).map(status => <section className="admin-account-group" key={status}>
