@@ -143,3 +143,7 @@ Suggested manual checks include substantial dialogue, sparse dialogue, group act
 ## Single-file fallback
 
 Local script import without a cast remains supported. Each token then needs a genuine single-token `Line` record whose nonblank `Role` supplies its name. Missing solo identities and conflicting labels are validation errors. **Remove cast** returns to this fallback. Do not invent dialogue to identify action-only characters; supply the cast instead. Hosted publishing requires both script and cast.
+
+## Updating song videos
+
+Media CSV rows use the existing `No,YouTubeURL` format. Supply rows only for songs whose links you want to add or replace. Omitting the file or a row retains existing associations when the old and new Song titles match uniquely; record numbers may move. Titles are compared after trimming, collapsing whitespace, and ignoring case. Renamed, repeated, or removed linked songs require review. Use explicit removal controls in administration (or the publisher's `--remove-media` option); a blank URL is invalid. Inspect all detected songs in the Scripts page before publication, not only those appearing in one character's preview.
