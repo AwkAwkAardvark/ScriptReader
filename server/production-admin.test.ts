@@ -34,7 +34,7 @@ it('allows staff validation and publication but denies signed-out/pending/cross-
 });
 it('rejects invalid input and oversized requests without changing active content', async () => {
  const before=await manage('list');
- expect((await api('productions/validate','POST',{...files,cast:'Tag,Name\nRo,Only'})).status).toBe(422);
+ expect((await api('productions/validate','POST',{...files,slug:'invalid-cast',cast:'Tag,Name\nRo,Only'})).status).toBe(422);
  expect((await api('productions','POST',{...files,slug:'next',script:'x'.repeat(5*1024*1024)})).status).toBe(413);
  expect((await api('productions','POST',{...files,slug:'next',before:6})).status).toBe(400);
  expect(await manage('list')).toEqual(before);
@@ -54,12 +54,16 @@ it('switches home explicitly while preserving old links and rejects stale home s
  const next=await manage('list');expect((await api('home','PATCH',{slug:null,expected:next.home.version})).status).toBe(200);
  expect((await manage('list')).productions).toHaveLength(1);
 });
-it('publishes whole snapshots, clears omitted media, and serializes competing updates',async()=>{
+it('retains omitted media, supports explicit removal, and serializes competing updates',async()=>{
  const {productions:[p]}=await manage('list');
  expect((await api('productions/'+p.slug+'/publish','POST',{...files,expected:p.version,media:'No,YouTubeURL\n9,https://youtu.be/abcdefghijk'})).status).toBe(200);
  const {productions:[next]}=await manage('list');expect(next.mediaCount).toBe(1);
  const responses=await Promise.all([api('productions/'+p.slug+'/publish','POST',{...files,expected:next.version}),api('productions/'+p.slug+'/publish','POST',{...files,expected:next.version})]);
  expect(responses.map(r=>r.status).sort()).toEqual([200,409]);
+ expect((await manage('list')).productions[0].mediaCount).toBe(1);
+ const metadataResponse=await api('productions/'+p.slug+'/songs');const metadata=await metadataResponse.json();expect(metadataResponse.status).toBe(200);expect(metadata.payload).toBeUndefined();expect(metadata.songs.some((s:any)=>s.no===9&&s.video==='abcdefghijk')).toBe(true);
+ expect((await api('productions/'+p.slug+'/songs','PATCH',{expected:metadata.version,mediaEdits:{9:null}})).status).toBe(200);
+ expect((await api('productions/'+p.slug+'/songs','PATCH',{expected:metadata.version,mediaEdits:{9:'https://youtu.be/abcdefghijk'}})).status).toBe(409);
  expect((await manage('list')).productions[0].mediaCount).toBe(0);
 });
 it('keeps the anonymous homepage response minimal and all content management server-only',async()=>{
@@ -82,7 +86,7 @@ it('enforces current access inside mutations and denies direct browser database 
  expect((await api('productions')).status).toBe(403);
  for(const role of ['anon','authenticated']){
   await local.db.exec(`set role ${role}`);
-  try {await expect(local.rpc('reader_home',{})).rejects.toThrow(/permission denied/);await expect(manage('list')).rejects.toThrow(/permission denied/);await expect(local.db.query('select * from reader_site_settings')).rejects.toThrow(/permission denied/);}
+  try {await expect(local.rpc('reader_home',{})).rejects.toThrow(/permission denied/);await expect(local.rpc('reader_song_context',{p_slug:'paper-2026'})).rejects.toThrow(/permission denied/);await expect(local.rpc('reader_publish_checked',{p_slug:'bad',p_title:'bad',p_payload:{},p_expected:null})).rejects.toThrow(/permission denied/);await expect(manage('list')).rejects.toThrow(/permission denied/);await expect(local.db.query('select * from reader_site_settings')).rejects.toThrow(/permission denied/);}
   finally{await local.db.exec('reset role');}
  }
 });
