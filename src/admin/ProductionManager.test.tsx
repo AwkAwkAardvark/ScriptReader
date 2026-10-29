@@ -56,4 +56,11 @@ it('opens examples for a new production and generates the link automatically',as
  expect(document.querySelector('.upload-card')).toHaveAttribute('open');
  expect(document.querySelectorAll('.csv-example[open]')).toHaveLength(3);
  expect(screen.queryByLabelText('Link identifier')).not.toBeInTheDocument();
+ fireEvent.change(screen.getByLabelText('Reader title'),{target:{value:'a'.repeat(69)+' '+ 'b'.repeat(15)}});
+ for(const [label,value] of [['Script CSV',csvFor()],['Cast CSV','Tag,Name\nRo,Rowan\nMi,Mira\nA1,One\nA2,Two\nA3,Three\nA4,Four']]){
+  const file=new File([value],'sample.csv',{type:'text/csv'});Object.defineProperty(file,'text',{value:async()=>value});fireEvent.change(screen.getByLabelText(label),{target:{files:[file]}});await waitFor(()=>expect(screen.getByLabelText(label)).not.toBeDisabled());
+ }
+ fireEvent.click(screen.getByRole('button',{name:'Validate and preview'}));await screen.findByText('Validation passed');
+ const input=vi.mocked(productionCall).mock.calls.find(([path])=>path==='productions/validate')![2] as {slug:string};
+ expect(input.slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);expect(input.slug.length).toBeLessThanOrEqual(80);
 });
