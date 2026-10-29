@@ -6,6 +6,7 @@
   "vars": {
     "BROWSER_REQUESTS_PER_MINUTE": "60",
     "IP_REQUESTS_PER_MINUTE": "1200",
-    "NEW_IDENTITIES_PER_MINUTE": "120"
+    "NEW_IDENTITIES_PER_MINUTE": "120",
+    "ADMIN_ORIGIN": "https://ebenezer-script-reader.pages.dev"
   }
 }
