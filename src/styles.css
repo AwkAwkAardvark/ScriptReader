@@ -280,3 +280,11 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
 .songs-manager select, .songs-manager input[type=url] { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px; border: 1px solid #bdcdc1; border-radius: 8px; background: white; }
 .songs-card .song-links-editor fieldset { min-width: 0; border: 0; border-bottom: 1px solid #dce5df; border-radius: 0; padding: 12px 0; }
 .songs-card .song-links-editor h3 { display: none; }
+
+.admin-shortcuts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0; }
+a.admin-action-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; min-height: 42px; max-width: 100%; padding: 9px 16px; border: 1px solid #bdcbb9; border-radius: 999px; background: #fff; color: #315e44; font-size: 14px; font-weight: 600; line-height: 1.35; text-decoration: none; }
+a.admin-action-link:hover { background: #edf4ef; border-color: #8eac98; }
+a.admin-action-link:focus-visible { outline: 3px solid #83b391; outline-offset: 3px; }
+a.admin-action-link:active { background: #e0ece3; }
+.admin-external-icon { flex: 0 0 15px; width: 15px; height: 15px; }
+.production-preview > .admin-action-link { margin: 0 10px 10px 0; }

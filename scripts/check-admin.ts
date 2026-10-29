@@ -116,6 +116,7 @@ try {
   assert.equal(await staff.locator('.upload-card').getAttribute('open'),null);
   assert.equal(await staff.getByLabel('Link identifier',{exact:true}).count(),0);
   await staff.getByLabel('Reader title',{exact:true}).fill('Workshop 2027 revised');
+  for(const width of [320,390,1440]){await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`script-actions-${width}.png`),fullPage:true});}
   await staff.getByRole('button',{name:'Save production settings',exact:true}).click();
   await staff.getByLabel('Choose a production',{exact:true}).locator('option').filter({hasText:'Workshop 2027 revised'}).waitFor({state:'attached'});
   await staff.getByLabel('Student homepage',{exact:true}).selectOption('');
