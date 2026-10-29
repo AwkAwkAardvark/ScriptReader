@@ -266,3 +266,6 @@ select { width: 100%; border: 1px solid #aebcab; border-radius: 12px; background
 .song-links-editor fieldset { border: 1px solid #dce5df; padding: 12px; border-radius: 12px; margin: 14px 0; }
 .song-links-editor legend { overflow-wrap: anywhere; max-width: 100%; padding: 0 4px; }
 .song-links-editor label { display: grid; gap: 8px; margin: 10px 0; }
+
+.production-editor .song-links-editor fieldset { display: block; }
+.song-links-editor p { margin: 8px 0; }
