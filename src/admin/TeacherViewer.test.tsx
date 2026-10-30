@@ -22,9 +22,9 @@ it('opens with collapsed settings and both casting columns, highlights dialogue 
  expect(document.querySelector('.teacher-settings')).not.toHaveAttribute('open');
  expect(screen.getByRole('link',{name:'Edit roster'})).toHaveAttribute('href','/admin/roster?production=workshop');
  const summary=document.querySelector('.teacher-settings > summary')!;
- expect(summary.querySelector('.settings-title')).toHaveTextContent('Workshop');
+ expect(summary.textContent).toBe('☰');
  expect(summary.querySelector('.menu-icon')).toHaveTextContent('☰');
- expect(summary).toHaveAttribute('aria-label','Workshop · Both — Settings');
+ expect(summary).toHaveAttribute('aria-label','Workshop · Both — Reading settings');
  expect(screen.getByLabelText('Display Korean lines').parentElement).toHaveClass('toggle-row');
  expect(document.querySelectorAll('.teacher-view .roster-multi-role')).toHaveLength(0);
  expect(document.querySelectorAll('.script-entry.highlighted')).toHaveLength(0);
@@ -85,4 +85,31 @@ it('retains a selected class after a roster rename so teachers can explicitly cl
  fireEvent(document,new Event('visibilitychange'));await screen.findByLabelText('Class C');
  expect(screen.getByLabelText('Class A')).toBeChecked();fireEvent.click(screen.getByLabelText('Class A'));expect(screen.queryByLabelText('Class A')).not.toBeInTheDocument();
  expect(document.querySelector('.script-entry[data-record="2"]')).not.toHaveClass('highlighted');
+});
+
+it('enlarges reading content without making requests or changing casting selection',async()=>{
+ render(<TeacherViewer locale="en"/>);await screen.findAllByText('Student Two');
+ const requests=vi.mocked(productionCall).mock.calls.length;
+ fireEvent.click(document.querySelector('.teacher-settings > summary')!);fireEvent.click(screen.getByLabelText('Class A'));
+ fireEvent.change(screen.getByRole('slider',{name:/Text size/}),{target:{value:'200'}});
+ expect(document.querySelector('.teacher-reading-workspace')).toHaveStyle({'--teacher-font-scale':'2'});
+ expect(document.querySelector('.teacher-reading-content')).toHaveClass('teacher-large-type');
+ expect(screen.getByLabelText('Class A')).toBeChecked();expect(document.querySelector('.script-entry[data-record="2"]')).toHaveClass('highlighted');
+ expect(vi.mocked(productionCall).mock.calls.length).toBe(requests);
+ fireEvent.click(screen.getByRole('button',{name:'Reset size'}));expect(screen.getByRole('slider',{name:/Text size/})).toHaveValue('100');
+});
+it('provides source-order scene links without refetching or resetting rehearsal filters',async()=>{
+ const scroll=vi.fn();Element.prototype.scrollIntoView=scroll;
+ render(<TeacherViewer locale="en"/>);await screen.findAllByText('Student Two');
+ fireEvent.click(document.querySelector('.teacher-settings > summary')!);fireEvent.click(screen.getByLabelText('Class B'));fireEvent.click(screen.getByRole('radio',{name:'2부'}));
+ const requests=vi.mocked(productionCall).mock.calls.length;const links=screen.getByRole('navigation',{name:'Chapters'}).querySelectorAll('a');
+ expect([...links].map(a=>a.getAttribute('href'))).toEqual(['#teacher-scene-1','#teacher-scene-14','#teacher-scene-18']);
+ fireEvent.click(links[1]);await waitFor(()=>expect(scroll).toHaveBeenCalledWith({block:'start'}));
+ expect(document.getElementById('teacher-scene-14')).toHaveFocus();expect(screen.getByLabelText('Class B')).toBeChecked();expect(screen.getByRole('radio',{name:'2부'})).toBeChecked();
+ expect(vi.mocked(productionCall).mock.calls.length).toBe(requests);
+});
+it('closes the contextual panel with Escape and returns focus to its compact trigger',async()=>{
+ render(<TeacherViewer locale="ko"/>);await screen.findAllByText('Student Two');const summary=document.querySelector<HTMLElement>('.teacher-settings > summary')!;
+ fireEvent.click(summary);expect(document.querySelector('.teacher-settings')).toHaveAttribute('open');
+ fireEvent.keyDown(screen.getByRole('slider',{name:/글자 크기/}),{key:'Escape'});expect(document.querySelector('.teacher-settings')).not.toHaveAttribute('open');expect(summary).toHaveFocus();
 });

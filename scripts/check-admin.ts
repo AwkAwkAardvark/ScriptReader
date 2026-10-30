@@ -158,11 +158,17 @@ try {
   await staff.locator('.teacher-view .script-entry').first().waitFor();
   assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
   assert.equal(await staff.locator('.teacher-settings .menu-icon').innerText(),'☰');
-  assert.equal(await staff.locator('.teacher-settings .settings-title').innerText(),'Workshop 2027 revised');
+  assert.equal(await staff.locator('.teacher-settings > summary').getAttribute('aria-label'),'Workshop 2027 revised · Both — Reading settings');
   assert.equal(await staff.locator('.teacher-view .script-entry.highlighted').count(),0);
   const recordCount=await staff.locator('.teacher-view [data-record]').count();
   assert.equal(recordCount,17); // three scene headings are outside data-record entries
   await staff.locator('.teacher-settings > summary').click();
+  const readingFont=await staff.locator('.teacher-view .script-entry[data-record=\"2\"] .entry-text > p').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize));
+  const toolsFont=await staff.locator('.teacher-settings > summary').evaluate(e=>parseFloat(getComputedStyle(e).fontSize));
+  await staff.getByRole('slider',{name:'Text size',exact:false}).fill('200');
+  assert.equal(await staff.locator('.teacher-view .script-entry[data-record=\"2\"] .entry-text > p').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)),readingFont*2);
+  assert.equal(await staff.locator('.teacher-settings > summary').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)),toolsFont);
+  await staff.getByRole('button',{name:'Reset size',exact:true}).click();
   await staff.getByRole('checkbox',{name:'Class A',exact:true}).check();
   assert.ok(await staff.locator('.teacher-view .script-entry[data-record="2"]').evaluate(e=>e.classList.contains('highlighted')));
   await staff.getByRole('checkbox',{name:'Class B',exact:true}).check();

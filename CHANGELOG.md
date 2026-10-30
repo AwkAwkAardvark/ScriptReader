@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add teacher-only reading text sizing, a compact collapsible settings sidebar, and chapter links derived from existing scene headings.
+- Keep controls at their normal size while script text, attributions and secondary Korean scale together; retain browser zoom and rehearsal highlights.
+
 ## v0.3.14 — 2026-10-30
 
 - Add a staff roster editor with production-local students, name/class/optional-label editing, role assignment for both performances, review, undo and confirmed saving.
