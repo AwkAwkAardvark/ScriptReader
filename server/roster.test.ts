@@ -87,7 +87,7 @@ it('explicit global deletion clears student data and revocation takes effect on 
 });
 
 it('backfills existing casting by stable ID without merging names or changing versions',async()=>{
- const migration='20261030055215_roster_editor.sql';const prior=await localDatabase({beforeMigration:migration});
+ const migration='20261030073023_roster_editor.sql';const prior=await localDatabase({beforeMigration:migration});
  try{
   await prior.rpc('reader_admin_bootstrap',{p_user:owner,p_email:'owner@example.test',p_name:'Owner'});
   await prior.rpc('reader_publish',{p_slug:'before-upgrade',p_title:'Before upgrade',p_payload:preparePublication(csvFor(),'Tag,Name\nRo,Rowan\nMi,Mira')});
