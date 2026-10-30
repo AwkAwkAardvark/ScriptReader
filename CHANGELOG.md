@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.15 — 2026-10-30
 
 - Share compact staff headers, collapsible desktop navigation and mobile disclosure menus across admin pages; keep rehearsal navigation closed by default.
 - Preserve production and interface-language context across staff pages, with consistent production selectors.
