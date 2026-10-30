@@ -157,7 +157,9 @@ try {
   await staff.getByRole('link',{name:'Open teacher viewer',exact:true}).click();
   await staff.locator('.teacher-view .script-entry').first().waitFor();
   assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
-  assert.equal(await staff.locator('.teacher-settings .menu-icon').innerText(),'☰');
+  assert.equal(await staff.locator('.teacher-settings .teacher-menu-bars > span').count(),3);
+  const iconOffset=await staff.locator('.teacher-settings > summary').evaluate(el=>{const outer=el.getBoundingClientRect(),icon=el.querySelector('.menu-icon')!.getBoundingClientRect();return {x:icon.x+icon.width/2-outer.x-outer.width/2,y:icon.y+icon.height/2-outer.y-outer.height/2};});
+  assert.ok(Math.abs(iconOffset.x)<=.5&&Math.abs(iconOffset.y)<=.5);
   assert.equal(await staff.locator('.teacher-settings > summary').getAttribute('aria-label'),'Workshop 2027 revised · Both — Reading settings');
   assert.equal(await staff.locator('.teacher-view .script-entry.highlighted').count(),0);
   const recordCount=await staff.locator('.teacher-view [data-record]').count();

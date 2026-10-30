@@ -68,7 +68,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
   }
   return <section className="teacher-view teacher-reading-workspace" aria-busy={loading} style={{'--teacher-font-scale':fontScale/100} as CSSProperties}>
     <div className="teacher-layout">
-    <details ref={settings} className="admin-card teacher-settings" onKeyDown={event => { if (event.key === 'Escape' && settings.current?.open) { event.preventDefault(); settings.current.open = false; settings.current.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true }); } }}><summary className="settings-summary" title={summary} aria-label={`${summary} — ${ko ? '대본 설정' : 'Reading settings'}`}><span className="menu-icon" aria-hidden="true">☰</span></summary>
+    <details ref={settings} className="admin-card teacher-settings" onKeyDown={event => { if (event.key === 'Escape' && settings.current?.open) { event.preventDefault(); settings.current.open = false; settings.current.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true }); } }}><summary className="settings-summary" title={summary} aria-label={`${summary} — ${ko ? '대본 설정' : 'Reading settings'}`}><span className="menu-icon teacher-menu-bars" aria-hidden="true"><span/><span/><span/></span></summary>
       <div className="teacher-settings-body"><h2 className="teacher-tools-title">{ko?'대본 설정':'Reading settings'}</h2>
       <label className="control-label" htmlFor="teacher-text-size">{ko?'글자 크기':'Text size'} <output htmlFor="teacher-text-size">{fontScale}%</output></label>
       <input id="teacher-text-size" type="range" min="100" max="250" step="25" value={fontScale} onChange={event=>setFontScale(Number(event.target.value))}/>

@@ -22,8 +22,8 @@ it('opens with collapsed settings and both casting columns, highlights dialogue 
  expect(document.querySelector('.teacher-settings')).not.toHaveAttribute('open');
  expect(screen.getByRole('link',{name:'Edit roster'})).toHaveAttribute('href','/admin/roster?production=workshop');
  const summary=document.querySelector('.teacher-settings > summary')!;
- expect(summary.textContent).toBe('☰');
- expect(summary.querySelector('.menu-icon')).toHaveTextContent('☰');
+ expect(summary.querySelector('.menu-icon')).toHaveAttribute('aria-hidden','true');
+ expect(summary.querySelectorAll('.teacher-menu-bars > span')).toHaveLength(3);
  expect(summary).toHaveAttribute('aria-label','Workshop · Both — Reading settings');
  expect(screen.getByLabelText('Display Korean lines').parentElement).toHaveClass('toggle-row');
  expect(document.querySelectorAll('.teacher-view .roster-multi-role')).toHaveLength(0);
