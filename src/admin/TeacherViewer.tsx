@@ -66,7 +66,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
       <fieldset className="teacher-performance"><legend className="control-label">{ko ? '공연 회차' : 'Performance'}</legend>{(['both', ...PERFORMANCES] as const).map(value => <label key={value}><input type="radio" name="performance" value={value} checked={selection.performance === value} onChange={() => setSelection(s => ({ ...s, performance: value }))} />{value === 'both' ? both : value}</label>)}</fieldset>
       <fieldset className="teacher-classes"><legend className="control-label">{ko ? '반' : 'Classes'}</legend>{classes.map(value => <label key={value}><input type="checkbox" checked={selection.classes.includes(value)} onChange={() => setSelection(s => ({ ...s, classes: s.classes.includes(value) ? s.classes.filter(c => c !== value) : [...s.classes, value] }))} />{value}</label>)}{!classes.length && <small>{ko ? '등록된 반이 없습니다.' : 'No classes assigned.'}</small>}</fieldset>
       <label className="toggle-row teacher-korean"><input type="checkbox" checked={showKorean} onChange={e => setShowKorean(e.target.checked)} /><span className="toggle-track" aria-hidden="true"/><span>{ko ? '한국어 표기' : 'Display Korean lines'}</span></label>
-      {selected && <AdminActionLink href={`/admin/assignments?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 배정 관리' : 'Manage assignments'}</AdminActionLink>}
+      {selected && <AdminActionLink href={`/admin/roster?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 편집' : 'Edit roster'}</AdminActionLink>}
       </div>
     </details>
     {loading && <p role="status">{ko ? '불러오는 중…' : 'Loading…'}</p>}

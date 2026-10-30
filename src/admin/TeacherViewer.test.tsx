@@ -20,6 +20,7 @@ it('opens with collapsed settings and both casting columns, highlights dialogue 
  render(<TeacherViewer locale="en"/>);
  await screen.findAllByText('Student Two');
  expect(document.querySelector('.teacher-settings')).not.toHaveAttribute('open');
+ expect(screen.getByRole('link',{name:'Edit roster'})).toHaveAttribute('href','/admin/roster?production=workshop');
  const summary=document.querySelector('.teacher-settings > summary')!;
  expect(summary.querySelector('.settings-title')).toHaveTextContent('Workshop');
  expect(summary.querySelector('.menu-icon')).toHaveTextContent('☰');
