@@ -515,3 +515,6 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .staff-main .admin-card { margin-top: 0; margin-bottom: 0; }
 .assignment-manager label[for=assignment-file] { display: block; margin: 18px 0 8px; font-size: 13px; font-weight: 600; }
 .csv-upload input[type=file], .assignment-manager input[type=file] { padding: 10px; min-height: 44px; border: 1px solid #bdcdc1; border-radius: 12px; background: white; }
+
+.staff-home-link { display: none; }
+@media (max-width: 899px) { .staff-home-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 50%; text-decoration: none; color: #315e44; font-size: 22px; } }

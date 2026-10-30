@@ -20,15 +20,21 @@ it('collapses desktop navigation without hiding content and restores button focu
  expect(screen.queryByRole('navigation')).not.toBeInTheDocument();expect(screen.getByText('Page content')).toBeInTheDocument();
  fireEvent.click(button);expect(screen.getByRole('link',{name:'Access Management'})).toBeInTheDocument();
 });
-it('opens mobile navigation on demand and closes it when focus leaves',()=>{
+it('keeps in-flow mobile navigation stable when focus moves to a content action',()=>{
  media.matches=false;render(<AdminLayout page="roster" locale="en" onLocale={vi.fn()}><button>Content action</button></AdminLayout>);
  const button=screen.getByRole('button',{name:'Navigation'});expect(button).toHaveAttribute('aria-expanded','false');fireEvent.click(button);
  fireEvent.blur(screen.getByRole('link',{name:'Scripts'}),{relatedTarget:screen.getByRole('button',{name:'Content action'})});
- expect(button).toHaveAttribute('aria-expanded','false');
+ expect(button).toHaveAttribute('aria-expanded','true');
+ fireEvent.keyDown(screen.getByRole('navigation'),{key:'Escape'});expect(button).toHaveAttribute('aria-expanded','false');
 });
 it('starts the teacher workspace without an expanded admin sidebar, and hides privileged links from pending users',()=>{
  const view=render(<AdminLayout page="viewer" locale="en" onLocale={vi.fn()}><p>Script</p></AdminLayout>);
  expect(screen.getByRole('button',{name:'Navigation'})).toHaveAttribute('aria-expanded','false');view.unmount();
  render(<AdminLayout page="overview" locale="en" onLocale={vi.fn()} approved={false}><p>Pending</p></AdminLayout>);
  expect(screen.getByRole('link',{name:'My Account'})).toBeInTheDocument();expect(screen.queryByRole('link',{name:'Roster'})).not.toBeInTheDocument();
+});
+
+it('provides a reader return link on signed-out layouts without staff navigation',()=>{
+ render(<AdminLayout page="scripts" locale="en" onLocale={vi.fn()} navigation={false} approved={false}><p>Sign in</p></AdminLayout>);
+ expect(screen.getByRole('link',{name:'Open student reader'})).toHaveAttribute('href','/');expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
 });
