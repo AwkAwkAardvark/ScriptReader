@@ -1,3 +1,4 @@
+import {replaceAdminUrl} from './AdminLayout';
 import { SettingsLabel } from '../SettingsLabel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PERFORMANCES, assignmentMatches, type ViewerSelection } from '../assignments';
@@ -35,7 +36,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     let live = true; const current = ++generation.current;
     setLoading(true); setError(false);
     const params = new URLSearchParams(window.location.search); params.set('production', selected);
-    window.history.replaceState({}, '', window.location.pathname + '?' + params);
+    replaceAdminUrl(window.location.pathname + '?' + params);
     void productionCall<TeacherContext>('productions/' + selected + '/viewer').then(value => {
       if (live && current === generation.current) setContext(value);
     }).catch(() => { if (live) setError(true); }).finally(() => { if (live) setLoading(false); });

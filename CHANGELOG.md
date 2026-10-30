@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Share compact staff headers, collapsible desktop navigation and mobile disclosure menus across admin pages; keep rehearsal navigation closed by default.
+- Preserve production and interface-language context across staff pages, with consistent production selectors.
+- Standardize bounded, keyboard-accessible CSV examples, downloads and concise helper notes across script uploads, assignment imports and the roster.
+
 ## v0.3.14 — 2026-10-30
 
 - Add a staff roster editor with production-local students, name/class/optional-label editing, role assignment for both performances, review, undo and confirmed saving.

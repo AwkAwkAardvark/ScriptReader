@@ -47,6 +47,7 @@ try {
   await staffRow.locator('.admin-badge').filter({ hasText: /^Admin$/ }).waitFor();
   await staff.reload();await staff.getByRole('button', { name: 'Sign out' }).waitFor();
   assert.equal(await staff.getByRole('heading', { name: 'Access Management', exact: true }).count(), 0);
+  await staff.getByRole('button',{name:'Navigation',exact:true}).click();
   await staff.getByRole('link',{name:'Scripts',exact:true}).click();
   // Approved staff can publish, but cannot manage accounts. All files are fictional.
   await staff.getByRole('button', { name: 'New production', exact: true }).click();
@@ -131,7 +132,7 @@ try {
   assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/import'});
   // Private rehearsal workflow: synthetic assignments only, separate from script revisions.
   await staff.goto(demo.origin+'/admin/assignments?production=workshop-2027');
-  await staff.getByText('CSV format',{exact:true}).click();
+  await staff.getByText('CSV example',{exact:true}).click();
   const csvExample=staff.getByLabel('Assignment CSV example',{exact:true});
   await csvExample.waitFor();
   assert.ok((await csvExample.innerText()).includes('김민준'));
@@ -226,7 +227,7 @@ try {
   await staff.getByRole('button',{name:'Clear assignment',exact:true}).click();
   await staff.getByRole('button',{name:'Undo',exact:true}).click();
   await staff.getByRole('button',{name:'한국어',exact:true}).click();
-  await staff.getByRole('heading',{name:'배역 편집',exact:true}).waitFor();
+  await staff.getByRole('heading',{name:'배역 배정',exact:true}).waitFor();
   await staff.screenshot({path:join(out,'roster-editor-ko-390.png'),fullPage:true});
   await staff.getByRole('button',{name:'ENG',exact:true}).click();
   await staff.getByRole('button',{name:'Mira · 1부: 김민준 · EPG',exact:true}).click();
@@ -249,7 +250,8 @@ try {
   await staff.getByText('Saved.',{exact:true}).waitFor();
   assert.equal((await (await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/assignments')).json()).assignments.length,0);
   await staff.getByRole('link',{name:'Try roster preview',exact:true}).click();
-  await staff.getByRole('heading',{name:'Roster',exact:true}).waitFor();
+  await staff.getByRole('heading',{name:'Roster preview',exact:true}).waitFor();
+  await staff.locator('.roster-cast-button').first().waitFor();
   assert.equal(await staff.locator('.roster-cast-button.roster-multi-role').count(),2);
   assert.ok(await staff.getByRole('button',{name:'Guard One · 1부: 김민준 · EPG',exact:true}).evaluate(e=>getComputedStyle(e).backgroundColor==='rgb(251, 239, 223)'));
   const writes:string[]=[];const recordWrites=(request:import('playwright').Request)=>{if(request.url().includes('/api/admin/')&&['POST','PATCH','DELETE'].includes(request.method()))writes.push(request.url());};
@@ -258,10 +260,10 @@ try {
     await staff.setViewportSize({width,height:1000});
     assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     if(width<760) {
-      const menu=staff.getByRole('button',{name:'Navigation',exact:true});await menu.click();
-      await staff.locator('#roster-navigation a').first().focus();await staff.keyboard.press('Escape');
+      const menu=staff.getByRole('button',{name:'Navigation',exact:true});if(await menu.getAttribute('aria-expanded')==='false')await menu.click();
+      await staff.locator('#staff-navigation a').first().focus();await staff.keyboard.press('Escape');
       assert.equal(await menu.getAttribute('aria-expanded'),'false');
-    } else assert.ok(await staff.locator('.roster-sidebar').isVisible());
+    } else assert.ok(await staff.locator('.staff-sidebar').isVisible());
     await staff.screenshot({path:join(out,`roster-preview-${width}.png`),fullPage:true});
   }
   await staff.setViewportSize({width:390,height:1000});
@@ -277,14 +279,14 @@ try {
   await staff.getByText('Sample updated.',{exact:true}).waitFor();
   assert.deepEqual(writes,[]);staff.off('request',recordWrites);
   await staff.getByRole('button',{name:'한국어',exact:true}).click();
-  await staff.getByRole('heading',{name:'배역 편집',exact:true}).waitFor();
+  await staff.getByRole('heading',{name:'배역 편집 미리보기',exact:true}).waitFor();
   await staff.screenshot({path:join(out,'roster-preview-ko-390.png'),fullPage:true});
   await staff.goto(demo.origin+'/admin/assignments?production=workshop-2027');
   await staffRow.getByRole('combobox').selectOption('master');
   await staffRow.getByRole('button', { name: 'Save access' }).click();
   await owner.getByRole('dialog').getByRole('button', { name: 'Confirm', exact: true }).click();
   await staffRow.locator('.admin-badge').filter({ hasText: /^Master$/ }).waitFor();
-  await staff.reload();await staff.getByRole('link',{name:'Access Management',exact:true}).click();await staff.getByRole('heading', { name: 'Access Management', exact: true }).waitFor();
+  await staff.reload();await staff.getByRole('button',{name:'Navigation',exact:true}).click();await staff.getByRole('link',{name:'Access Management',exact:true}).click();await staff.getByRole('heading', { name: 'Access Management', exact: true }).waitFor();
   for (const width of [320, 390, 1440]) {
     await owner.setViewportSize({ width, height: 1000 });
     assert.ok(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth));

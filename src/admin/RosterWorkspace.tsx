@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { RosterDraft, RosterStudent } from '../roster';
 import { ProductionFailure } from './productions';
-import { BrandMark } from '../BrandMark';
+import {AdminLayout,adminDestination} from './AdminLayout';
+import {CsvExample} from './CsvExample';
+import {AdminActionLink} from './AdminActionLink';
 import { assignmentExample } from './assignment-example';
 import type { Locale } from '../i18n';
 
@@ -12,15 +14,14 @@ type Modal = { kind: 'pick'; slot: Slot } | { kind: 'student'; id?: string; slot
 const performances = ['1부','2부'] as const;
 const slotKey = (slot: Slot) => slot.role + ':' + slot.performance;
 
-export function RosterWorkspace({ locale, onLocale, master = false, initial, roles, title, sampleMode=false, productionPicker, onSave, onReload, onDirtyChange }: {
- locale: Locale; onLocale:(locale:Locale)=>void; master?:boolean; initial:Draft; roles:{tag:string;label:string;ko?:string}[]; title:string; sampleMode?:boolean;
+export function RosterWorkspace({ locale, onLocale, master = false, initial, roles, title, sampleMode=false, productionPicker, onSave, onReload, onDirtyChange, embedded=false }: {
+ embedded?:boolean; locale: Locale; onLocale:(locale:Locale)=>void; master?:boolean; initial:Draft; roles:{tag:string;label:string;ko?:string}[]; title:string; sampleMode?:boolean;
  productionPicker?:ReactNode; onSave?:(draft:Draft)=>Promise<void>; onReload?:()=>void; onDirtyChange?:(dirty:boolean)=>void;
 }) {
   const ko = locale === 'ko';
   const [draft, setDraft] = useState<Draft>(()=>structuredClone(initial));
   const [baseline, setBaseline] = useState<Draft>(()=>structuredClone(initial));
   const [history, setHistory] = useState<Draft[]>([]);
-  const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState('');
   const [onlyUnassigned, setOnlyUnassigned] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
@@ -29,7 +30,6 @@ export function RosterWorkspace({ locale, onLocale, master = false, initial, rol
   const [message, setMessage] = useState(''); const [error, setError] = useState('');
   const [busy,setBusy]=useState(false);const [saveError,setSaveError]=useState('');
   const dialog = useRef<HTMLDialogElement>(null);
-  const navButton = useRef<HTMLButtonElement>(null);
   const dirty = JSON.stringify(draft) !== JSON.stringify(baseline);
   const changedSlots = roles.flatMap(role => performances.map(performance => ({ role: role.tag, performance }))).filter(slot => draft.casting[slotKey(slot)] !== baseline.casting[slotKey(slot)]);
   const student = (id?: string) => draft.students.find(s => s.id === id);
@@ -64,33 +64,8 @@ export function RosterWorkspace({ locale, onLocale, master = false, initial, rol
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn);
   }, [dirty]);
-  const navigation = [
-    { href: '/admin/viewer', en: 'Teacher Viewer', ko: '교사용 대본' },
-    { href: '/admin/roster', en: 'Roster', ko: '배역 배정', active: !sampleMode },
-    ...(sampleMode?[{ href: '/admin/roster-preview', en: 'Roster preview', ko: '배역 편집 미리보기', active: true }]:[]),
-    { href: '/admin/assignments', en: 'Assignments / CSV', ko: '배역 배정 / CSV' },
-    { href: '/admin/scripts', en: 'Scripts', ko: '공연 대본' },
-    { href: '/admin/songs', en: 'Songs', ko: '노래' },
-    { href: '/admin', en: 'My Account', ko: '내 계정' },
-    ...(master ? [{href:'/admin/accounts',en:'Access Management',ko:'권한 관리'}] : []),
-  ];
-  const params = new URLSearchParams(window.location.search);
-  if (ko) params.set('lang', 'ko'); else params.delete('lang');
-  const href = (path: string) => path + (params.size ? '?' + params : '');
-  const nav = <nav id="roster-navigation" aria-label={ko ? '관리 메뉴' : 'Administration navigation'}>{navigation.map(item => <a key={item.href} href={href(item.href)} aria-current={item.active ? 'page' : undefined}>{ko ? item.ko : item.en}</a>)}</nav>;
-  return <div className="roster-preview-shell roster-workspace" aria-busy={busy}>
-    <a className="roster-skip" href="#roster-main">{ko ? '본문으로 이동' : 'Skip to roster'}</a>
-    <header className="roster-appbar">
-      <button className="roster-menu-button" ref={navButton} aria-label={ko ? '메뉴' : 'Navigation'} aria-controls="roster-navigation" aria-expanded={menu} onClick={() => setMenu(value => !value)}>☰</button>
-      <a className="roster-brand" href="/admin" aria-label="Script Reader"><BrandMark /></a>
-      <h1>{ko ? '배역 편집' : 'Roster'}</h1>
-      <div className="language-switch" role="group" aria-label={ko ? '화면 언어' : 'Interface language'}><button lang="en" aria-pressed={!ko} onClick={() => onLocale('en')}>ENG</button><button lang="ko" aria-pressed={ko} onClick={() => onLocale('ko')}>한국어</button></div>
-    </header>
-    <div className="roster-layout">
-      <aside className={`roster-sidebar ${menu ? 'is-open' : ''}`} onKeyDown={event => { if (event.key === 'Escape') { setMenu(false); navButton.current?.focus(); } }}>
-        <p>{ko ? '직원 메뉴' : 'Staff workspace'}</p>{nav}
-      </aside>
-      <main id="roster-main" className="roster-main">
+  const href=(path:string)=>adminDestination(path,locale,new URLSearchParams(window.location.search).get('production'));
+  const content=<div className="roster-preview-shell roster-workspace" aria-busy={busy}><div className="roster-main">
         {sampleMode&&<p className="roster-preview-notice">{ko ? '예시 배역 · 저장되지 않습니다.' : 'Sample roster · changes are not saved'}</p>}
         {saveError&&<div className="admin-error roster-error" role="alert"><p>{saveError==='conflict'?(ko?'다른 직원이 수정했습니다. 최신 배정을 불러와 확인하세요.':'Someone else updated this roster. Load the latest version before saving.'):(ko?'저장하지 못했습니다. 배정을 다시 확인하세요.':'Unable to confirm the save. Check the latest roster.')}</p>{onReload&&<button onClick={()=>{if(!dirty||window.confirm(ko?'저장하지 않은 변경을 버리고 최신 배정을 불러올까요?':'Discard unsaved changes and load the latest roster?'))onReload();}}>{ko?'최신 배정 불러오기':'Load latest roster'}</button>}</div>}
         <div className="roster-production"><div>{productionPicker??<><small>{ko ? '예시 공연' : 'Sample production'}</small><h2>{title}</h2></>}</div><button className="admin-secondary" onClick={() => openStudent()}>{ko ? '학생 추가' : 'Add student'}</button></div>
@@ -102,10 +77,9 @@ export function RosterWorkspace({ locale, onLocale, master = false, initial, rol
           const slot = { role: role.tag, performance }; const current = student(draft.casting[slotKey(slot)]); const changed = draft.casting[slotKey(slot)] !== baseline.casting[slotKey(slot)];
           return <div key={performance}><div className="roster-slot-heading"><span>{performance}</span>{changed && <small>{ko ? '변경됨' : 'Changed'}</small>}</div><button className={`roster-cast-button ${current ? '' : 'is-empty'}${current && multipleRoles(current.id) ? ' roster-multi-role' : ''}`} aria-label={`${roleName(role.tag)} · ${performance}: ${identity(current)}`} onClick={() => openPicker(slot)}><span className="roster-student-name"><strong>{current ? <>{current.name}{nameMarker(current)}</> : (ko ? '학생 선택' : 'Choose student')}</strong>{current&&<small>{current.className||(ko?'반 미지정':'No class')}</small>}</span>{current?.label&&<span>{current.label}</span>}<span className="roster-edit-hint">{ko ? '변경' : 'Change'} ›</span></button></div>;
         })}</div></section>)}</div>
-        <details className="roster-csv-help"><summary>{ko ? 'CSV 도움말 및 예시' : 'CSV help & example'}</summary><div className="roster-help-body"><p>{ko ? 'CSV는 최초 등록이나 일괄 교체에 사용합니다.' : 'Use CSV for initial setup or bulk replacement.'}</p><pre tabIndex={0} aria-label={ko ? '배역 배정 CSV 예시' : 'Assignment CSV example'}>{assignmentExample(roles)}</pre><p className="roster-helper">{ko ? '학생과 반은 가상 예시입니다.' : 'Student names and classes are fictional.'}</p><a href={href('/admin/assignments')}>{ko ? 'CSV 가져오기 열기' : 'Open CSV import'}</a></div></details>
+        <CsvExample kind="assignments" locale={locale} value={assignmentExample(roles)} note={ko?'가상 학생 · 이 공연의 배역 태그':'Fictional students · this production’s character tags'}><p>{ko?'최초 등록이나 일괄 교체에 사용하세요.':'For initial setup or bulk replacement.'}</p><AdminActionLink href={href('/admin/assignments')}>{ko?'CSV 가져오기 열기':'Open CSV import'}</AdminActionLink></CsvExample>
         <div className="roster-savebar"><span role="status">{message || (dirty ? (sampleMode?(ko ? '저장하지 않은 예시 변경' : 'Unsaved sample changes'):(ko?'저장하지 않은 변경':'Unsaved changes')) : (ko ? '변경 사항 없음' : 'No changes'))}</span><button className="roster-undo" disabled={!history.length} onClick={() => { setDraft(history.at(-1)!); setHistory(values => values.slice(0,-1)); setMessage(''); }}>{ko ? '실행 취소' : 'Undo'}</button><button className="admin-primary" disabled={!dirty||busy} onClick={() => setModal({kind:'review'})}>{ko ? '변경 검토' : 'Review changes'}</button></div>
-      </main>
-    </div>
+      </div>
     <span id="roster-shared-name" className="visually-hidden">{ko ? '별표는 동명이인을 표시합니다.' : 'An asterisk marks a shared name.'}</span>
     <dialog ref={dialog} className="roster-dialog" aria-labelledby="roster-dialog-title" onCancel={event => { event.preventDefault(); if(!busy)setModal(null); }}>
       <div className="roster-dialog-heading"><h2 id="roster-dialog-title">{modal?.kind === 'pick' ? `${roleName(modal.slot.role)} · ${modal.slot.performance}` : modal?.kind === 'student' ? (ko ? '학생 정보' : 'Student details') : (sampleMode?(ko ? '예시 변경 검토' : 'Review sample changes'):(ko?'변경 검토':'Review changes'))}</h2><button disabled={busy} aria-label={ko ? '닫기' : 'Close'} onClick={() => setModal(null)}>×</button></div>
@@ -117,4 +91,5 @@ export function RosterWorkspace({ locale, onLocale, master = false, initial, rol
       </fieldset>
     </dialog>
   </div>;
+  return embedded?content:<AdminLayout page={sampleMode?'roster-preview':'roster'} locale={locale} onLocale={onLocale} master={master}>{content}</AdminLayout>;
 }
