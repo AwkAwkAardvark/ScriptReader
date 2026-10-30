@@ -104,6 +104,10 @@ Script publication is independent of application deployment; see the [hosting gu
 
 ## Admin interface
 
+Staff pages share one compact header and collapsible desktop sidebar. Mobile navigation opens on demand; Escape closes it and returns focus to the menu button. The teacher viewer starts with administrative navigation closed so the script remains prominent; its rehearsal controls stay separate. Links between staff pages retain the selected production and interface language without copying authentication-result parameters.
+
+Production selectors use the same labeling and sizing. Script, cast, video-mapping and assignment CSV examples share one disclosure, bounded keyboard-focusable code region and download action. Preparation notes appear only where relevant; assignment examples use fictional students and the selected production’s existing role tags.
+
 `/admin` uses Google sign-in through Supabase Auth. Pages Functions perform the OAuth code exchange, maintain HttpOnly browser-session cookies, and verify identity before checking current database membership. Authentication SDKs run on the server; the frontend does not read access or refresh tokens.
 
 Signed-in users can request access. Masters approve requests, assign admin/master roles, and revoke access. All masters have equal powers. Database transactions serialize changes, allow at most three active masters, and prevent removing the last one. A revoked user can request again but returns to pending without regaining their previous privileges. These app roles do not grant access to provider dashboards. Approved staff see their status and can use the production and rehearsal tools; only masters manage account access.

@@ -53,7 +53,7 @@ it('clears private roster data when current membership is revoked',async()=>{
  await act(async()=>document.dispatchEvent(new Event('visibilitychange')));await waitFor(()=>expect(screen.queryByText('김민준')).not.toBeInTheDocument());expect(screen.getByRole('alert')).toHaveTextContent('Sign in again');
 });
 it('keeps a dirty draft on external changes and leaves Korean labels available',async()=>{
- render(<RosterEditor locale="ko" onLocale={vi.fn()}/>);await screen.findByRole('heading',{name:'배역 편집'});
+ render(<RosterEditor locale="ko" onLocale={vi.fn()}/>);await screen.findByRole('heading',{name:'배역 배정'});
  fireEvent.click(screen.getByRole('button',{name:'학생 추가'}));fireEvent.change(screen.getByLabelText('이름'),{target:{value:'박지우'}});fireEvent.click(screen.getByRole('button',{name:'반영'}));stored.version='external';
  await act(async()=>document.dispatchEvent(new Event('visibilitychange')));await screen.findByText('다른 직원이 수정했습니다. 최신 배정을 확인하세요.');expect(screen.getByRole('button',{name:'변경 검토'})).toBeEnabled();expect(writes).toEqual([]);
 });
