@@ -87,7 +87,7 @@ it('retains a selected class after a roster rename so teachers can explicitly cl
  expect(document.querySelector('.script-entry[data-record="2"]')).not.toHaveClass('highlighted');
 });
 
-it('enlarges reading content without making requests or changing casting selection',async()=>{
+it('adjusts English reading scale without making requests or changing casting selection',async()=>{
  render(<TeacherViewer locale="en"/>);await screen.findAllByText('Student Two');
  const requests=vi.mocked(productionCall).mock.calls.length;
  fireEvent.click(document.querySelector('.teacher-settings > summary')!);fireEvent.click(screen.getByLabelText('Class A'));

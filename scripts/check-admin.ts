@@ -165,9 +165,11 @@ try {
   await staff.locator('.teacher-settings > summary').click();
   const readingFont=await staff.locator('.teacher-view .script-entry[data-record=\"2\"] .entry-text > p').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize));
   const toolsFont=await staff.locator('.teacher-settings > summary').evaluate(e=>parseFloat(getComputedStyle(e).fontSize));
+  const fixedReadingFonts=await staff.locator('.teacher-reading-content').evaluate(root=>Object.fromEntries(['.entry-name','.teacher-cast','.translation','.scene-heading','.teacher-column-key'].map(selector=>[selector,getComputedStyle(root.querySelector(selector)!).fontSize])));
   await staff.getByRole('slider',{name:'Text size',exact:false}).fill('200');
   assert.equal(await staff.locator('.teacher-view .script-entry[data-record=\"2\"] .entry-text > p').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)),readingFont*2);
   assert.equal(await staff.locator('.teacher-settings > summary').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)),toolsFont);
+  assert.deepEqual(await staff.locator('.teacher-reading-content').evaluate(root=>Object.fromEntries(['.entry-name','.teacher-cast','.translation','.scene-heading','.teacher-column-key'].map(selector=>[selector,getComputedStyle(root.querySelector(selector)!).fontSize]))),fixedReadingFonts);
   await staff.getByRole('button',{name:'Reset size',exact:true}).click();
   await staff.getByRole('checkbox',{name:'Class A',exact:true}).check();
   assert.ok(await staff.locator('.teacher-view .script-entry[data-record="2"]').evaluate(e=>e.classList.contains('highlighted')));

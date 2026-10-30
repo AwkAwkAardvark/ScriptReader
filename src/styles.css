@@ -522,14 +522,9 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
  .teacher-reading-content { min-width: 0; container-type: inline-size; }
  .teacher-reading-content .scene-heading { scroll-margin-top: 20px; }
  .teacher-reading-content .scene-heading:focus { outline: 2px solid #468259; outline-offset: 4px; border-radius: 8px; }
- .teacher-reading-content .entry-text > p { font-size: calc(.9375rem * var(--teacher-font-scale)); }
- .teacher-reading-content .direction .entry-text > p { font-size: calc(.875rem * var(--teacher-font-scale)); }
- .teacher-reading-content .entry-name, .teacher-reading-content .teacher-cast { font-size: calc(.8rem * var(--teacher-font-scale)); }
- .teacher-reading-content .teacher-column-key { font-size: calc(.7rem * var(--teacher-font-scale)); }
- .teacher-reading-content .scene-heading { font-size: calc(1.1875rem * var(--teacher-font-scale)); }
- .teacher-reading-content .scene-heading .scene-title { font-size: inherit; }
- .teacher-reading-content .entry-text > p.translation, .teacher-reading-content .scene-title .translation { font-size: calc(.75rem * var(--teacher-font-scale)); }
- .teacher-reading-content .scene-heading > span:first-child { font-size: calc(.625rem * var(--teacher-font-scale)); }
+ .teacher-reading-content .entry-text > p[lang=en] { font-size: calc(.9375rem * var(--teacher-font-scale)); }
+ .teacher-reading-content .direction .entry-text > p[lang=en] { font-size: calc(.875rem * var(--teacher-font-scale)); }
+ .teacher-reading-content .entry-text > p.translation { font-size: .75rem; }
  @container (max-width: 780px) {
   .teacher-reading-content .script-entry { grid-template-columns: minmax(0,1fr) minmax(0,.65fr) minmax(0,.65fr); }
   .teacher-reading-content .script-entry .entry-text { grid-column: 1 / -1; }

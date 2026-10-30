@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Add teacher-only reading text sizing, a compact collapsible settings sidebar, and chapter links derived from existing scene headings.
-- Keep controls at their normal size while script text, attributions and secondary Korean scale together; retain browser zoom and rehearsal highlights.
+- Enlarge English script text while role labels, student names, Korean, headings and controls retain their normal sizes; preserve browser zoom and rehearsal highlights.
 
 ## v0.3.14 — 2026-10-30
 
