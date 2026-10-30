@@ -5,6 +5,12 @@
 - Add teacher-only reading text sizing, a compact collapsible settings sidebar, and chapter links derived from existing scene headings.
 - Enlarge English script text while role labels, student names, Korean, headings and controls retain their normal sizes; preserve browser zoom and rehearsal highlights.
 
+## v0.3.15 — 2026-10-30
+
+- Share compact staff headers, collapsible desktop navigation and mobile disclosure menus across admin pages; keep rehearsal navigation closed by default.
+- Preserve production and interface-language context across staff pages, with consistent production selectors.
+- Standardize bounded, keyboard-accessible CSV examples, downloads and concise helper notes across script uploads, assignment imports and the roster.
+
 ## v0.3.14 — 2026-10-30
 
 - Add a staff roster editor with production-local students, name/class/optional-label editing, role assignment for both performances, review, undo and confirmed saving.

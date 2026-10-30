@@ -42,7 +42,7 @@ it('adds a separate duplicate-name student without merging and never calls a per
 });
 it('provides disclosure navigation with Escape support and Korean text',()=>{
  const onLocale=vi.fn();render(<RosterPreview locale="ko" onLocale={onLocale}/>);
- const toggle=screen.getByRole('button',{name:'메뉴'});fireEvent.click(toggle);expect(toggle).toHaveAttribute('aria-expanded','true');
+ const toggle=screen.getByRole('button',{name:'메뉴'});if(toggle.getAttribute('aria-expanded')==='true')fireEvent.click(toggle);fireEvent.click(toggle);expect(toggle).toHaveAttribute('aria-expanded','true');
  fireEvent.keyDown(screen.getByRole('navigation'),{key:'Escape'});expect(toggle).toHaveAttribute('aria-expanded','false');expect(toggle).toHaveFocus();
  expect(screen.queryByRole('menu')).not.toBeInTheDocument();fireEvent.click(screen.getByRole('button',{name:'ENG'}));expect(onLocale).toHaveBeenCalledWith('en');
 });

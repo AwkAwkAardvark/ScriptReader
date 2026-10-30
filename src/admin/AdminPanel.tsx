@@ -2,20 +2,19 @@ import { RosterEditor } from './RosterEditor';
 import { RosterPreview } from './RosterPreview';
 import { TeacherViewer } from './TeacherViewer';
 import { AssignmentManager } from './AssignmentManager';
-import { AdminActionLink } from './AdminActionLink';
 import { SongManager } from './SongManager';
 import { ProductionManager } from './ProductionManager';
 import { useEffect, useRef, useState } from 'react';
-import { BrandMark } from '../BrandMark';
+import {AdminLayout,adminPageTitle,type AdminPage} from './AdminLayout';
 import { copy, type Locale } from '../i18n';
 import { adminCopy } from './copy';
 import { adminClient, AdminFailure } from './client';
 import type { AdminAccount, AdminAction, AdminError, AdminSession } from './protocol';
 
-export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accounts'|'songs'|'viewer'|'assignments'|'roster-preview'|'roster'}) {
+export function AdminPanel({page='overview'}:{page?:AdminPage}) {
   const [locale, setLocale] = useState<Locale>(new URLSearchParams(window.location.search).get('lang')==='ko'?'ko':'en');
   const text = adminCopy[locale];
-  const pageTitle = page==='roster'?(locale==='ko'?'배역 배정':'Roster'):page==='roster-preview'?(locale==='ko'?'배역 편집 미리보기':'Roster preview'):page==='viewer'?(locale==='ko'?'교사용 대본':'Teacher Viewer'):page==='assignments'?(locale==='ko'?'배역 배정':'Assignments'):page==='scripts'?(locale==='ko'?'공연 대본':'Scripts'):page==='songs'?(locale==='ko'?'노래':'Songs'):page==='accounts'?text.accounts:text.title;
+  const pageTitle = adminPageTitle(page,locale);
   const [session, setSession] = useState<AdminSession | null>(null);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,23 +76,13 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
       </div>
     </li>;
   }
-  if (page==='roster' && session?.account?.status==='approved') return <RosterEditor locale={locale} onLocale={setLocale} master={Boolean(master)}/>;
-  if (page==='roster-preview' && session?.account?.status==='approved') return <RosterPreview locale={locale} onLocale={setLocale} master={Boolean(master)}/>;
-  return <div className={`app-shell admin-shell ${page==='viewer'?'teacher-shell':''}`}>
-    <header className="masthead"><a className="brand" href="/"><BrandMark /><span>{copy[locale].app}</span></a>
-      <div className="language-switch" role="group" aria-label={copy[locale].interfaceLanguage}>
-        <button lang="en" aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>ENG</button>
-        <button lang="ko" aria-pressed={locale === 'ko'} onClick={() => setLocale('ko')}>한국어</button>
-      </div>
-    </header>
-    <main className="admin-main" aria-busy={loading || busy}>
-      <div className="admin-heading"><h1>{pageTitle}</h1><AdminActionLink href="/">{text.reader}</AdminActionLink></div>
+  return <AdminLayout page={page} locale={locale} onLocale={setLocale} approved={session?.account?.status==='approved'} master={Boolean(master)} navigation={Boolean(session?.user)}>
+    <div className="admin-main" aria-busy={loading || busy}>
       {error && <p className="admin-error" role="alert">{text.errors[error]}</p>}
       {!error && new URLSearchParams(window.location.search).get('auth') === 'failed' && !session?.user && <p className="admin-error" role="alert">{text.loginFailed}</p>}
       {loading ? <p role="status">{text.loading}</p> : !session?.user ? <section className="admin-card admin-signin">
         {session?.configured === false ? <p role="status">{text.setup}</p> : <button className="admin-primary" disabled={busy} onClick={() => void login()}>{text.login}</button>}
       </section> : <>
-        <nav className="admin-navigation" aria-label={locale==='ko'?'관리 메뉴':'Administration navigation'}>{([['overview','/admin',text.title],['scripts','/admin/scripts',locale==='ko'?'공연 대본':'Scripts'],['songs','/admin/songs',locale==='ko'?'노래':'Songs'],['viewer','/admin/viewer',locale==='ko'?'교사용 대본':'Teacher Viewer'],['roster','/admin/roster',locale==='ko'?'배역 배정':'Roster'],['assignments','/admin/assignments',locale==='ko'?'배역 배정 / CSV':'Assignments / CSV'],...(master?[['accounts','/admin/accounts',text.accounts]]:[])]).filter(([key])=>key==='overview'||session.account?.status==='approved').map(([key,href,label])=><a key={key} href={`${href}${locale==='ko'?'?lang=ko':''}`} aria-current={page===key?'page':undefined}>{label}</a>)}</nav>
         {(page==='overview'||session.account?.status!=='approved')&&<section className="admin-card admin-session">
           <div className="admin-identity"><strong>{session.user.name}</strong><span>{session.user.email}</span><span className="admin-badge">{session.account ? statusText(session.account) : text.noAccess}</span></div>
           <div className="admin-session-actions">
@@ -101,6 +90,8 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
             <button className="admin-secondary" disabled={busy} onClick={() => void run(adminClient.logout)}>{text.logout}</button>
           </div>
         </section>}
+        {page==='roster' && session.account?.status==='approved' && <RosterEditor locale={locale} onLocale={setLocale} master={Boolean(master)} embedded/>}
+        {page==='roster-preview' && session.account?.status==='approved' && <RosterPreview locale={locale} onLocale={setLocale} master={Boolean(master)} embedded/>}
         {page==='scripts' && session.account?.status === 'approved' && <ProductionManager locale={locale} />}
         {page==='songs' && session.account?.status === 'approved' && <SongManager locale={locale} />}
         {page==='viewer' && session.account?.status === 'approved' && <TeacherViewer locale={locale} />}
@@ -113,7 +104,7 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
           </section>)}
         </section>}
       </>}
-    </main>
+    </div>
     <dialog ref={dialog} className="admin-dialog" aria-labelledby="access-dialog-title" onCancel={event => { event.preventDefault();if (!busy) setChange(null); }}>
       {change && <><h2 id="access-dialog-title">{text.confirmation}</h2><p>{text.confirmationText}</p>
         <div className="admin-identity"><strong>{change.account.name}</strong><span>{change.account.email}</span><span className="admin-badge">{change.role === 'revoked' ? text.revoked : change.role === 'master' ? text.master : text.admin}</span></div>
@@ -122,5 +113,5 @@ export function AdminPanel({page='overview'}:{page?:'overview'|'scripts'|'accoun
           <button className="admin-primary" disabled={busy} onClick={() => { const chosen = change;setChange(null);void run(() => adminClient.change(chosen.account.user_id, chosen.role)); }}>{text.confirm}</button></div>
       </>}
     </dialog>
-  </div>;
+  </AdminLayout>;
 }

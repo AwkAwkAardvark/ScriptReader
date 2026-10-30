@@ -1,3 +1,6 @@
+import {ProductionPicker} from './ProductionPicker';
+import {CsvExample} from './CsvExample';
+import {replaceAdminUrl} from './AdminLayout';
 import { assignmentExample } from './assignment-example';
 import { useEffect, useRef, useState } from 'react';
 import { parseAssignments, type Assignment, type AssignmentDiagnostic } from '../assignments';
@@ -32,9 +35,9 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
     const current = ++generation.current;
     setSelected(slug); setContext(null); setCsv(''); setPreview(null); setDiagnostics([]); setError(''); setSaved(false); setBusy(true);
     if (input.current) input.current.value = '';
+    const params = new URLSearchParams(window.location.search); if(slug)params.set('production',slug);else params.delete('production');
+    replaceAdminUrl(window.location.pathname + (params.size?'?' + params:''));
     if (!slug) { setBusy(false); return; }
-    const params = new URLSearchParams(window.location.search); params.set('production', slug);
-    window.history.replaceState({}, '', window.location.pathname + '?' + params);
     try {
       const value = await productionCall<AssignmentContext>('productions/' + slug + '/assignments');
       if (active.current && current === generation.current) setContext(value);
@@ -94,15 +97,15 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
   }
   return <section className="assignment-manager" aria-busy={busy}>
     {error && <p role="alert" className="admin-error">{problem}</p>}{saved && <p role="status">{ko ? '저장했습니다.' : 'Saved.'}</p>}
-    {list && <section className="admin-card"><label htmlFor="assignments-production">{ko ? '공연 선택' : 'Choose a production'}</label><select id="assignments-production" value={selected} disabled={busy} onChange={e => void choose(e.target.value)}><option value="">{ko ? '공연 선택' : 'Choose a production'}</option>{list.productions.map(p => <option key={p.slug} value={p.slug}>{p.title}</option>)}</select></section>}
+    {list && <section className="admin-card"><ProductionPicker id="assignments-production" locale={locale} value={selected} disabled={busy} productions={list.productions} onChange={value=>void choose(value)}/></section>}
     {context && <>
       <section className="admin-card"><div className="admin-heading"><h2>{context.title}</h2><AdminActionLink href={`/admin/viewer?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '교사용 대본 열기' : 'Open teacher viewer'}</AdminActionLink></div>
         <p><AdminActionLink href={`/admin/roster?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 편집' : 'Edit roster'}</AdminActionLink> <AdminActionLink href={`/admin/roster-preview${ko ? '?lang=ko' : ''}`}>{ko ? '배역 편집 체험' : 'Try roster preview'}</AdminActionLink></p>
         <p>{ko ? `배정 ${context.assignments.length}개` : `${context.assignments.length} assignments`}</p>
         {!!context.assignments.length && <details><summary>{ko ? '현재 배정' : 'Current assignments'}</summary>{table(context.assignments)}</details>}
         <label htmlFor="assignment-file">{ko ? '배역 배정 CSV' : 'Assignment CSV'}</label><input ref={input} id="assignment-file" type="file" accept=".csv,text/csv" disabled={busy} onChange={e => void file(e.target.files?.[0])} />
-        <details className="csv-example"><summary>{ko ? 'CSV 형식' : 'CSV format'}</summary><pre tabIndex={0} aria-label={ko ? '배역 배정 CSV 예시' : 'Assignment CSV example'}>{assignmentExample(context.characters)}</pre><small>{ko ? '학생 이름과 반은 가상 예시이며, 배역 태그는 선택한 공연의 태그입니다.' : 'Student names and classes are fictional; role tags come from the selected production.'}</small><p>{ko ? '학생 ID는 공연 내에서 유지하는 임의의 코드입니다. 같은 학생은 모든 배역과 회차에 같은 ID를 사용하세요. 반은 비워 둘 수 있습니다. 회차는 1부 또는 2부입니다. 배역 태그는 이 공연의 등장인물 태그를 사용하세요.' : 'Use a stable, production-local student code for every role and performance belonging to that student. Class may be blank. Performance is 1부 or 2부. Tag must match this production’s character roster.'}</p></details>
-        <div className="admin-dialog-actions"><button className="admin-primary" disabled={busy || !csv} onClick={() => void validate()}>{ko ? '검증 및 미리보기' : 'Validate and preview'}</button><small className="upload-unsaved-note">{ko ? '확인 후 저장하면 전체 배정이 교체됩니다.' : 'Saving replaces the complete assignment list after confirmation.'}</small></div>
+        <CsvExample kind="assignments" locale={locale} value={assignmentExample(context.characters)} note={ko?'가상 학생 · 이 공연의 배역 태그':'Fictional students · this production’s character tags'}><p>{ko?'같은 학생은 모든 배역과 회차에 같은 학생 ID를 사용하세요. 회차는 1부 또는 2부입니다.':'Use the same student code for every role and performance belonging to that student. Performance is 1부 or 2부.'}</p></CsvExample>
+        <div className="admin-dialog-actions"><button className="admin-primary" disabled={busy || !csv} onClick={() => void validate()}>{ko ? '검증 및 미리보기' : 'Validate and preview'}</button><small className="upload-note"><em>{ko ? '확인 후 저장하면 전체 배정이 교체됩니다.' : 'Saving replaces the complete assignment list after confirmation.'}</em></small></div>
         {diagnostics.length > 0 && <ul role="alert" className="admin-error">{diagnostics.map((d, i) => <li key={i}>{ko ? '행' : 'Record'} {d.recordNumber}: {d.message}</li>)}</ul>}
       </section>
       {preview && <section className="admin-card"><h2>{ko ? '배정 미리보기' : 'Assignment preview'}</h2><p>{ko ? `${new Set(preview.assignments.map(a => a.studentId)).size}명 · 배정 ${preview.assignments.length}개` : `${new Set(preview.assignments.map(a => a.studentId)).size} students · ${preview.assignments.length} assignments`}</p>
