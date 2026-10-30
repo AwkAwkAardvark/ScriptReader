@@ -97,7 +97,7 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
     {list && <section className="admin-card"><label htmlFor="assignments-production">{ko ? '공연 선택' : 'Choose a production'}</label><select id="assignments-production" value={selected} disabled={busy} onChange={e => void choose(e.target.value)}><option value="">{ko ? '공연 선택' : 'Choose a production'}</option>{list.productions.map(p => <option key={p.slug} value={p.slug}>{p.title}</option>)}</select></section>}
     {context && <>
       <section className="admin-card"><div className="admin-heading"><h2>{context.title}</h2><AdminActionLink href={`/admin/viewer?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '교사용 대본 열기' : 'Open teacher viewer'}</AdminActionLink></div>
-        <p><AdminActionLink href={`/admin/roster-preview${ko ? '?lang=ko' : ''}`}>{ko ? '배역 편집 체험' : 'Try roster preview'}</AdminActionLink></p>
+        <p><AdminActionLink href={`/admin/roster?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 편집' : 'Edit roster'}</AdminActionLink> <AdminActionLink href={`/admin/roster-preview${ko ? '?lang=ko' : ''}`}>{ko ? '배역 편집 체험' : 'Try roster preview'}</AdminActionLink></p>
         <p>{ko ? `배정 ${context.assignments.length}개` : `${context.assignments.length} assignments`}</p>
         {!!context.assignments.length && <details><summary>{ko ? '현재 배정' : 'Current assignments'}</summary>{table(context.assignments)}</details>}
         <label htmlFor="assignment-file">{ko ? '배역 배정 CSV' : 'Assignment CSV'}</label><input ref={input} id="assignment-file" type="file" accept=".csv,text/csv" disabled={busy} onChange={e => void file(e.target.files?.[0])} />
@@ -108,10 +108,10 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
       {preview && <section className="admin-card"><h2>{ko ? '배정 미리보기' : 'Assignment preview'}</h2><p>{ko ? `${new Set(preview.assignments.map(a => a.studentId)).size}명 · 배정 ${preview.assignments.length}개` : `${new Set(preview.assignments.map(a => a.studentId)).size} students · ${preview.assignments.length} assignments`}</p>
         {preview.warnings.length > 0 && <ul role="status">{preview.warnings.map((d, i) => <li key={i}>{ko ? '행' : 'Record'} {d.recordNumber}: {d.message}</li>)}</ul>}{table(preview.assignments)}
         <button className="admin-primary" disabled={busy} onClick={() => setConfirmation('save')}>{ko ? '배정 저장' : 'Save assignments'}</button></section>}
-      {!!context.assignments.length && <details className="admin-card"><summary>{ko ? '배정 삭제' : 'Delete assignments'}</summary><p>{ko ? '학생 배정만 삭제됩니다. 대본과 등장인물은 유지됩니다.' : 'Deletes student assignments for this production. The script and character roster remain available.'}</p><button className="admin-secondary" disabled={busy} onClick={() => setConfirmation('delete')}>{ko ? '모든 배정 삭제' : 'Delete all assignments'}</button></details>}
+      {!!context.assignments.length && <details className="admin-card"><summary>{ko ? '배정 삭제' : 'Delete assignments'}</summary><p>{ko ? '이 공연의 학생 목록과 배정이 모두 삭제됩니다. 대본과 등장인물은 유지됩니다.' : 'Deletes this production’s student list and assignments. The script and character roster remain available.'}</p><button className="admin-secondary" disabled={busy} onClick={() => setConfirmation('delete')}>{ko ? '모든 배정 삭제' : 'Delete all assignments'}</button></details>}
     </>}
     <dialog ref={dialog} className="admin-dialog" aria-labelledby="assignment-confirmation" onCancel={e => { e.preventDefault(); if (!busy) setConfirmation(null); }}>
-      <h2 id="assignment-confirmation">{confirmation === 'delete' ? (ko ? '모든 학생 배정을 삭제할까요?' : 'Delete all student assignments?') : (ko ? '전체 학생 배정을 교체할까요?' : 'Replace all student assignments?')}</h2>
+      <h2 id="assignment-confirmation">{confirmation === 'delete' ? (ko ? '학생 목록과 모든 배정을 삭제할까요?' : 'Delete the student list and all assignments?') : (ko ? '전체 학생 배정을 교체할까요?' : 'Replace all student assignments?')}</h2>
       <p>{context?.title}</p><div className="admin-dialog-actions"><button disabled={busy} onClick={() => setConfirmation(null)}>{ko ? '취소' : 'Cancel'}</button><button className="admin-primary" disabled={busy} onClick={() => void save(confirmation === 'delete')}>{ko ? '확인' : 'Confirm'}</button></div>
     </dialog>
   </section>;

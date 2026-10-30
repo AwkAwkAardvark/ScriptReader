@@ -75,3 +75,13 @@ it('highlights joint dialogue for any matching participant but only the matching
  expect(line.querySelectorAll('.teacher-student-selected')).toHaveLength(1);
  expect(line.querySelector('.teacher-student-selected')).not.toHaveTextContent('Student Two');
 });
+
+it('retains a selected class after a roster rename so teachers can explicitly clear it',async()=>{
+ render(<TeacherViewer locale="en"/>);await screen.findAllByText('Student Two');
+ fireEvent.click(document.querySelector('.teacher-settings > summary')!);fireEvent.click(screen.getByLabelText('Class A'));
+ const renamed={...context,version:'a2',assignments:assignments.map(a=>({...a,className:a.className==='Class A'?'Class C':a.className}))};
+ vi.mocked(productionCall).mockImplementation(async path=>path==='productions'?list:renamed);
+ fireEvent(document,new Event('visibilitychange'));await screen.findByLabelText('Class C');
+ expect(screen.getByLabelText('Class A')).toBeChecked();fireEvent.click(screen.getByLabelText('Class A'));expect(screen.queryByLabelText('Class A')).not.toBeInTheDocument();
+ expect(document.querySelector('.script-entry[data-record="2"]')).not.toHaveClass('highlighted');
+});

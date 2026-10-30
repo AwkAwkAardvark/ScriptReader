@@ -112,9 +112,9 @@ it('keeps the overview separate from master account loading and links to dedicat
  expect(document.querySelector('.admin-account-group')).toBeNull();
 });
 
-it('keeps the roster prototype behind approved staff access',async()=>{
+it.each(['roster','roster-preview'] as const)('keeps %s behind approved staff access',async(page)=>{
  vi.mocked(adminClient.me).mockResolvedValue(signedIn(account(id,'admin','pending')));
- render(<AdminPanel page="roster-preview"/>);await screen.findByText('Awaiting approval');
+ render(<AdminPanel page={page}/>);await screen.findByText('Awaiting approval');
  expect(document.querySelector('.roster-preview-shell')).not.toBeInTheDocument();
  expect(screen.queryByRole('button',{name:'Add student'})).not.toBeInTheDocument();
 });

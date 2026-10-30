@@ -1,5 +1,6 @@
 // @vitest-environment node
 import {beforeAll,afterAll,it,expect} from 'vitest';
+import {readFile} from 'node:fs/promises';
 import {localDatabase} from './local-database';
 import {handleAdminApi} from './admin-api';
 import {handleApi} from './api';
@@ -84,3 +85,19 @@ it('explicit global deletion clears student data and revocation takes effect on 
  await local.rpc('reader_admin_access',{p_action:'change',p_actor:owner,p_target:staff,p_role:'revoked'});
  expect((await api(path+'roster')).status).toBe(403);expect((await api(path+'roster','PATCH',body(c))).status).toBe(403);
 });
+
+it('backfills existing casting by stable ID without merging names or changing versions',async()=>{
+ const migration='20261030055215_roster_editor.sql';const prior=await localDatabase({beforeMigration:migration});
+ try{
+  await prior.rpc('reader_admin_bootstrap',{p_user:owner,p_email:'owner@example.test',p_name:'Owner'});
+  await prior.rpc('reader_publish',{p_slug:'before-upgrade',p_title:'Before upgrade',p_payload:preparePublication(csvFor(),'Tag,Name\nRo,Rowan\nMi,Mira')});
+  const c=await prior.rpc('reader_staff_context',{p_actor:owner,p_slug:'before-upgrade'}) as RosterContext;
+  const rows=[{studentId:'old-a',studentName:'김민준',className:'EPG',performance:'1부',tag:'Ro'},{studentId:'old-a',studentName:'김민준',className:'EPG',performance:'2부',tag:'Ro'},{studentId:'old-b',studentName:'김민준',className:'EPI',performance:'1부',tag:'Mi'}];
+  const saved=await prior.rpc('reader_staff_context',{p_actor:owner,p_slug:'before-upgrade',p_action:'save',p_expected:c.version,p_production:c.productionVersion,p_rows:rows}) as {version:string};
+  await prior.db.exec(await readFile('supabase/migrations/'+migration,'utf8'));
+  const upgraded=await prior.rpc('reader_roster',{p_actor:owner,p_slug:'before-upgrade'}) as RosterContext;
+  expect(upgraded.students).toEqual([{id:'old-a',name:'김민준',className:'EPG',label:''},{id:'old-b',name:'김민준',className:'EPI',label:''}]);
+  expect(upgraded.version).toBe(saved.version);expect(upgraded.productionVersion).toBe(c.productionVersion);expect(upgraded.assignments).toHaveLength(3);
+  const legacy=await prior.rpc('reader_staff_context',{p_actor:owner,p_slug:'before-upgrade'}) as {assignments:unknown[]};expect(legacy.assignments).toEqual(rows);
+ }finally{await prior.db.close();}
+},60000);

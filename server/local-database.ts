@@ -2,11 +2,11 @@ import { PGlite } from '@electric-sql/pglite';
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Rpc } from './database';
-export async function localDatabase() {
+export async function localDatabase(options: { beforeMigration?: string } = {}) {
   const db = new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
   const directory = resolve('supabase/migrations');
-  for (const file of (await readdir(directory)).filter(name => name.endsWith('.sql')).sort()) {
+  for (const file of (await readdir(directory)).filter(name => name.endsWith('.sql') && (!options.beforeMigration || name < options.beforeMigration)).sort()) {
     await db.exec(await readFile(resolve(directory, file), 'utf8'));
   }
   const rpc: Rpc = async (name, args) => {

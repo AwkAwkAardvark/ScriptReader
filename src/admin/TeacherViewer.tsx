@@ -55,7 +55,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     document.addEventListener('visibilitychange', check);
     return () => document.removeEventListener('visibilitychange', check);
   }, [selected]);
-  const classes = useMemo(() => [...new Set(context?.assignments.map(a => a.className).filter(Boolean))].sort(), [context]);
+  const classes = useMemo(() => [...new Set([...(context?.assignments.map(a => a.className).filter(Boolean) ?? []), ...selection.classes])].sort(), [context, selection.classes]);
   const reading = useMemo(() => context && buildTeacherDocument(context.payload.script, context.assignments, selection, showKorean), [context, selection, showKorean]);
   const both = ko ? '전체 공연' : 'Both';
   const summary = `${context?.title ?? (ko ? '공연 선택' : 'Production')} · ${selection.performance === 'both' ? both : selection.performance}${selection.classes.length ? ' · ' + selection.classes.join(', ') : ''}`;
