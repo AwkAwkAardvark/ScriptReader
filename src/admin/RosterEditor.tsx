@@ -21,7 +21,7 @@ export function RosterEditor({locale,onLocale,master=false}:{locale:Locale;onLoc
  }).catch(fail);return()=>{active.current=false;generation.current++;};},[]);
  useEffect(()=>{
   const check=()=>{if(document.visibilityState!=='visible'||!selected||saving.current)return;const current=generation.current;
-   void productionCall<RosterContext>('productions/'+selected+'/roster').then(next=>{if(!active.current||current!==generation.current)return;if(context&&(context.version!==next.version||context.productionVersion!==next.productionVersion)){if(dirty.current)setError('conflict');else{setContext(next);setEpoch(v=>v+1);}}}).catch(fail);
+   void productionCall<RosterContext>('productions/'+selected+'/roster').then(next=>{if(!active.current||current!==generation.current||saving.current)return;if(context&&(context.version!==next.version||context.productionVersion!==next.productionVersion)){if(dirty.current)setError('conflict');else{setContext(next);setEpoch(v=>v+1);}}}).catch(fail);
   };document.addEventListener('visibilitychange',check);return()=>document.removeEventListener('visibilitychange',check);
  },[selected,context]);
  async function save(draft:RosterDraft){
