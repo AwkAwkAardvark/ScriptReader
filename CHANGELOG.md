@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.14 — 2026-10-30
 
 - Add a staff roster editor with production-local students, name/class/optional-label editing, role assignment for both performances, review, undo and confirmed saving.
 - Retain unassigned students, duplicate-name markers and muted multiple-role shading; place classes beside names.
