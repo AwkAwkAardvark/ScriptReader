@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.14 — 2026-10-30
+
+- Add a staff roster editor with production-local students, name/class/optional-label editing, role assignment for both performances, review, undo and confirmed saving.
+- Retain unassigned students, duplicate-name markers and muted multiple-role shading; place classes beside names.
+- Share stale-update protection with CSV imports, preserve existing casting during migration, and keep student data separate from public scripts.
+
 ## v0.3.13 — 2026-10-30
 
 - Apply muted orange shading to multiple-role students throughout the roster preview, including their role cards and picker choices; shared-name asterisks remain a separate cue.
