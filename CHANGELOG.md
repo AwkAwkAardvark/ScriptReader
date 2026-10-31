@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.16 — 2026-10-31
 
 - Add teacher-only reading text sizing, a compact collapsible settings sidebar, and chapter links derived from existing scene headings.
 - Enlarge English script text while role labels, student names, Korean, headings and controls retain their normal sizes; preserve browser zoom and rehearsal highlights.
