@@ -25,7 +25,7 @@ function ScriptEntry({ entry, text, video, active, onToggle, attribution }: { at
     {attribution ? attribution(entry) : <span className="entry-name">{entry.speaker}</span>}<ScriptText entry={entry} />
   </article>;
 }
-export function ReadingContent({ document, text, media = {}, attribution }: { document: Pick<ReadingDocument, 'blocks'> & Partial<Omit<ReadingDocument, 'blocks'>>; text: Copy; media?: Record<string, string>; attribution?: (entry: ReadingEntry) => ReactNode }) {
+export function ReadingContent({ document, text, media = {}, attribution, sceneIdPrefix }: { sceneIdPrefix?: string; document: Pick<ReadingDocument, 'blocks'> & Partial<Omit<ReadingDocument, 'blocks'>>; text: Copy; media?: Record<string, string>; attribution?: (entry: ReadingEntry) => ReactNode }) {
   const [active, setActive] = useState<number | null>(null);
   const songIds = document.blocks.flatMap(block => block.kind === 'passage' ? block.entries.filter(entry => entry.kind === 'song').map(entry => entry.no) : []);
   const visible = active !== null && songIds.includes(active) && /^[A-Za-z0-9_-]{11}$/.test(media[active] ?? '');
@@ -35,7 +35,7 @@ export function ReadingContent({ document, text, media = {}, attribution }: { do
     ? <section key={`window-${block.passage}`} className="passage-window" aria-label={text.passage} data-passage={block.passage}>
       <div className="window-entries">{block.entries.map(entry => <ScriptEntry key={entry.no} attribution={attribution} entry={entry} text={text} video={/^[A-Za-z0-9_-]{11}$/.test(media[entry.no] ?? '') ? media[entry.no] : undefined} active={visible && active === entry.no} onToggle={() => setActive(value => value === entry.no ? null : entry.no)} />)}</div>
     </section>
-    : <h3 key={block.entry.no} className="scene-heading"><span>{text.scene} {block.entry.scene.toString().padStart(2, '0')}</span>
+    : <h3 key={block.entry.no} id={sceneIdPrefix ? `${sceneIdPrefix}${block.entry.no}` : undefined} tabIndex={sceneIdPrefix ? -1 : undefined} className="scene-heading"><span>{text.scene} {block.entry.scene.toString().padStart(2, '0')}</span>
       <span className="scene-title"><span lang="en">{block.entry.english}</span>
         {block.entry.korean.trim() && <span lang="ko" className="translation">{block.entry.korean}</span>}
       </span></h3>)}</div>;
