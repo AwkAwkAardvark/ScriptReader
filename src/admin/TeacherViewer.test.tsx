@@ -75,6 +75,10 @@ it('highlights joint dialogue for any matching participant but only the matching
  expect(line).toHaveClass('highlighted');
  expect(line.querySelectorAll('.teacher-student-selected')).toHaveLength(1);
  expect(line.querySelector('.teacher-student-selected')).not.toHaveTextContent('Student Two');
+ fireEvent.click(screen.getByLabelText('Class A'));fireEvent.click(screen.getByLabelText('Class B'));
+ expect(line.querySelector('.entry-name')?.textContent).toBe('Rowan, Mira');
+ expect(line.querySelector('.teacher-role-selected')?.textContent).toBe('Mira');
+ expect(line.querySelector('.teacher-role-selected')?.previousSibling?.textContent).toBe(', ');
 });
 
 it('retains a selected class after a roster rename so teachers can explicitly clear it',async()=>{
