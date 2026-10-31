@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.17 — 2026-10-31
+
+- Keep commas between teacher-viewer role names outside individual role highlights.
+
 ## v0.3.16 — 2026-10-31
 
 - Add teacher-only reading text sizing, a compact collapsible settings sidebar, and chapter links derived from existing scene headings.
