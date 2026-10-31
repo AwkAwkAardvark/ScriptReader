@@ -1,5 +1,5 @@
 import {replaceAdminUrl} from './AdminLayout';
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { PERFORMANCES, assignmentMatches, type ViewerSelection } from '../assignments';
 import { ReadingContent } from '../ReadingContent';
 import { buildTeacherDocument } from '../teacher-document';
@@ -92,7 +92,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
       <ReadingContent sceneIdPrefix="teacher-scene-" document={reading} text={copy[locale]} media={context.payload.media} attribution={entry => {
         const tags = entry.tags ?? [];
         const assigned = context.assignments.filter(a => tags.includes(a.tag));
-        return <><span className="entry-name">{tags.length ? tags.map((tag, index) => <span key={tag} className={assigned.some(a => a.tag === tag && assignmentMatches(a, selection)) ? 'teacher-role-selected' : undefined}>{index > 0 && ', '}{context.characters.find(c => c.tag === tag)?.label ?? tag}</span>) : entry.speaker}</span>
+        return <><span className="entry-name">{tags.length ? tags.map((tag, index) => <Fragment key={tag}>{index > 0 && ', '}<span className={assigned.some(a => a.tag === tag && assignmentMatches(a, selection)) ? 'teacher-role-selected' : undefined}>{context.characters.find(c => c.tag === tag)?.label ?? tag}</span></Fragment>) : entry.speaker}</span>
           {PERFORMANCES.map(performance => <span className="teacher-cast" key={performance} aria-label={performance}>{assigned.filter(a => a.performance === performance).length ? assigned.filter(a => a.performance === performance).map(a => <span className={assignmentMatches(a, selection) ? 'teacher-student-selected' : undefined} key={a.tag}>{a.studentName}</span>) : <span className="teacher-unassigned">—</span>}</span>)}</>;
       }} />
     </>}
