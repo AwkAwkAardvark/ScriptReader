@@ -115,6 +115,8 @@ When replacing files on the Scripts page, a single collapsed song-review card ap
 
 **Access Management** at `/admin/accounts` is master-only and controls staff requests, approvals, roles, and revocation. This is separate from My Account, which concerns the signed-in person. Approved admins have production controls but no account directory. Navigation and direct routes preserve these permission checks. Full-script staff viewing and student assignments remain separate features.
 
+Use the pencil beside a staff name to edit its display name, then **Save** or **Cancel**. **Use account name** restores the Google-name default. The chosen name is used throughout the staff interface; the email and account permissions are unchanged. Apply the staff-display-name migration before deploying this feature. No new secret bindings or Google settings are needed.
+
 
 ## Staff rehearsal viewer and assignments
 
