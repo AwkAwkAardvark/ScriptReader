@@ -59,10 +59,10 @@ it('serializes concurrent roster saves and rejects stale production context',asy
 });
 it('keeps the CSV fallback compatible, preserving unassigned students/labels with a shared version token',async()=>{
  const c=await context();const csv='StudentId,StudentName,Class,Performance,Tag\ns1,CSV student,CSV class,1부,Ro\ns4,New student,Class C,2부,Mi';
- expect((await api(path+'assignments','PATCH',{csv,expected:c.version,productionVersion:c.productionVersion})).status).toBe(200);
+ expect((await api(path+'assignments','PATCH',{csv,expected:c.version,productionVersion:c.productionVersion},owner)).status).toBe(200);
  const next=await context();expect(next.students).toHaveLength(4);expect(next.students.find(s=>s.id==='s1')).toEqual({id:'s1',name:'CSV student',className:'CSV class',label:'PRIVATE_LABEL_FIXTURE'});expect(next.students.find(s=>s.id==='s2')).toBeDefined();
  expect((await api(path+'roster','PATCH',body(c))).status).toBe(409);
- expect((await api(path+'assignments','PATCH',{csv,expected:c.version,productionVersion:c.productionVersion})).status).toBe(409);
+ expect((await api(path+'assignments','PATCH',{csv,expected:c.version,productionVersion:c.productionVersion},owner)).status).toBe(409);
 });
 it('does not publish student identities or labels through public metadata, passages or revision payloads',async()=>{
  const request=(suffix:string,data:unknown)=>handleApi(new Request('https://reader.test/api/productions/workshop'+suffix,{method:'POST',headers:{Origin:'https://reader.test','Content-Type':'application/json'},body:JSON.stringify(data)}),env,local.rpc);
@@ -80,7 +80,7 @@ it('guards CLI publication and direct database mutation/function permissions',as
  for(const role of ['anon','authenticated']){await local.db.exec('set role '+role);try{await expect(local.db.query('select students from reader_assignment_sets')).rejects.toThrow(/permission denied/);await expect(local.rpc('reader_roster',{p_actor:staff,p_slug:'workshop'})).rejects.toThrow(/permission denied/);}finally{await local.db.exec('reset role');}}
 });
 it('explicit global deletion clears student data and revocation takes effect on subsequent requests',async()=>{
- const c=await context();expect((await api(path+'assignments','PATCH',{clear:true,expected:c.version,productionVersion:c.productionVersion})).status).toBe(200);
+ const c=await context();expect((await api(path+'assignments','PATCH',{clear:true,expected:c.version,productionVersion:c.productionVersion},owner)).status).toBe(200);
  expect((await context()).students).toEqual([]);expect((await context()).assignments).toEqual([]);
  await local.rpc('reader_admin_access',{p_action:'change',p_actor:owner,p_target:staff,p_role:'revoked'});
  expect((await api(path+'roster')).status).toBe(403);expect((await api(path+'roster','PATCH',body(c))).status).toBe(403);
