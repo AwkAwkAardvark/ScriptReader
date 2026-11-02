@@ -2,11 +2,13 @@ import {replaceAdminUrl} from './AdminLayout';
 import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { PERFORMANCES, assignmentMatches, type ViewerSelection } from '../assignments';
 import { ReadingContent } from '../ReadingContent';
-import { buildTeacherDocument } from '../teacher-document';
+import { buildFocusedTeacherDocument, buildTeacherDocument } from '../teacher-document';
 import { copy, type Locale } from '../i18n';
 import { productionCall, ProductionFailure, type ProductionList } from './productions';
 import type { TeacherContext } from './teacher';
 import { AdminActionLink } from './AdminActionLink';
+import { ContextPicker } from '../ContextPicker';
+import { DEFAULT_CONTEXT, validContextCount, type Context } from '../context';
 
 export function TeacherViewer({ locale }: { locale: Locale }) {
   const ko = locale === 'ko';
@@ -14,6 +16,9 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
   const [selected, setSelected] = useState('');
   const [context, setContext] = useState<TeacherContext | null>(null);
   const [selection, setSelection] = useState<ViewerSelection>({ performance: 'both', classes: [] });
+  const [role, setRole] = useState('');
+  const [focusContext, setFocusContext] = useState<Context>(DEFAULT_CONTEXT);
+  const [hideActions, setHideActions] = useState(false);
   const [showKorean, setShowKorean] = useState(true);
   const [fontScale, setFontScale] = useState(100);
   const [error, setError] = useState(false);
@@ -32,6 +37,9 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
   }, []);
   useEffect(() => {
     setContext(null); setSelection({ performance: 'both', classes: [] });
+    setRole(''); setHideActions(false);
+    const production = list?.productions.find(p => p.slug === selected);
+    setFocusContext({ before: validContextCount(production?.before) ? production.before : DEFAULT_CONTEXT.before, after: validContextCount(production?.after) ? production.after : DEFAULT_CONTEXT.after });
     if (!selected) return;
     let live = true; const current = ++generation.current;
     setLoading(true); setError(false);
@@ -57,9 +65,11 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     return () => document.removeEventListener('visibilitychange', check);
   }, [selected]);
   const classes = useMemo(() => [...new Set([...(context?.assignments.map(a => a.className).filter(Boolean) ?? []), ...selection.classes])].sort(), [context, selection.classes]);
-  const reading = useMemo(() => context && buildTeacherDocument(context.payload.script, context.assignments, selection, showKorean), [context, selection, showKorean]);
+  useEffect(() => { if (context && role && !context.payload.script.characters.some(c => c.tag === role)) setRole(''); }, [context, role]);
+  const reading = useMemo(() => context && (!role ? buildTeacherDocument(context.payload.script, context.assignments, selection, showKorean)
+    : context.payload.script.characters.some(c => c.tag === role) ? buildFocusedTeacherDocument(context.payload.script, role, focusContext, showKorean, hideActions) : null), [context, role, focusContext, hideActions, selection, showKorean]);
   const both = ko ? '전체 공연' : 'Both';
-  const summary = `${context?.title ?? (ko ? '공연 선택' : 'Production')} · ${selection.performance === 'both' ? both : selection.performance}${selection.classes.length ? ' · ' + selection.classes.join(', ') : ''}`;
+  const summary = `${context?.title ?? (ko ? '공연 선택' : 'Production')}${role ? ' · ' + (context?.characters.find(c => c.tag === role)?.label ?? role) : ''} · ${selection.performance === 'both' ? both : selection.performance}${selection.classes.length ? ' · ' + selection.classes.join(', ') : ''}`;
   const chapters = reading?.blocks.filter(block => block.kind === 'scene').map(block => block.entry) ?? [];
   function jumpToChapter(no: number) {
     const target = document.getElementById(`teacher-scene-${no}`);
@@ -76,6 +86,10 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
       <button className="teacher-font-reset" disabled={fontScale===100} onClick={()=>setFontScale(100)}>{ko?'기본 크기':'Reset size'}</button>
       <label className="control-label" htmlFor="viewer-production">{ko ? '공연' : 'Production'}</label>
       <select id="viewer-production" value={selected} onChange={e => setSelected(e.target.value)}><option value="">{ko ? '공연 선택' : 'Choose a production'}</option>{list?.productions.map(p => <option value={p.slug} key={p.slug}>{p.title}</option>)}</select>
+      <label className="control-label" htmlFor="teacher-role">{copy[locale].character}</label>
+      <select id="teacher-role" disabled={!context || loading} value={role} onChange={e => setRole(e.target.value)}><option value="">{ko ? '전체 배역' : 'All roles'}</option>{context?.characters.map(c => <Fragment key={c.tag}>{c.dividerBefore && <option disabled value={`divider-${c.tag}`}>──────────</option>}<option value={c.tag}>{c.label}</option></Fragment>)}</select>
+      {role && <><ContextPicker idPrefix="teacher-context" value={focusContext} onChange={setFocusContext} disabled={!context || loading} text={copy[locale]}/>
+      <label className="toggle-row"><input type="checkbox" checked={hideActions} onChange={e => setHideActions(e.target.checked)}/><span className="toggle-track" aria-hidden="true"/><span>{copy[locale].actions}</span></label></>}
       <fieldset className="teacher-performance"><legend className="control-label">{ko ? '공연 회차' : 'Performance'}</legend>{(['both', ...PERFORMANCES] as const).map(value => <label key={value}><input type="radio" name="performance" value={value} checked={selection.performance === value} onChange={() => setSelection(s => ({ ...s, performance: value }))} />{value === 'both' ? both : value}</label>)}</fieldset>
       <fieldset className="teacher-classes"><legend className="control-label">{ko ? '반' : 'Classes'}</legend>{classes.map(value => <label key={value}><input type="checkbox" checked={selection.classes.includes(value)} onChange={() => setSelection(s => ({ ...s, classes: s.classes.includes(value) ? s.classes.filter(c => c !== value) : [...s.classes, value] }))} />{value}</label>)}{!classes.length && <small>{ko ? '등록된 반이 없습니다.' : 'No classes assigned.'}</small>}</fieldset>
       <label className="toggle-row teacher-korean"><input type="checkbox" checked={showKorean} onChange={e => setShowKorean(e.target.checked)} /><span className="toggle-track" aria-hidden="true"/><span>{ko ? '한국어 표기' : 'Display Korean lines'}</span></label>
@@ -87,7 +101,8 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     {loading && <p role="status">{ko ? '불러오는 중…' : 'Loading…'}</p>}
     {error && <p role="alert" className="admin-error">{ko ? '불러오지 못했습니다. 권한을 확인하고 페이지를 새로고침하세요.' : 'Unable to load. Check your access and refresh the page.'}</p>}
     {context && reading && <>
-      {!context.assignments.length && <p className="admin-empty">{ko ? '배역 배정 전입니다. 전체 대본을 표시합니다.' : 'No student assignments yet. Showing the full script.'}</p>}
+      {!context.assignments.length && <p className="admin-empty">{ko ? (role ? '배역 배정 전입니다.' : '배역 배정 전입니다. 전체 대본을 표시합니다.') : (role ? 'No student assignments yet.' : 'No student assignments yet. Showing the full script.')}</p>}
+      {role && !reading.blocks.some(b => b.kind === 'passage') && <p className="admin-empty" role="status">{copy[locale].noMatches}</p>}
       <div className="teacher-column-key" aria-hidden="true"><span>{ko ? '배역' : 'Role'}</span><span>1부</span><span>2부</span></div>
       <ReadingContent sceneIdPrefix="teacher-scene-" document={reading} text={copy[locale]} media={context.payload.media} attribution={entry => {
         const tags = entry.tags ?? [];
