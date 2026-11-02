@@ -24,3 +24,23 @@ it('retries return the original result without clearing newly admitted choices; 
 it('rejects stale day confirmations and reused operation IDs for a different day',async()=>{await seed();const before=await current();const old=new Date(Date.parse(before.day)-86400000).toISOString().slice(0,10);expect(await reset(op(4),old)).toEqual({error:'day_changed'});expect(await reset(op(1),old)).toEqual({error:'invalid_request'});expect(await current()).toEqual(before);expect((await events()).length).toBe(3);});
 it('rolls back deletion if the private audit insert fails and denies browser/history mutations',async()=>{const before=await current();await local.db.exec("alter table reader_private.quota_reset_operations add constraint synthetic_reset_failure check(affected_count<0) not valid");try{await expect(reset(op(5))).rejects.toThrow();expect(await current()).toEqual(before);}finally{await local.db.exec('alter table reader_private.quota_reset_operations drop constraint synthetic_reset_failure');}for(const role of ['anon','authenticated']){await local.db.exec('set role '+role);try{await expect(local.rpc('reader_quota_admin',{p_actor:owner})).rejects.toThrow(/permission denied/);await expect(local.db.query('select * from reader_private.quota_reset_operations')).rejects.toThrow(/permission denied/);}finally{await local.db.exec('reset role');}}await local.db.exec('set role service_role');try{for(const sql of ['delete from reader_private.quota_reset_operations','update reader_private.quota_reset_operations set affected_count=0','truncate reader_private.quota_reset_operations'])await expect(local.db.exec(sql)).rejects.toThrow(/permission denied/);}finally{await local.db.exec('reset role');}});
 it('rechecks demotion and rejects old-master retries rather than revealing their earlier operation',async()=>{await local.rpc('reader_admin_access',{p_actor:owner,p_action:'change',p_target:staff,p_role:'master'});await local.rpc('reader_admin_access',{p_actor:staff,p_action:'change',p_target:owner,p_role:'admin'});expect(await local.rpc('reader_quota_admin',{p_actor:owner,p_action:'reset',p_expected_day:'2026-01-01',p_operation:op(1)})).toEqual({error:'forbidden'});expect((await api()).status).toBe(403);});
+it('restores exactly five distinct character choices while retaining request-rate counters',async()=>{
+ const tags=['Ro','Mi','Gua1','Gua2','Gua3','Gua4'];
+ const cast='Tag,Name\nRo,Rowan\nMi,Mira\nGua1,Guard One\nGua2,Guard Two\nGua3,Guard Three\nGua4,Guard Four';
+ const revision=await local.rpc('reader_publish',{p_slug:'quota-five-after-reset',p_title:'Synthetic quota rehearsal',p_payload:preparePublication(csvFor(),cast)});
+ const browser='c'.repeat(64),ip='d'.repeat(64),now=new Date().toISOString();
+ const read=(tag:string)=>local.rpc('reader_fetch',{p_slug:'quota-five-after-reset',p_browser:browser,p_ip:ip,p_new_browser:false,p_character:tag,p_revision:revision,p_now:now}) as Promise<{error?:string;production?:{used:number}}>;
+ const rates=async()=>(await local.db.query('select * from reader_rates where bucket in ($1,$2) order by bucket,window_start',['b:'+browser,'ip:'+ip])).rows;
+ for(let i=0;i<5;i++)expect(await read(tags[i])).toMatchObject({production:{used:i+1}});
+ expect(await read(tags[5])).toHaveProperty('error','quota');
+ const before=await rates();expect(before).toHaveLength(2);expect(before.map((row:any)=>row.hits)).toEqual([6,6]);
+ const today=await local.rpc('reader_quota_admin',{p_actor:staff,p_action:'today'}) as {day:string};
+ expect(await local.rpc('reader_quota_admin',{p_actor:staff,p_action:'reset',p_expected_day:today.day,p_operation:op(6)})).toHaveProperty('operationId',op(6));
+ expect(await rates()).toEqual(before);
+ // Start with the previously denied role, then four earlier roles: five admissions are renewed.
+ const after=[tags[5],...tags.slice(0,4)];
+ for(let i=0;i<5;i++)expect(await read(after[i])).toMatchObject({production:{used:i+1}});
+ expect(await read(tags[4])).toHaveProperty('error','quota');
+ const final=await rates();expect(final.map((row:any)=>row.hits)).toEqual([12,12]);
+ expect(final.map((row:any)=>row.window_start)).toEqual(before.map((row:any)=>row.window_start));
+});
