@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.21 — 2026-11-02
 
 - Add local character focus to the teacher viewer using the student reader’s passage/context/action rules, while retaining independent rehearsal emphasis and both cast columns.
 
