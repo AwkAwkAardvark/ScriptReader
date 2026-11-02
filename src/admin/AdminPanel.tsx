@@ -1,3 +1,4 @@
+import {StaffDisplayName} from './StaffDisplayName';
 import {ReaderAllowances} from './ReaderAllowances';
 import { RosterEditor } from './RosterEditor';
 import { RosterPreview } from './RosterPreview';
@@ -58,12 +59,17 @@ export function AdminPanel({page='overview'}:{page?:AdminPage}) {
     try { const result = await adminClient.login();window.location.assign(result.url); }
     catch (value) { failure(value);setBusy(false); }
   }
+  async function saveDisplayName(id:string,name:string|null){
+    setBusy(true);
+    try{const result=await adminClient.displayName(id,name);setAccounts(previous=>previous.map(account=>account.user_id===id?result.account:account));setSession(previous=>previous?{...previous,account:previous.account?.user_id===id?result.account:previous.account,user:previous.user?.id===id?{...previous.user,name:result.account.name}:previous.user}:previous);}
+    catch(value){if(value instanceof AdminFailure&&['unauthorized','forbidden'].includes(value.code)){setAccounts([]);await refresh().catch(failure);}throw value;}finally{setBusy(false);}
+  }
   const statusText = (account: AdminAccount) => account.status === 'pending' ? text.pending : account.status === 'revoked' ? text.revoked : account.role === 'master' ? text.master : text.admin;
   function row(account: AdminAccount) {
     const role = selected[account.user_id] ?? account.role;
     const last = account.role === 'master' && masterCount === 1;
     return <li className="admin-account" key={account.user_id}>
-      <div className="admin-identity"><strong>{account.name}</strong><span>{account.email}</span><span className="admin-badge">{statusText(account)}{last ? ` · ${text.last}` : ''}</span></div>
+      <div className="admin-identity"><StaffDisplayName account={account} locale={locale} disabled={busy} onSave={name=>saveDisplayName(account.user_id,name)}/><span>{account.email}</span><span className="admin-badge">{statusText(account)}{last ? ` · ${text.last}` : ''}</span></div>
       <div className="admin-account-actions">
         <label className="visually-hidden" htmlFor={`access-${account.user_id}`}>{text.accessFor} {account.email}</label>
         <select id={`access-${account.user_id}`} value={role} disabled={busy || last} onChange={event => setSelected(previous => ({ ...previous, [account.user_id]: event.target.value as 'admin' | 'master' }))}>

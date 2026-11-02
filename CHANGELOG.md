@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.23 — 2026-11-02
+
+- Add master-managed staff display names with inline editing and a Google-name default, preserving account identities and access permissions.
+
 ## v0.3.22 — 2026-11-02
 
 - Add a master-only, explicitly confirmed reset of the current Korean day’s reader allowances across all productions, with safe retries and a private metadata-only operation record.

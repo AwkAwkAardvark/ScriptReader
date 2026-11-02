@@ -16,5 +16,6 @@ export const adminClient = {
   logout: () => call('auth/logout', 'POST'),
   request: () => call('requests', 'POST'),
   accounts: (signal?: AbortSignal) => call<{ accounts: AdminAccount[] }>('accounts', 'GET', undefined, signal),
+  displayName: (id:string,name:string|null)=>call<{account:AdminAccount}>('accounts/'+encodeURIComponent(id)+'/display-name','PATCH',{name}),
   change: (id: string, role: AdminAction) => call('accounts/' + encodeURIComponent(id), 'PATCH', { role }),
 };
