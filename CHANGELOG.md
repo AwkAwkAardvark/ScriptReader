@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.22 — 2026-11-02
+
+- Add a master-only, explicitly confirmed reset of the current Korean day’s reader allowances across all productions, with safe retries and a private metadata-only operation record.
+
 ## v0.3.21 — 2026-11-02
 
 - Add local character focus to the teacher viewer using the student reader’s passage/context/action rules, while retaining independent rehearsal emphasis and both cast columns.

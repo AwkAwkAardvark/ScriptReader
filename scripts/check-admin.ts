@@ -1,3 +1,4 @@
+import {checkQuotaReset} from './check-quota-reset';
 import {checkTeacherRoleFocus} from './check-teacher-focus';
 import {checkAdminPreparation} from './check-admin-preparation';
 import { csvFor } from '../src/test/fixtures';
@@ -54,6 +55,7 @@ try {
   await staff.reload();await staff.getByRole('button', { name: 'Sign out' }).waitFor();
   assert.equal(await staff.getByRole('heading', { name: 'Access Management', exact: true }).count(), 0);
   const focusContext=await browser.newContext({storageState:await staff.context().storageState()});const focusPage=await focusContext.newPage();focusPage.on('pageerror',error=>errors.push(error.message));try{await checkTeacherRoleFocus(focusPage,demo.rpc,demo.origin);}finally{await focusContext.close();}
+  const quotaContext=await browser.newContext({storageState:await owner.context().storageState()});const quotaPage=await quotaContext.newPage();quotaPage.on('pageerror',error=>errors.push(error.message));try{await checkQuotaReset(quotaPage,demo.origin);}finally{await quotaContext.close();}
   await checkAdminPreparation(staff,demo.rpc,demo.origin,owner);
   await staff.getByRole('button',{name:'Navigation',exact:true}).click();
   await staff.getByRole('link',{name:'Scripts',exact:true}).click();
