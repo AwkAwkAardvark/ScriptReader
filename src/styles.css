@@ -583,3 +583,12 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .roster-casting-preview table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .roster-casting-preview th, .roster-casting-preview td { text-align: left; padding: 8px; border-bottom: 1px solid #dce5dc; }
 .roster-casting-preview th { white-space: nowrap; }
+
+.admin-staff-name-editor { min-width: 0; }
+.admin-staff-name { display: flex; align-items: center; gap: .35rem; }
+.admin-staff-name strong { overflow-wrap: anywhere; }
+.admin-name-pencil { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 2rem; width: 2rem; height: 2rem; padding: .25rem; background: transparent; color: #69766e; border-color: transparent; }
+.admin-name-form { display: grid; gap: .65rem; margin-top: .5rem; width: min(25rem, 100%); }
+.admin-name-form label { display: grid; gap: .3rem; }
+.admin-name-form input { width: 100%; min-width: 0; box-sizing: border-box; }
+.admin-name-actions { display: flex; flex-wrap: wrap; gap: .5rem; }

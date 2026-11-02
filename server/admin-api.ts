@@ -30,7 +30,8 @@ export async function handleAdminApi(request: Request, env: Environment, rpcOver
   const callback = path === '/api/admin/auth/callback';
   const me = path === '/api/admin/me';
   const accounts = path === '/api/admin/accounts';
-  const target = path.match(/^\/api\/admin\/accounts\/([a-f0-9-]+)$/i)?.[1];
+  const nameTarget=path.match(/^\/api\/admin\/accounts\/([a-f0-9-]+)\/display-name$/i)?.[1];
+  const target = nameTarget??path.match(/^\/api\/admin\/accounts\/([a-f0-9-]+)$/i)?.[1];
   const allowed = callback || me || accounts || target || ['/api/admin/auth/start', '/api/admin/auth/logout', '/api/admin/requests'].includes(path);
   if (!allowed) return problem('not_found');
   const expected = callback || me || accounts ? 'GET' : target ? 'PATCH' : 'POST';
@@ -54,7 +55,7 @@ export async function handleAdminApi(request: Request, env: Environment, rpcOver
     if (!user || !uuid.test(user.id)) return me ? json({ configured: true, user: null, account: null }) : problem('unauthorized');
     const rpc = rpcOverride ?? supabaseRpc(env.SUPABASE_URL, env.SUPABASE_SECRET_KEY);
     const action = me ? 'me' : accounts ? 'list' : target ? 'change' : 'request';
-    let role: string | null = null;
+    let role: string | null = null;let displayName:string|null=null;
     if (target) {
       if (!uuid.test(target) || !request.headers.get('Content-Type')?.startsWith('application/json')) return problem('invalid_request');
       const reader = request.body?.getReader();
@@ -63,14 +64,19 @@ export async function handleAdminApi(request: Request, env: Environment, rpcOver
       while (true) { const { value, done } = await reader.read();if (done) break;length += value.length;
         if (length > 4096) { await reader.cancel();return json({ error: 'invalid_request' }, 413); }chunks.push(value); }
       const bytes = new Uint8Array(length);let offset = 0;for (const chunk of chunks) { bytes.set(chunk, offset);offset += chunk.length; }
-      let body: unknown;try { body = JSON.parse(new TextDecoder().decode(bytes)); } catch { return problem('invalid_request'); }
+      let body: unknown;try { body = JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)); } catch { return problem('invalid_request'); }
+      if(nameTarget){
+        if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).length!==1||!('name' in body)||body.name!==null&&(typeof body.name!=='string'||!body.name.trim()||body.name.trim().length>100||/[\u0000-\u001f\u007f-\u009f]/.test(body.name)))return problem('invalid_request');
+        displayName=body.name===null?null:(body.name as string).trim();
+      }else {
       if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length !== 1 || !('role' in body) || !['admin', 'master', 'revoked'].includes(String(body.role))) return problem('invalid_request');
       role = String(body.role);
+      }
     }
-    const result = await rpc('reader_admin_access', { p_action: action, p_actor: user.id, p_email: user.email, p_name: user.name,
-      p_target: target ?? null, p_role: role }) as AccessResult;
+    const result = await (nameTarget?rpc('reader_admin_display_name',{p_actor:user.id,p_target:target,p_name:displayName}):rpc('reader_admin_access', { p_action: action, p_actor: user.id, p_email: user.email, p_name: user.name,
+      p_target: target ?? null, p_role: role })) as AccessResult;
     if (result.error) return problem(result.error in statuses ? result.error : 'unavailable');
-    if (me) return json({ configured: true, user, account: result.account ?? null });
+    if (me) return json({ configured: true, user:{...user,name:result.account?.name??user.name}, account: result.account ?? null });
     return json(result);
   } catch { return callback ? redirect(false) : problem('unavailable'); }
 }

@@ -5,7 +5,7 @@ import { AdminPanel } from './AdminPanel';
 import { adminClient, AdminFailure } from './client';
 import type { AdminAccount, AdminSession } from './protocol';
 vi.mock('./client', async original => ({ ...(await original<typeof import('./client')>()), adminClient: {
-  me: vi.fn(), login: vi.fn(), logout: vi.fn(), request: vi.fn(), accounts: vi.fn(), change: vi.fn(),
+  me: vi.fn(), login: vi.fn(), logout: vi.fn(), request: vi.fn(), accounts: vi.fn(), change: vi.fn(), displayName: vi.fn(),
 } }));
 const id = '00000000-0000-4000-8000-000000000001';
 const candidate = '00000000-0000-4000-8000-000000000002';
@@ -117,4 +117,12 @@ it.each(['roster','roster-preview'] as const)('keeps %s behind approved staff ac
  render(<AdminPanel page={page}/>);await screen.findByText('Awaiting approval');
  expect(document.querySelector('.roster-preview-shell')).not.toBeInTheDocument();
  expect(screen.queryByRole('button',{name:'Add student'})).not.toBeInTheDocument();
+});
+it('serializes display-name saves with access changes and uses the effective name in confirmations',async()=>{
+ const owner=account(id,'master','approved'),staff=account(candidate,'admin','approved');let finish!:(value:{account:AdminAccount})=>void;
+ vi.mocked(adminClient.me).mockResolvedValue(signedIn(owner));vi.mocked(adminClient.accounts).mockResolvedValue({accounts:[owner,staff]});vi.mocked(adminClient.displayName).mockImplementation(()=>new Promise(resolve=>finish=resolve));
+ render(<AdminPanel page="accounts"/>);fireEvent.click(await screen.findByRole('button',{name:'Edit display name for staff@example.test'}));fireEvent.change(screen.getByRole('textbox',{name:'Display name'}),{target:{value:'김민준 선생님'}});fireEvent.click(screen.getByRole('button',{name:'Save'}));
+ await waitFor(()=>expect(screen.getByRole('combobox',{name:'Access for staff@example.test'})).toBeDisabled());for(const revoke of screen.getAllByRole('button',{name:'Revoke'}))expect(revoke).toBeDisabled();
+ await act(async()=>finish({account:{...staff,name:'김민준 선생님'}}));await screen.findByText('Display name saved.');await waitFor(()=>expect(screen.getByRole('button',{name:'Edit display name for staff@example.test'})).toHaveFocus());
+ fireEvent.change(screen.getByRole('combobox',{name:'Access for staff@example.test'}),{target:{value:'master'}});fireEvent.click(within(screen.getByRole('combobox',{name:'Access for staff@example.test'}).closest('li')!).getByRole('button',{name:'Save access'}));expect(screen.getByRole('dialog')).toHaveTextContent('김민준 선생님');expect(screen.getByRole('dialog')).not.toHaveTextContent(staff.name);
 });

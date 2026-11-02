@@ -10,7 +10,7 @@ export async function localDatabase(options: { beforeMigration?: string } = {}) 
     await db.exec(await readFile(resolve(directory, file), 'utf8'));
   }
   const rpc: Rpc = async (name, args) => {
-    if (!['reader_publish', 'reader_fetch', 'reader_admin_access', 'reader_admin_bootstrap', 'reader_manage_productions', 'reader_home', 'reader_song_context', 'reader_publish_checked', 'reader_staff_context', 'reader_roster', 'reader_quota_admin'].includes(name)) throw new Error('Unknown RPC');
+    if (!['reader_publish', 'reader_fetch', 'reader_admin_access', 'reader_admin_bootstrap', 'reader_manage_productions', 'reader_home', 'reader_song_context', 'reader_publish_checked', 'reader_staff_context', 'reader_roster', 'reader_quota_admin', 'reader_admin_display_name'].includes(name)) throw new Error('Unknown RPC');
     const entries = Object.entries(args);
     if (entries.some(([key]) => !/^p_[a-z_]+$/.test(key))) throw new Error('Invalid argument');
     const parameters = entries.map(([key], i) => `${key} => $${i + 1}`).join(', ');

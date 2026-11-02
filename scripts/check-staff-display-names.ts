@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import type {Page} from 'playwright';
+/** Local synthetic approved staff only; caller owns isolated authenticated master/staff contexts. */
+export async function checkStaffDisplayNames(owner:Page,staff:Page,origin:string){
+ const email='staff@example.test';
+ for(const [locale,width] of [['en',1440],['ko',320]] as const){
+  const ko=locale==='ko';await owner.setViewportSize({width,height:900});await owner.goto(origin+'/admin/accounts'+(ko?'?lang=ko':''));const row=owner.locator('.admin-account').filter({hasText:email});await row.waitFor();const original=await row.locator('.admin-staff-name strong').innerText();const pencil=row.getByRole('button',{name:ko?`${email} 표시 이름 수정`:`Edit display name for ${email}`,exact:true});
+  await pencil.click();const input=row.getByRole('textbox',{name:ko?'표시 이름':'Display name',exact:true});assert.equal(await input.inputValue(),original);assert.ok(await input.evaluate(node=>node===document.activeElement));await input.fill('취소할 이름');await owner.keyboard.press('Escape');assert.equal(await input.count(),0);assert.ok(await pencil.evaluate(node=>node===document.activeElement));
+  await pencil.click();const alias=ko?'김민준'.repeat(33):'<img src=x onerror=alert(1)>';
+  await input.fill(alias);assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));let failed=false;const fail=async(route:import('playwright').Route)=>{failed=true;await route.fulfill({status:503,json:{error:'unavailable'}});};await owner.route('**/api/admin/accounts/*/display-name',fail);await input.press('Enter');await row.getByRole('alert').waitFor();assert.ok(failed);assert.equal(await input.inputValue(),alias);await owner.unroute('**/api/admin/accounts/*/display-name',fail);await input.press('Enter');await row.getByRole('status').filter({hasText:ko?'표시 이름을 저장했습니다.':'Display name saved.'}).waitFor();assert.equal(await row.locator('.admin-staff-name strong').innerText(),alias);assert.equal(await row.locator('img').count(),0);assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await owner.waitForFunction(()=>document.activeElement?.classList.contains('admin-name-pencil'));
+  await staff.goto(origin+'/admin'+(ko?'?lang=ko':''));await staff.locator('.admin-session .admin-identity strong').filter({hasText:alias}).waitFor();assert.equal(await staff.locator('.admin-session img').count(),0);
+  await pencil.click();await row.getByRole('button',{name:ko?'계정 이름 사용':'Use account name',exact:true}).click();await row.getByRole('status').filter({hasText:ko?'계정 이름을 사용합니다.':'Using account name.'}).waitFor();assert.equal(await row.locator('.admin-staff-name strong').innerText(),original);assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ }
+}
