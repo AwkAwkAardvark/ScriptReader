@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.20 — 2026-11-02
 
 - Consolidate casting edits and transfer tools in Roster; redirect the former assignment page.
 - Add complete versioned JSON roster backups, reviewed master-only restores and cleanup, while keeping routine roster edits and committed exports available to all approved staff.
