@@ -52,7 +52,7 @@ try {
   await staffRow.locator('.admin-badge').filter({ hasText: /^Admin$/ }).waitFor();
   await staff.reload();await staff.getByRole('button', { name: 'Sign out' }).waitFor();
   assert.equal(await staff.getByRole('heading', { name: 'Access Management', exact: true }).count(), 0);
-  await checkAdminPreparation(staff,demo.rpc,demo.origin);
+  await checkAdminPreparation(staff,demo.rpc,demo.origin,owner);
   await staff.getByRole('button',{name:'Navigation',exact:true}).click();
   await staff.getByRole('link',{name:'Scripts',exact:true}).click();
   // Approved staff can publish, but cannot manage accounts. All files are fictional.
@@ -143,31 +143,14 @@ try {
   await staff.waitForFunction(()=>document.querySelector<HTMLButtonElement>('#student-home + button')?.disabled===true);
   assert.deepEqual(await (await staff.request.get(demo.origin+'/api/home')).json(),{destination:'/import'});
   // Private rehearsal workflow: synthetic assignments only, separate from script revisions.
-  await staff.goto(demo.origin+'/admin/assignments?production=workshop-2027');
-  await staff.getByText('CSV example',{exact:true}).click();
-  const csvExample=staff.getByLabel('Assignment CSV example',{exact:true});
-  await csvExample.waitFor();
-  assert.ok((await csvExample.innerText()).includes('김민준'));
-  for(const width of [320,390,1440]) {
-    await staff.setViewportSize({width,height:1000});
-    assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    if(width===320) assert.ok(await csvExample.evaluate(e=>e.scrollWidth>e.clientWidth));
-    await csvExample.focus();
-    await staff.screenshot({path:join(out,`assignment-example-${width}.png`),fullPage:true});
-  }
-  await staff.setViewportSize({width:390,height:1000});
-  await staff.getByRole('button',{name:'한국어',exact:true}).click();
-  await staff.getByLabel('배역 배정 CSV 예시',{exact:true}).waitFor();
-  assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  await staff.getByRole('button',{name:'ENG',exact:true}).click();
+  await owner.goto(demo.origin+'/admin/roster?production=workshop-2027');
+  await owner.locator('.roster-transfer > summary').click();await owner.getByText('CSV example',{exact:true}).click();
+  const csvExample=owner.getByLabel('Assignment CSV example',{exact:true});await csvExample.waitFor();assert.ok((await csvExample.innerText()).includes('김민준'));
+  for(const width of [320,390,1440]){await owner.setViewportSize({width,height:1000});assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await csvExample.focus();await owner.screenshot({path:join(out,`assignment-example-${width}.png`),fullPage:true});}
   const assignmentCsv='StudentId,StudentName,Class,Performance,Tag\ns1,PRIVATE_STUDENT_FIXTURE,Class A,1부,Ro\ns1,PRIVATE_STUDENT_FIXTURE,Class A,2부,Ro\ns2,Example Student Two,Class B,2부,Mi';
-  await staff.getByLabel('Assignment CSV',{exact:true}).setInputFiles({name:'assignments.csv',mimeType:'text/csv',buffer:Buffer.from(assignmentCsv)});
-  await staff.getByRole('button',{name:'Validate and preview',exact:true}).click();
-  await staff.getByRole('heading',{name:'Assignment preview',exact:true}).waitFor();
-  await staff.getByRole('button',{name:'Save assignments',exact:true}).click();
-  await staff.getByRole('dialog').getByRole('button',{name:'Confirm',exact:true}).click();
-  await staff.getByText('Saved.',{exact:true}).waitFor();
-  await staff.getByRole('link',{name:'Open teacher viewer',exact:true}).click();
+  await owner.getByLabel('Roster file (CSV / JSON)',{exact:true}).setInputFiles({name:'assignments.csv',mimeType:'text/csv',buffer:Buffer.from(assignmentCsv)});await owner.getByRole('button',{name:'Validate and preview',exact:true}).click();await owner.getByRole('heading',{name:'Replacement preview',exact:true}).waitFor();await owner.getByRole('button',{name:'Import assignments',exact:true}).click();await Promise.all([owner.waitForResponse(r=>r.url().endsWith('/workshop-2027/roster')&&r.request().method()==='GET'),owner.getByRole('dialog',{name:'Import assignments',exact:true}).getByRole('button',{name:'Import assignments',exact:true}).click()]);
+  await owner.goto(demo.origin+'/admin/accounts');await owner.getByRole('heading',{name:'Access Management',exact:true}).waitFor();
+  await staff.goto(demo.origin+'/admin/viewer?production=workshop-2027');
   await staff.locator('.teacher-view .script-entry').first().waitFor();
   assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
   assert.equal(await staff.locator('.teacher-settings .teacher-menu-bars > span').count(),3);
@@ -258,20 +241,17 @@ try {
   await staff.getByRole('button',{name:'Review changes',exact:true}).click();await staff.getByRole('button',{name:'Save changes',exact:true}).click();
   await staff.getByText('Someone else updated this roster. Load the latest version before saving.',{exact:true}).waitFor();
   assert.ok(await staff.getByRole('button',{name:'Mira · 1부: Unassigned',exact:true}).isVisible());
-  staff.once('dialog',dialog=>dialog.accept());await staff.getByRole('button',{name:'Load latest roster',exact:true}).click();
+  await staff.getByRole('button',{name:'Load latest roster',exact:true}).click();await staff.getByRole('dialog',{name:'Unsaved changes',exact:true}).getByRole('button',{name:'Discard changes',exact:true}).click();
   await staff.getByRole('button',{name:'Mira · 1부: 김민준 · EPG',exact:true}).waitFor();
   await staff.goto(demo.origin+'/admin/viewer?production=workshop-2027');
   await staff.locator('.teacher-view .script-entry').first().waitFor();
   assert.ok((await staff.locator('.teacher-view').innerText()).includes('김민준'));
   assert.equal(await staff.locator('.teacher-view .roster-multi-role').count(),0);
   assert.equal(await staff.locator('.teacher-view .script-entry.highlighted').count(),0);
-  await staff.goto(demo.origin+'/admin/assignments?production=workshop-2027');
-  await staff.getByText('Delete assignments',{exact:true}).click();
-  await staff.getByRole('button',{name:'Delete all assignments',exact:true}).click();
-  await staff.getByRole('dialog').getByRole('button',{name:'Confirm',exact:true}).click();
-  await staff.getByText('Saved.',{exact:true}).waitFor();
-  assert.equal((await (await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/assignments')).json()).assignments.length,0);
-  await staff.getByRole('link',{name:'Try roster preview',exact:true}).click();
+  await staff.goto(demo.origin+'/admin/assignments?production=workshop-2027');await staff.waitForURL('**/admin/roster?production=workshop-2027');assert.equal(await staff.locator('.roster-cleanup').count(),0);
+  const clearing=await(await owner.request.get(demo.origin+'/api/admin/productions/workshop-2027/roster')).json();assert.equal((await owner.request.post(demo.origin+'/api/admin/productions/workshop-2027/roster/bulk',{headers:{Origin:demo.origin},data:{action:'clear',expected:clearing.version,productionVersion:clearing.productionVersion}})).status(),200);
+  assert.equal((await(await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/assignments')).json()).assignments.length,0);
+  await staff.goto(demo.origin+'/admin/roster-preview');
   await staff.getByRole('heading',{name:'Roster preview',exact:true}).waitFor();
   await staff.locator('.roster-cast-button').first().waitFor();
   assert.equal(await staff.locator('.roster-cast-button.roster-multi-role').count(),2);

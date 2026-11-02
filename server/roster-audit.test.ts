@@ -59,7 +59,7 @@ it('audits successful unchanged saves but not reads, previews, denied or stale r
  const c = await context(); const count = (await events()).length;
  const csv = 'StudentId,StudentName,Class,Performance,Tag\ns1,SYNTHETIC_IMPORT_NAME,Class B,1부,Ro';
  // Validation is POST rather than publication, and must not create an event.
- const response = await handleAdminApi(new Request('https://reader.test/api/admin/productions/audit-test/assignments/validate', { method: 'POST', headers: { Origin: env.ADMIN_ORIGIN, 'Content-Type': 'application/json' }, body: JSON.stringify({ csv, expected: c.version, productionVersion: c.productionVersion }) }), env, local.rpc, auth(admin));
+ const response = await handleAdminApi(new Request('https://reader.test/api/admin/productions/audit-test/assignments/validate', { method: 'POST', headers: { Origin: env.ADMIN_ORIGIN, 'Content-Type': 'application/json' }, body: JSON.stringify({ csv, expected: c.version, productionVersion: c.productionVersion }) }), env, local.rpc, auth(master));
  expect(response.status).toBe(200);
  expect((await api('roster', patch(c, c), null)).status).toBe(401);
  expect((await api('roster', patch(c, c), pending)).status).toBe(403);
@@ -76,13 +76,13 @@ it('audits successful unchanged saves but not reads, previews, denied or stale r
 it('audits CSV import from final synchronized storage, retaining optional labels and omitted students', async () => {
  const c = await context();
  const csv = 'StudentId,StudentName,Class,Performance,Tag\ns1,SYNTHETIC_IMPORT_NAME,Class B,2부,Ro\ns3,SYNTHETIC_NEW_NAME,Class C,1부,Mi';
- expect((await api('assignments', { csv, expected: c.version, productionVersion: c.productionVersion })).status).toBe(200);
+ expect((await api('assignments', { csv, expected: c.version, productionVersion: c.productionVersion }, master)).status).toBe(200);
  const event = (await events()).at(-1); expect(event.action).toBe('csv_import');
  expect(event.student_changes).toEqual([{ studentId: 's1', change: 'updated', fields: ['className', 'name'] }, { studentId: 's3', change: 'added', fields: ['className', 'label', 'name'] }]);
- expect(event.actor_id).toBe(admin); expect((await context()).students).toHaveLength(3);
+ expect(event.actor_id).toBe(master); expect((await context()).students).toHaveLength(3);
  expect(JSON.stringify(event)).not.toMatch(/SYNTHETIC_IMPORT_NAME|SYNTHETIC_NEW_NAME|Class B|Class C/);
  const count = (await events()).length;
- expect((await api('assignments', { csv, expected: c.version, productionVersion: c.productionVersion, actor: master })).status).toBe(400);
+ expect((await api('assignments', { csv, expected: c.version, productionVersion: c.productionVersion, actor: master }, master)).status).toBe(400);
  expect((await events()).length).toBe(count);
 });
 
@@ -106,7 +106,7 @@ it('keeps normal saves non-destructive, and audits explicit and legacy clearing 
  expect((await context()).students).toEqual([]); expect((await events()).length).toBe(count + 1);
  expect((await save({ students: [student('legacy')], assignments: [] })).status).toBe(200);
  c = await context();
- expect(await local.rpc('reader_staff_context', { p_actor: admin, p_slug: 'audit-test', p_action: 'save', p_expected: c.version, p_production: c.productionVersion, p_rows: [] })).toHaveProperty('saved', true);
+ expect(await local.rpc('reader_staff_context', { p_actor: master, p_slug: 'audit-test', p_action: 'save', p_expected: c.version, p_production: c.productionVersion, p_rows: [] })).toHaveProperty('saved', true);
  event = (await events()).at(-1); expect(event.action).toBe('clear');
  expect(event.student_changes).toEqual([{ studentId: 'legacy', change: 'deleted', fields: ['className', 'label', 'name'] }]);
 });

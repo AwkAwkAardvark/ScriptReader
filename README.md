@@ -20,4 +20,4 @@ npm run dev
 - [CSV preparation and character tagging](docs/csv-tagging-guide.md)
 - [Release notes](CHANGELOG.md)
 
-Approved staff can manage productions and choose the student homepage at `/admin/scripts`; song links are at `/admin/songs`, and account status and navigation are at `/admin`. The private Teacher Viewer is at `/admin/viewer`; student casting is edited at `/admin/roster`, with bulk CSV import at `/admin/assignments`. See [browser publication](docs/hosted-delivery.md#manage-productions-in-the-browser).
+Approved staff can manage productions and choose the student homepage at `/admin/scripts`; song links are at `/admin/songs`, and account status and navigation are at `/admin`. The private Teacher Viewer is at `/admin/viewer`; student casting, JSON backups and master-only bulk tools are at `/admin/roster`. See [browser publication](docs/hosted-delivery.md#manage-productions-in-the-browser).

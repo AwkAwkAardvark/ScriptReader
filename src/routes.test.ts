@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readerRoute } from './routes';
+import { readerRoute,legacyRosterLocation } from './routes';
 
 describe('reader entry points', () => {
   it('resolves the configured homepage at the hosted root and preserves production links', () => {
@@ -15,10 +15,13 @@ describe('reader entry points', () => {
     expect(readerRoute('/admin/viewer','https:',false)).toEqual({kind:'admin',page:'viewer'});
     expect(readerRoute('/admin/roster','https:',false)).toEqual({kind:'admin',page:'roster'});
     expect(readerRoute('/admin/roster-preview','https:',false)).toEqual({kind:'admin',page:'roster-preview'});
-    expect(readerRoute('/admin/assignments','https:',false)).toEqual({kind:'admin',page:'assignments'});
+    expect(readerRoute('/admin/assignments','https:',false)).toEqual({kind:'roster-redirect'});
     expect(readerRoute('/admin/accounts','https:',false)).toEqual({kind:'admin',page:'accounts'});
     expect(readerRoute('/admin/nope', 'https:', false)).toEqual({kind:'not-found'});
     expect(readerRoute('/admin', 'file:', false)).toEqual({kind:'local'});
+  });
+  it('redirects the legacy CSV page without unrelated query data',()=>{
+    expect(legacyRosterLocation('?production=rehearsal&lang=ko&token=bad')).toBe('/admin/roster?production=rehearsal&lang=ko');
   });
   it('keeps the importer explicit and the offline/development workflows local', () => {
     expect(readerRoute('/import/', 'https:', false)).toEqual({kind:'local'});

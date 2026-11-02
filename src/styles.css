@@ -567,3 +567,19 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
  .teacher-reading-content > .teacher-column-key { padding-right: 56px; min-height: 44px; align-items: center; }
  .teacher-reading-content .scene-heading { scroll-margin-top: 58px; padding-right: 50px; }
 }
+
+.roster-files { display: grid; gap: 16px; margin-top: 20px; min-width: 0; }
+.roster-files .admin-card { padding: 18px; min-width: 0; }
+.roster-files summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+.roster-transfer[open] > summary, .roster-cleanup[open] > summary { margin-bottom: 16px; }
+.roster-helper-text { display: block; margin: 10px 0; font-size: 12px; line-height: 1.5; color: #657168; }
+.roster-file-input { display: grid; gap: 8px; margin: 18px 0 12px; font-size: 13px; }
+.roster-file-input input { min-width: 0; max-width: 100%; width: 100%; padding: 10px; background: white; border: 1px solid #bdcdc1; border-radius: 12px; }
+.roster-transfer-preview { margin-top: 20px; padding-top: 16px; border-top: 1px solid #dce5dc; font-size: 13px; }
+.roster-transfer-preview h3 { margin-top: 0; }
+.roster-transfer-preview ul { padding-left: 20px; max-height: 220px; overflow-y: auto; }
+.roster-transfer-preview button { margin-top: 16px; }
+.roster-casting-preview { max-width: 100%; max-height: 240px; overflow: auto; margin: 12px 0; }
+.roster-casting-preview table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.roster-casting-preview th, .roster-casting-preview td { text-align: left; padding: 8px; border-bottom: 1px solid #dce5dc; }
+.roster-casting-preview th { white-space: nowrap; }

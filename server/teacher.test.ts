@@ -17,7 +17,7 @@ const path = 'productions/workshop/';
 const csv = 'StudentId,StudentName,Class,Performance,Tag\ns1,PRIVATE_STUDENT_FIXTURE,Class A,1부,Ro\ns1,PRIVATE_STUDENT_FIXTURE,Class A,2부,Ro';
 const cast = 'Tag,Name\nRo,Rowan\nMi,Mira';
 const payload = preparePublication(csvFor(),cast);
-async function api(route: string, method='GET', body?: unknown, id: string|null=staff, origin='https://reader.test') {
+async function api(route: string, method='GET', body?: unknown, id: string|null=(method==='GET'?staff:owner), origin='https://reader.test') {
  return handleAdminApi(new Request('https://reader.test/api/admin/'+route,{method,headers:{Origin:origin,'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})}),env,local.rpc,auth(id));
 }
 async function context() { return await (await api(path+'viewer')).json() as TeacherContext; }
@@ -80,7 +80,7 @@ it('requires current membership inside database operations and prevents direct b
  try {
   expect((await local.rpc('reader_staff_context',{p_actor:pending,p_slug:'workshop'}))).toEqual({error:'forbidden'});
   const c=await context();expect(c.assignments).toHaveLength(2);
-  expect(await local.rpc('reader_staff_context',{p_actor:staff,p_slug:'workshop',p_action:'save',p_expected:c.version,p_production:c.productionVersion,p_rows:[{studentId:'s',studentName:'Bad',className:'A',performance:'1부',tag:'Unknown'}]})).toEqual({error:'validation'});
+  expect(await local.rpc('reader_staff_context',{p_actor:owner,p_slug:'workshop',p_action:'save',p_expected:c.version,p_production:c.productionVersion,p_rows:[{studentId:'s',studentName:'Bad',className:'A',performance:'1부',tag:'Unknown'}]})).toEqual({error:'validation'});
  }finally{await local.db.exec('reset role');}
  for(const role of ['anon','authenticated']){
   await local.db.exec('set role '+role);
@@ -98,5 +98,5 @@ it('deletes without assignment history, preserves script, and revokes access on 
  const stored=await local.db.query('select assignments from reader_assignment_sets');expect(stored.rows).toEqual([{assignments:[]}]);
  await local.rpc('reader_admin_access',{p_action:'change',p_actor:owner,p_target:staff,p_role:'revoked'});
  expect((await api(path+'viewer')).status).toBe(403);
- expect((await api(path+'assignments','PATCH',input(c))).status).toBe(403);
+ expect((await api(path+'assignments','PATCH',input(c),staff)).status).toBe(403);
 });

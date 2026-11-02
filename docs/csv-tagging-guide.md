@@ -155,7 +155,7 @@ The input helpers use selected actual Chapter 3 records: its heading (`107`), me
 
 ## Optional student assignments (staff only)
 
-The character cast roster continues to map `Tag,Name` to **characters**. Student casting is a separate optional CSV uploaded at **Assignments** (`/admin/assignments`), after publishing a production. It is never part of public script publication or local-import demos.
+The character cast roster continues to map `Tag,Name` to **characters**. Student casting is a separate optional CSV uploaded by a master under **Roster → Import / export** (`/admin/roster`), after publishing a production. It is never part of public script publication or local-import demos.
 
 Required headers, in this order:
 
@@ -169,6 +169,8 @@ Use a stable, opaque student code local to this production: 1–64 letters, digi
 
 The expandable CSV format example uses fictional students and classes with valid tags from the selected production. Long rows scroll inside the example rather than widening the page.
 
-Upload a complete CSV of at most 5 MiB and 5,000 rows, validate, inspect the preview/warnings, then confirm **Save assignments**. Changed files invalidate the preview. Saving replaces casting for that production. Matching student codes update names/classes; optional labels and students omitted from the CSV remain in the roster, without restoring their former roles. Use `/admin/roster` for routine edits without CSV uploads. **Delete all assignments** clears the student list and casting without removing the script. Stale changes fail rather than overwrite another staff member's updates. Update or remove affected assignments before publishing a cast roster that drops assigned tags.
+Upload a complete CSV of at most 5 MiB and 5,000 rows, validate, inspect the preview/warnings, then confirm **Import assignments**. Changed files invalidate the preview. Saving replaces casting for that production. Matching student codes update names/classes; optional labels and students omitted from the CSV remain in the roster, without restoring their former roles. Use `/admin/roster` for routine edits without CSV uploads. Masters can use **Clear roster** to clear the student list and casting without removing the script. Stale changes fail rather than overwrite another staff member's updates. Update or remove affected assignments before publishing a cast roster that drops assigned tags.
 
 The Teacher Viewer keeps the full script and both casting columns visible. It opens without highlighting. Choose a performance to highlight its assignments; selecting one or more classes restricts highlighting to those classes within the chosen performance(s). Names, character labels and corresponding dialogue are highlighted, while other lines remain visible for teachers to cover. Joint lines highlight if any tagged participant matches; individual student names highlight only when they match. Unknown classes stay blank and are not inferred by the app.
+
+A complete JSON backup is available to all approved staff from Roster. It includes unassigned students and distinguishing labels that assignment CSV cannot represent. Only masters can restore it, to the same production, after reviewing the full replacement. Use JSON rather than CSV for a complete backup; keep downloaded files private.
