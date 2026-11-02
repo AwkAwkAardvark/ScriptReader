@@ -53,7 +53,7 @@ try {
   await staffRow.locator('.admin-badge').filter({ hasText: /^Admin$/ }).waitFor();
   await staff.reload();await staff.getByRole('button', { name: 'Sign out' }).waitFor();
   assert.equal(await staff.getByRole('heading', { name: 'Access Management', exact: true }).count(), 0);
-  const focusPage=await staff.context().newPage();focusPage.on('pageerror',error=>errors.push(error.message));try{await checkTeacherRoleFocus(focusPage,demo.rpc,demo.origin);}finally{await focusPage.close();}
+  const focusContext=await browser.newContext({storageState:await staff.context().storageState()});const focusPage=await focusContext.newPage();focusPage.on('pageerror',error=>errors.push(error.message));try{await checkTeacherRoleFocus(focusPage,demo.rpc,demo.origin);}finally{await focusContext.close();}
   await checkAdminPreparation(staff,demo.rpc,demo.origin,owner);
   await staff.getByRole('button',{name:'Navigation',exact:true}).click();
   await staff.getByRole('link',{name:'Scripts',exact:true}).click();
