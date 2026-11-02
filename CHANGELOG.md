@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.23 — 2026-11-02
 
 - Add master-managed staff display names with inline editing and a Google-name default, preserving account identities and access permissions.
 
