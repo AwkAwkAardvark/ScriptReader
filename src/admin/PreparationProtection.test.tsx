@@ -57,3 +57,12 @@ it('assignment imports count empty/invalid files and retain them after failed va
  window.history.replaceState({},'','/admin/assignments');render(<AssignmentManager locale="ko"/>);await screen.findByLabelText('배역 배정 CSV');expect(warned()).toBe(false);await file('배역 배정 CSV','');expect(warned()).toBe(true);
  await file('배역 배정 CSV','bad headers\ninvalid');fireEvent.click(screen.getByRole('button',{name:'검증 및 미리보기'}));await screen.findByRole('alert');expect(warned()).toBe(true);fireEvent.change(screen.getByLabelText('공연 선택'),{target:{value:'other'}});expect(screen.getByRole('dialog',{name:'저장하지 않은 변경'})).toBeInTheDocument();fireEvent.click(screen.getByRole('button',{name:'계속 편집'}));expect(screen.getByLabelText('공연 선택')).toHaveValue('paper-2026');
 });
+it('does not revive a deferred file read after a confirmed departure and new page mount',async()=>{
+ const {act}=await import('@testing-library/react');let resolve!:(value:string)=>void;const pending=new Promise<string>(done=>{resolve=done;});
+ const view=render(<ProductionManager locale="en"/>);fireEvent.change(await screen.findByLabelText('Choose a production'),{target:{value:'paper-2026'}});await waitFor(()=>expect(screen.getByLabelText('Reader title')).not.toBeDisabled());
+ const chosen=new File([''],'pending.csv');Object.defineProperty(chosen,'text',{value:()=>pending});fireEvent.change(screen.getByLabelText('Script CSV'),{target:{files:[chosen]}});expect(warned()).toBe(true);
+ const link=document.createElement('a');link.href='/admin/songs';link.textContent='Leave';document.body.append(link);fireEvent.click(link);expect(screen.getByRole('dialog',{name:'Unsaved changes'})).toBeInTheDocument();fireEvent.click(screen.getByRole('button',{name:'Keep editing'}));expect(screen.getByLabelText('Reader title')).toHaveValue('Paper 2026');
+ const error=vi.spyOn(console,'error').mockImplementation(()=>{});fireEvent.click(link);fireEvent.click(screen.getByRole('button',{name:'Discard changes'}));view.unmount();link.remove();
+ window.history.replaceState({},'','/admin/scripts?production=other');render(<ProductionManager locale="en"/>);await waitFor(()=>expect(screen.getByLabelText('Reader title')).toHaveValue('Other'));
+ await act(async()=>resolve(csvFor()));expect(screen.getByLabelText('Reader title')).toHaveValue('Other');expect(screen.getByRole('button',{name:'Validate and preview'})).toBeDisabled();expect(warned()).toBe(false);error.mockRestore();
+});
