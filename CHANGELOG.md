@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add local character focus to the teacher viewer using the student reader’s passage/context/action rules, while retaining independent rehearsal emphasis and both cast columns.
+
 ## v0.3.20 — 2026-11-02
 
 - Consolidate casting edits and transfer tools in Roster; redirect the former assignment page.

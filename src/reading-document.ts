@@ -21,7 +21,7 @@ export function buildReadingDocument(script: Script, filtered: FilteredScript, c
   for (const { record, highlighted, passage } of filtered.items) {
     const entry: ReadingEntry = {
       no: record.no, scene: record.scene, english: record.source.English,
-      korean: context.showKorean ? record.source.Korean : '', speaker: attribution(record, script),
+      korean: context.showKorean ? record.source.Korean : '', speaker: attribution(record, script), tags: record.tags,
       kind: record.types.includes('Title') ? 'scene' : record.types.includes('Song') ? 'song' : record.types.includes('Line') ? 'dialogue' : 'cue',
       highlighted, stageDirection: record.types.includes('StageDirection'),
     };
