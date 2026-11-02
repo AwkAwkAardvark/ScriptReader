@@ -1,3 +1,4 @@
+import {handleQuotaAdmin} from './quota-admin-api';
 import {handleRosterBulk} from './roster-bulk-api';
 import { handleRosterApi } from './roster-api';
 import { handleTeacherApi } from './teacher-api';
@@ -13,6 +14,7 @@ const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 type AccessResult = { account?: AdminAccount | null; accounts?: AdminAccount[]; error?: AdminError };
 
 export async function handleAdminApi(request: Request, env: Environment, rpcOverride?: Rpc, authFactory: AdminAuthFactory = createAdminAuth): Promise<Response> {
+  if (/^\/api\/admin\/quotas(?:\/|$)/.test(new URL(request.url).pathname)) return handleQuotaAdmin(request,env,rpcOverride,authFactory);
   if (/^\/api\/admin\/productions\/[^/]+\/roster\/bulk(?:\/|$)/.test(new URL(request.url).pathname)) return handleRosterBulk(request, env, rpcOverride, authFactory);
   if (/^\/api\/admin\/productions\/[^/]+\/roster(?:\/|$)/.test(new URL(request.url).pathname)) return handleRosterApi(request, env, rpcOverride, authFactory);
   if (/^\/api\/admin\/productions\/[^/]+\/(viewer|assignments)(?:\/|$)/.test(new URL(request.url).pathname)) return handleTeacherApi(request, env, rpcOverride, authFactory);

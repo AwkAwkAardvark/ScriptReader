@@ -1,3 +1,4 @@
+import {ReaderAllowances} from './ReaderAllowances';
 import { RosterEditor } from './RosterEditor';
 import { RosterPreview } from './RosterPreview';
 import { TeacherViewer } from './TeacherViewer';
@@ -101,6 +102,7 @@ export function AdminPanel({page='overview'}:{page?:AdminPage}) {
             {accounts.some(account => account.status === status) ? <ul>{accounts.filter(account => account.status === status).map(row)}</ul> : <p className="admin-empty">{text.empty}</p>}
           </section>)}
         </section>}
+        {page==='accounts'&&master&&<ReaderAllowances locale={locale} onDenied={()=>void refresh().catch(failure)}/>}
       </>}
     </div>
     <dialog ref={dialog} className="admin-dialog" aria-labelledby="access-dialog-title" onCancel={event => { event.preventDefault();if (!busy) setChange(null); }}>
