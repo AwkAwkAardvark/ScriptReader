@@ -1,3 +1,4 @@
+import {useUnsavedChanges} from './useUnsavedChanges';
 import {ProductionPicker} from './ProductionPicker';
 import {CsvExample} from './CsvExample';
 import {replaceAdminUrl} from './AdminLayout';
@@ -20,6 +21,8 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
   const [diagnostics, setDiagnostics] = useState<AssignmentDiagnostic[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [fileSelected,setFileSelected]=useState(false);
+  const guard=useUnsavedChanges(fileSelected,locale,busy);
   const [saved, setSaved] = useState(false);
   const [confirmation, setConfirmation] = useState<'save' | 'delete' | null>(null);
   const generation = useRef(0); const active = useRef(true);
@@ -29,11 +32,11 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
     if (!active.current) return;
     const code = value instanceof ProductionFailure ? value.code : 'unavailable';
     setError(code);
-    if (code === 'unauthorized' || code === 'forbidden') { setContext(null); setCsv(''); setPreview(null); setList(null); setDiagnostics([]); }
+    if (code === 'unauthorized' || code === 'forbidden') { setContext(null); setCsv(''); setPreview(null); setList(null); setDiagnostics([]);setFileSelected(false);generation.current++; }
   }
   async function choose(slug: string) {
     const current = ++generation.current;
-    setSelected(slug); setContext(null); setCsv(''); setPreview(null); setDiagnostics([]); setError(''); setSaved(false); setBusy(true);
+    setFileSelected(false);setSelected(slug); setContext(null); setCsv(''); setPreview(null); setDiagnostics([]); setError(''); setSaved(false); setBusy(true);
     if (input.current) input.current.value = '';
     const params = new URLSearchParams(window.location.search); if(slug)params.set('production',slug);else params.delete('production');
     replaceAdminUrl(window.location.pathname + (params.size?'?' + params:''));
@@ -58,7 +61,7 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
   useEffect(() => { if (confirmation) dialog.current?.showModal(); else dialog.current?.close(); }, [confirmation]);
   async function file(file?: File) {
     const current = ++generation.current;
-    setPreview(null); setDiagnostics([]); setCsv(''); setSaved(false); setError('');
+    setBusy(false);setFileSelected(Boolean(file));setPreview(null); setDiagnostics([]); setCsv(''); setSaved(false); setError('');
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { setError('too_large'); return; }
     setBusy(true);
@@ -72,10 +75,10 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
     setPreview(null); setDiagnostics([]); setError('');
     const parsed = parseAssignments(csv, context.characters);
     if (!parsed.ok) { setDiagnostics(parsed.errors); return; }
-    setBusy(true);
+    setBusy(true);const current=generation.current;
     try {
       const value = await productionCall<Preview>('productions/' + selected + '/assignments/validate', 'POST', body());
-      if (active.current) setPreview(value);
+      if (active.current&&current===generation.current) setPreview(value);
     } catch (value) { fail(value); }
     finally { if (active.current) setBusy(false); }
   }
@@ -97,7 +100,7 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
   }
   return <section className="assignment-manager" aria-busy={busy}>
     {error && <p role="alert" className="admin-error">{problem}</p>}{saved && <p role="status">{ko ? '저장했습니다.' : 'Saved.'}</p>}
-    {list && <section className="admin-card"><ProductionPicker id="assignments-production" locale={locale} value={selected} disabled={busy} productions={list.productions} onChange={value=>void choose(value)}/></section>}
+    {list && <section className="admin-card"><ProductionPicker id="assignments-production" locale={locale} value={selected} disabled={busy} productions={list.productions} onChange={value=>{if(value!==selected)guard.request(()=>void choose(value));}}/></section>}
     {context && <>
       <section className="admin-card"><div className="admin-heading"><h2>{context.title}</h2><AdminActionLink href={`/admin/viewer?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '교사용 대본 열기' : 'Open teacher viewer'}</AdminActionLink></div>
         <p><AdminActionLink href={`/admin/roster?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 편집' : 'Edit roster'}</AdminActionLink> <AdminActionLink href={`/admin/roster-preview${ko ? '?lang=ko' : ''}`}>{ko ? '배역 편집 체험' : 'Try roster preview'}</AdminActionLink></p>
@@ -117,5 +120,6 @@ export function AssignmentManager({ locale }: { locale: Locale }) {
       <h2 id="assignment-confirmation">{confirmation === 'delete' ? (ko ? '학생 목록과 모든 배정을 삭제할까요?' : 'Delete the student list and all assignments?') : (ko ? '전체 학생 배정을 교체할까요?' : 'Replace all student assignments?')}</h2>
       <p>{context?.title}</p><div className="admin-dialog-actions"><button disabled={busy} onClick={() => setConfirmation(null)}>{ko ? '취소' : 'Cancel'}</button><button className="admin-primary" disabled={busy} onClick={() => void save(confirmation === 'delete')}>{ko ? '확인' : 'Confirm'}</button></div>
     </dialog>
+    {guard.prompt}
   </section>;
 }

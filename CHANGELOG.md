@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Protect unsaved script preparation, song edits and assignment imports when switching productions or leaving the page.
+- Keep homepage, production settings and file publication changes independent; retain preparation after failed operations.
+- Treat equivalent song URLs and reverted settings as clean, while protecting empty/invalid file selections and asynchronous reads.
+
 ## v0.3.17 — 2026-10-31
 
 - Keep commas between teacher-viewer role names outside individual role highlights.

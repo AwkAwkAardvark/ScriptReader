@@ -22,3 +22,18 @@ it('loads a linked production directly and clears song details after permission 
  fireEvent.click(screen.getByRole('button',{name:'연결 삭제'}));fireEvent.click(screen.getByRole('button',{name:'노래 연결 저장'}));fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'확인'}));
  await screen.findByRole('alert');expect(document.querySelector('.songs-card')).toBeNull();
 });
+it('retains staged links and a leave warning when save succeeds but reloading fails',async()=>{
+ render(<SongManager locale="en"/>);fireEvent.change(await screen.findByLabelText('Choose a production'),{target:{value:'paper-2026'}});await waitFor(()=>expect(document.querySelector('.songs-card')).toBeInTheDocument());fireEvent.click(screen.getByText('Song links · 1'));
+ fireEvent.change(screen.getByLabelText('YouTube URL: 9'),{target:{value:'https://youtu.be/lmnopqrstuv'}});
+ vi.mocked(productionCall).mockImplementation(async(path,method)=>{if(method==='PATCH')return {saved:true};if(path==='productions')throw new ProductionFailure('unavailable');return {songs:[],version:'v2'};});
+ fireEvent.click(screen.getByRole('button',{name:'Save song links'}));fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Confirm'}));
+ await screen.findByText(/Links were saved but could not be reloaded/);expect(screen.getByLabelText('YouTube URL: 9')).toHaveValue('https://youtu.be/lmnopqrstuv');
+ const event=new Event('beforeunload',{cancelable:true});window.dispatchEvent(event);expect(event.defaultPrevented).toBe(true);
+});
+it('treats equivalent URLs and Undo as clean but guards a real production change',async()=>{
+ render(<SongManager locale="en"/>);fireEvent.change(await screen.findByLabelText('Choose a production'),{target:{value:'paper-2026'}});await waitFor(()=>expect(document.querySelector('.songs-card')).toBeInTheDocument());fireEvent.click(screen.getByText('Song links · 1'));
+ fireEvent.change(screen.getByLabelText('YouTube URL: 9'),{target:{value:'https://www.youtube.com/watch?v=abcdefghijk'}});expect(screen.getByRole('button',{name:'Save song links'})).toBeDisabled();
+ let event=new Event('beforeunload',{cancelable:true});window.dispatchEvent(event);expect(event.defaultPrevented).toBe(false);
+ fireEvent.click(screen.getByRole('button',{name:'Remove link'}));event=new Event('beforeunload',{cancelable:true});window.dispatchEvent(event);expect(event.defaultPrevented).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Undo change'}));event=new Event('beforeunload',{cancelable:true});window.dispatchEvent(event);expect(event.defaultPrevented).toBe(false);
+});
