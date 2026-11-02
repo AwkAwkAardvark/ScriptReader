@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.19 — 2026-11-02
 
 - Add transactional, server-attributed roster change audits for editor saves, assignment CSV imports and clearing, retaining identifiers and changed field names without historical personal values.
 

@@ -176,7 +176,7 @@ it('audits 5,000 changed slots/students without storing personal values or full 
 
 
 it('upgrades existing rosters without inventing history, copying personal values or changing versions', async () => {
- const migration = '20261102075747_roster_audit.sql';
+ const migration = '20261102080633_roster_audit.sql';
  const prior = await localDatabase({ beforeMigration: migration });
  try {
   await prior.rpc('reader_admin_bootstrap', { p_user: master, p_email: 'owner@example.test', p_name: 'Owner' });
