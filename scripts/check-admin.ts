@@ -1,3 +1,4 @@
+import {checkStaffDisplayNames} from './check-staff-display-names';
 import {checkQuotaReset} from './check-quota-reset';
 import {checkTeacherRoleFocus} from './check-teacher-focus';
 import {checkAdminPreparation} from './check-admin-preparation';
@@ -56,6 +57,8 @@ try {
   assert.equal(await staff.getByRole('heading', { name: 'Access Management', exact: true }).count(), 0);
   const focusContext=await browser.newContext({storageState:await staff.context().storageState()});const focusPage=await focusContext.newPage();focusPage.on('pageerror',error=>errors.push(error.message));try{await checkTeacherRoleFocus(focusPage,demo.rpc,demo.origin);}finally{await focusContext.close();}
   const quotaContext=await browser.newContext({storageState:await owner.context().storageState()});const quotaPage=await quotaContext.newPage();quotaPage.on('pageerror',error=>errors.push(error.message));try{await checkQuotaReset(quotaPage,demo.origin);}finally{await quotaContext.close();}
+  const namesOwnerContext=await browser.newContext({storageState:await owner.context().storageState()});const namesStaffContext=await browser.newContext({storageState:await staff.context().storageState()});
+  try{const namesOwner=await namesOwnerContext.newPage();const namesStaff=await namesStaffContext.newPage();for(const page of [namesOwner,namesStaff])page.on('pageerror',error=>errors.push(error.message));await checkStaffDisplayNames(namesOwner,namesStaff,demo.origin);}finally{await Promise.all([namesOwnerContext.close(),namesStaffContext.close()]);}
   await checkAdminPreparation(staff,demo.rpc,demo.origin,owner);
   await staff.getByRole('button',{name:'Navigation',exact:true}).click();
   await staff.getByRole('link',{name:'Scripts',exact:true}).click();
