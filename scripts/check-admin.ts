@@ -1,3 +1,4 @@
+import {checkAdminPreparation} from './check-admin-preparation';
 import { csvFor } from '../src/test/fixtures';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
@@ -51,6 +52,7 @@ try {
   await staffRow.locator('.admin-badge').filter({ hasText: /^Admin$/ }).waitFor();
   await staff.reload();await staff.getByRole('button', { name: 'Sign out' }).waitFor();
   assert.equal(await staff.getByRole('heading', { name: 'Access Management', exact: true }).count(), 0);
+  await checkAdminPreparation(staff,demo.rpc,demo.origin);
   await staff.getByRole('button',{name:'Navigation',exact:true}).click();
   await staff.getByRole('link',{name:'Scripts',exact:true}).click();
   // Approved staff can publish, but cannot manage accounts. All files are fictional.

@@ -106,6 +106,10 @@ Script publication is independent of application deployment; see the [hosting gu
 
 ## Admin interface
 
+Scripts, Songs and assignment imports protect unsaved preparation with a named **Keep editing / Discard changes** dialog before changing productions, resetting/refreshing a draft or following an ordinary same-tab app link. Selecting an empty or invalid file still counts as preparation. Preview filters, disclosure panels and equivalent/reverted values do not create unsaved changes. Homepage settings, production settings and uploaded files are independent: saving one does not discard the others. Validation and save failures retain preparation, except when access is revoked and private state must be cleared.
+
+Drafts remain in memory; there is no autosave or browser-storage copy. Reloading, closing a tab and external same-tab navigation use the browser’s own unsaved-change warning where supported. Its wording is browser-controlled, generally requires prior interaction, and cannot reliably cover mobile OS termination. New tabs, downloads and same-page anchor jumps remain available without a discard prompt.
+
 Staff pages share one compact header and collapsible desktop sidebar. Mobile navigation opens on demand; Escape closes it and returns focus to the menu button. The teacher viewer starts with administrative navigation closed so the script remains prominent; its rehearsal controls stay separate. Links between staff pages retain the selected production and interface language without copying authentication-result parameters.
 
 Production selectors use the same labeling and sizing. Script, cast, video-mapping and assignment CSV examples share one disclosure, bounded keyboard-focusable code region and download action. Preparation notes appear only where relevant; assignment examples use fictional students and the selected production’s existing role tags.
