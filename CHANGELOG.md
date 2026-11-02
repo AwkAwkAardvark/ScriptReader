@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add transactional, server-attributed roster change audits for editor saves, assignment CSV imports and clearing, retaining identifiers and changed field names without historical personal values.
+
 ## v0.3.18 — 2026-11-02
 
 - Protect unsaved script preparation, song edits and assignment imports when switching productions or leaving the page.
