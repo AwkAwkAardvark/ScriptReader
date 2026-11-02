@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.18 — 2026-11-02
 
 - Protect unsaved script preparation, song edits and assignment imports when switching productions or leaving the page.
 - Keep homepage, production settings and file publication changes independent; retain preparation after failed operations.
