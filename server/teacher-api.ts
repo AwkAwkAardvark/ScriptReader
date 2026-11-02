@@ -23,6 +23,7 @@ export async function handleTeacherApi(request: Request, env: Environment, rpcOv
     const user = await authFactory(request, env, headers).user();
     if (!user || !uuid.test(user.id)) return problem('unauthorized', 401);
     const rpc = rpcOverride ?? supabaseRpc(env.SUPABASE_URL, env.SUPABASE_SECRET_KEY);
+    if(method!=='GET'){const membership=await rpc('reader_admin_access',{p_actor:user.id,p_action:'me'}) as {account?:{role:string;status:string}};if(membership.account?.status!=='approved'||membership.account.role!=='master')return problem('forbidden',403);}
     const result = await rpc('reader_staff_context', { p_actor: user.id, p_slug: match[1] }) as TeacherContext & { error?: string };
     if (result.error) return problem(result.error, result.error === 'not_found' ? 404 : 403);
     if (method === 'GET') {
@@ -54,7 +55,7 @@ export async function handleTeacherApi(request: Request, env: Environment, rpcOv
     const parsed = body.clear === true ? { ok: true as const, assignments: [], warnings: [] } : parseAssignments(body.csv, result.characters);
     if (!parsed.ok) return json({ error: 'validation', diagnostics: parsed.errors }, 422);
     if (validation) return json({ assignments: parsed.assignments, warnings: parsed.warnings });
-    const saved = await rpc('reader_staff_context', { p_action: 'save', p_actor: user.id, p_slug: match[1], p_expected: body.expected,
+    const saved = await rpc('reader_staff_context', { p_action: body.clear===true?'clear':'import', p_actor: user.id, p_slug: match[1], p_expected: body.expected,
       p_production: body.productionVersion, p_rows: parsed.assignments }) as { error?: string };
     return saved.error ? problem(saved.error, saved.error === 'conflict' ? 409 : saved.error === 'validation' ? 422 : saved.error === 'not_found' ? 404 : 403) : json(saved);
   } catch { return problem('unavailable', 503); }

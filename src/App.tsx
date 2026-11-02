@@ -3,7 +3,7 @@ import { applyActionVisibility } from './action-visibility';
 import { AdminPanel } from './admin/AdminPanel';
 import { BrandMark } from './BrandMark';
 import { DEFAULT_CONTEXT } from './context';
-import { readerRoute } from './routes';
+import { readerRoute,legacyRosterLocation } from './routes';
 import { ControlsPanel } from './ControlsPanel';
 import { CharacterOptions } from './CharacterOptions';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -204,8 +204,11 @@ function LocalReader() {
   </div>;
 }
 
+function LegacyRosterRedirect(){useEffect(()=>{window.location.replace(legacyRosterLocation(window.location.search));},[]);return <p role="status">{new URLSearchParams(window.location.search).get('lang')==='ko'?'배역 배정을 여는 중…':'Opening roster…'}</p>;}
+
 export default function App() {
   const route = readerRoute(window.location.pathname, window.location.protocol, import.meta.env.DEV);
+  if (route.kind === 'roster-redirect')return <LegacyRosterRedirect/>;
   if (route.kind === 'home') return <Home />;
   if (route.kind === 'admin') return <AdminPanel page={route.page} />;
   if (route.kind === 'production') return <HostedReader slug={route.slug} />;

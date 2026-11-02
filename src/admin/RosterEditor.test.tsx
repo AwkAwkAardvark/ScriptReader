@@ -33,10 +33,10 @@ it('stages edits until confirmed, saves, and reloads the stored roster',async()=
  view.unmount();render(<RosterEditor locale="en" onLocale={vi.fn()}/>);await screen.findByRole('button',{name:'Guard One · 1부: 김민준 · EPC/EPD'});expect(screen.getByRole('button',{name:'Review changes'})).toBeDisabled();
 });
 it('retains the draft after conflicts and requires confirmation before loading latest',async()=>{
- const confirm=vi.spyOn(window,'confirm').mockReturnValue(false);failSave=true;
+ failSave=true;
  render(<RosterEditor locale="en" onLocale={vi.fn()}/>);await edit();await save();await screen.findByText('Someone else updated this roster. Load the latest version before saving.');
- fireEvent.click(screen.getByRole('button',{name:'Load latest roster'}));expect(confirm).toHaveBeenCalled();expect(screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPC/EPD'})).toBeInTheDocument();
- confirm.mockReturnValue(true);fireEvent.click(screen.getByRole('button',{name:'Load latest roster'}));await screen.findByRole('button',{name:'Guard One · 1부: 김민준 · EPG'});
+ fireEvent.click(screen.getByRole('button',{name:'Load latest roster'}));expect(screen.getByRole('dialog',{name:'Unsaved changes'})).toBeInTheDocument();fireEvent.click(screen.getByRole('button',{name:'Keep editing'}));expect(screen.getByRole('button',{name:'Guard One · 1부: 김민준 · EPC/EPD'})).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Load latest roster'}));fireEvent.click(screen.getByRole('button',{name:'Discard changes'}));await screen.findByRole('button',{name:'Guard One · 1부: 김민준 · EPG'});
 });
 it('does not declare success when another save lands before readback',async()=>{
  race=true;render(<RosterEditor locale="en" onLocale={vi.fn()}/>);await edit();await save();await screen.findByText('Someone else updated this roster. Load the latest version before saving.');expect(screen.queryByText('Saved.')).not.toBeInTheDocument();

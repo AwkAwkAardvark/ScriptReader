@@ -1,7 +1,6 @@
 import { RosterEditor } from './RosterEditor';
 import { RosterPreview } from './RosterPreview';
 import { TeacherViewer } from './TeacherViewer';
-import { AssignmentManager } from './AssignmentManager';
 import { SongManager } from './SongManager';
 import { ProductionManager } from './ProductionManager';
 import { useEffect, useRef, useState } from 'react';
@@ -90,12 +89,11 @@ export function AdminPanel({page='overview'}:{page?:AdminPage}) {
             <button className="admin-secondary" disabled={busy} onClick={() => void run(adminClient.logout)}>{text.logout}</button>
           </div>
         </section>}
-        {page==='roster' && session.account?.status==='approved' && <RosterEditor locale={locale} onLocale={setLocale} master={Boolean(master)} embedded/>}
+        {(page==='roster'||page==='assignments') && session.account?.status==='approved' && <RosterEditor locale={locale} onLocale={setLocale} master={Boolean(master)} embedded/>}
         {page==='roster-preview' && session.account?.status==='approved' && <RosterPreview locale={locale} onLocale={setLocale} master={Boolean(master)} embedded/>}
         {page==='scripts' && session.account?.status === 'approved' && <ProductionManager locale={locale} />}
         {page==='songs' && session.account?.status === 'approved' && <SongManager locale={locale} />}
         {page==='viewer' && session.account?.status === 'approved' && <TeacherViewer locale={locale} />}
-        {page==='assignments' && session.account?.status === 'approved' && <AssignmentManager locale={locale} />}
         {page==='accounts' && !master && !error && <p role="alert">{text.errors.forbidden}</p>}
         {page==='accounts' && master && <section className="admin-card"><div className="admin-heading"><h2>{locale==='ko'?'직원 계정':'Staff accounts'}</h2><span className="admin-badge">{text.masters(masterCount)}</span></div>
           {(['pending', 'approved', 'revoked'] as const).map(status => <section className="admin-account-group" key={status}>

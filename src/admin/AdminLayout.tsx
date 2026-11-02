@@ -7,11 +7,10 @@ const destinations=[
  {page:'roster',path:'/admin/roster',en:'Roster',ko:'배역 배정'},
  {page:'scripts',path:'/admin/scripts',en:'Scripts',ko:'공연 대본'},
  {page:'songs',path:'/admin/songs',en:'Songs',ko:'노래'},
- {page:'assignments',path:'/admin/assignments',en:'Assignments / CSV',ko:'배역 배정 / CSV'},
  {page:'overview',path:'/admin',en:'My Account',ko:'내 계정'},
  {page:'accounts',path:'/admin/accounts',en:'Access Management',ko:'권한 관리'},
 ] as const;
-export function adminPageTitle(page:AdminPage,locale:Locale){return page==='roster-preview'?(locale==='ko'?'배역 편집 미리보기':'Roster preview'):destinations.find(item=>item.page===page)![locale];}
+export function adminPageTitle(page:AdminPage,locale:Locale){if(page==='assignments')return locale==='ko'?'배역 배정':'Roster';return page==='roster-preview'?(locale==='ko'?'배역 편집 미리보기':'Roster preview'):destinations.find(item=>item.page===page)![locale];}
 export function replaceAdminUrl(url:string){window.history.replaceState({},'',url);window.dispatchEvent(new Event('admin-location-change'));}
 export function adminDestination(path:string,locale:Locale,production:string|null){const params=new URLSearchParams();if(production&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(production))params.set('production',production);if(locale==='ko')params.set('lang','ko');return path+(params.size?'?'+params:'');}
 export function AdminLayout({page,locale,onLocale,approved=true,master=false,navigation=true,children}:{page:AdminPage;locale:Locale;onLocale:(locale:Locale)=>void;approved?:boolean;master?:boolean;navigation?:boolean;children:ReactNode}){
