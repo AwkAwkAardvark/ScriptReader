@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.24 — 2026-11-03
+
+- Serve the Google Search Console ownership-verification file at its required public address.
+
 ## v0.3.23 — 2026-11-02
 
 - Add master-managed staff display names with inline editing and a Google-name default, preserving account identities and access permissions.
