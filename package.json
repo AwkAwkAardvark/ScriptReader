@@ -1,6 +1,6 @@
 {
   "name": "script-reader",
-  "version": "0.3.27",
+  "version": "0.3.28",
   "private": true,
   "type": "module",
   "engines": {
@@ -21,7 +21,8 @@
     "test:hosted-browser": "tsx scripts/check-hosted.ts",
     "check:exposure": "node scripts/check-exposure.mjs",
     "test:admin-browser": "tsx scripts/check-admin.ts",
-    "test:analytics-browser": "tsx scripts/check-student-analytics.ts"
+    "test:analytics-browser": "tsx scripts/check-student-analytics.ts",
+    "test:pages-routing": "node scripts/check-pages-routing.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
