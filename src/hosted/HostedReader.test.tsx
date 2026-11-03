@@ -29,6 +29,30 @@ async function select() {
   return user;
 }
 describe('hosted reader', () => {
+  it('silently suppresses its context menu while keeping selection, copying, shortcuts and printing available', async () => {
+    const user = await select();
+    const line = screen.getByText('The gate is open. Shall we take a look?');
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {});
+    const context = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    expect(line.dispatchEvent(context)).toBe(false);
+    expect(context.defaultPrevented).toBe(true);
+    expect(alert).not.toHaveBeenCalled();
+    const range = document.createRange(); range.selectNodeContents(line);
+    const selection = window.getSelection()!; selection.removeAllRanges(); selection.addRange(range);
+    expect(selection.toString()).toBe(line.textContent);
+    const copy = new Event('copy', { bubbles: true, cancelable: true });
+    expect(line.dispatchEvent(copy)).toBe(true);
+    for (const key of ['c', 'p']) {
+      const shortcut = new KeyboardEvent('keydown', { key, ctrlKey: true, bubbles: true, cancelable: true });
+      expect(line.dispatchEvent(shortcut)).toBe(true);
+    }
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Print / Save PDF' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'Print / Save PDF' }));
+    expect(print).toHaveBeenCalledOnce();
+    expect(document.body.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))).toBe(true);
+    selection.removeAllRanges();
+  });
   it('defaults to 2/1, uses preloaded views without extra calls, and fetches larger context', async () => {
     const user = await select();
     expect(screen.getByRole('heading', { level: 1, name: production.title })).toBeVisible();
@@ -126,4 +150,14 @@ it('mounts YouTube only on click, switches players, collapses and includes the e
   expect(document.querySelectorAll('iframe')).toHaveLength(1);
   expect(document.querySelector('iframe')).toHaveAttribute('src', expect.stringContaining('lmnopqrstuv'));
   await user.click(buttons[1]); expect(document.querySelector('iframe')).toBeNull();
+});
+
+it('leaves the shared reading content context menu available to teacher and local readers', () => {
+  const counts = { before: 2, after: 1, includeNonDialogue: false };
+  const bundle = passageBundle(production, payload, 'Ro', counts);
+  render(<ReadingContent document={unpackView(bundle, counts, false)!} text={copy.en} />);
+  const line = screen.getByText('The gate is open. Shall we take a look?');
+  const context = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+  expect(line.dispatchEvent(context)).toBe(true);
+  expect(context.defaultPrevented).toBe(false);
 });
