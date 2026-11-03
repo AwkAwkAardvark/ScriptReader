@@ -134,6 +134,16 @@ For automated admin UI/API checks, run `npm run test:admin-browser` with the sam
 
 The admin shell separates account/status navigation, production controls, song-link management, and master-only account management. Production defaults reuse the student slider component, with separate control identifiers so preview sliders remain independent. Song resolution is shared by the browser publishing API and fallback CLI. Protected song metadata exposes Song records and associations, not the full script; the trusted server obtains the existing snapshot to create link-only revisions. Unique title matching preserves links across renumbering, while ambiguous changes require explicit review. Publishing checks the baseline version transactionally so a stale preview cannot overwrite newer links.
 
+### Student-reader analytics
+
+Cloudflare Web Analytics loads once per document on the configured canonical HTTPS production-reader routes (`/p/<slug>`). It is absent from administrative and teacher workspaces, imports, preview/development hosts and the offline demo. Visits directly referred from a same-origin administrative page are also excluded. Navigation between reader and staff pages replaces the document; preserve this boundary when changing routing.
+
+The manual beacon uses `spa: false`, so character, context and language changes do not create extra page-view measurements. It adds no custom events, student identifiers or application tracking cookies. Cloudflare processes page/performance measurements under its service policies; the measurements do not establish individual student attendance or rehearsal. A blocked script must leave the reader usable.
+
+The deployment CSP permits the specific Cloudflare beacon script and its reporting service. Automatic site-wide injection remains disabled to preserve route exclusions. The public site identifier and canonical host are configured in `src/student-analytics.ts`; the identifier is not a credential. A new deployment hostname requires deliberate configuration. See [Cloudflare's data collection documentation](https://developers.cloudflare.com/web-analytics/data-metrics/data-origin-and-collection/) and [CSP requirements](https://developers.cloudflare.com/web-analytics/faq/).
+
+`npm run test:analytics-browser` checks the built CSP, route exclusions, full-document navigation and blocked-script behavior with synthetic records and intercepted analytics requests. It does not submit test traffic to the provider.
+
 ### Daily reader allowance resets
 
 Masters can expand **Reader allowances** in Access Management to view the database's current Korean date and saved allowance-record count. An explicit dated confirmation resets that day's character choices across every production/browser; it changes neither browser cookies nor signing keys, minute-rate counters, content or student casting. Administrative responses are uncached and authorization is checked against current database membership.

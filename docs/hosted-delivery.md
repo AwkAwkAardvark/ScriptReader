@@ -33,6 +33,10 @@ The initial reader migrations create four RLS-protected tables and two server-on
 
 Only `service_role` has application privileges. `anon`, `authenticated`, and `PUBLIC` cannot select script tables or execute these RPC functions. RLS intentionally has no client policies because browsers have no direct database access; the advisor's informational “RLS Enabled No Policy” result is expected for this design ([Supabase explanation](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)).
 
+### Student-reader measurements
+
+The public reader uses manually scoped Cloudflare Web Analytics. Keep blanket Pages analytics injection disabled; it would bypass the application’s staff-page exclusions. See the [development guide](development.md#student-reader-analytics) for scope, configuration and checks.
+
 ### Cloudflare build and runtime
 
 Connect the GitHub repository to a Pages project. Use Node 22, build command `npm run build`, and output directory `dist`. The root `functions/` directory supplies the API, and `wrangler.jsonc` supplies non-secret runtime settings. Production follows the chosen production branch. The Cloudflare GitHub installation and Cloudflare API/tool authentication are separate connections; authorizing one does not establish the other.

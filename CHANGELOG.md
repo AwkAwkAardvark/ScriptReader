@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.26 — 2026-11-03
+
+- Add Cloudflare Web Analytics to canonical public student readers, excluding staff workspaces, local imports, previews and the offline demo.
+- Allow only the required analytics script and reporting service through the content security policy; blocked measurement does not interrupt reading.
+
 ## v0.3.25 — 2026-11-03
 
 - Silently suppress the context menu in the hosted student reader while preserving selection, keyboard shortcuts and printing.
