@@ -2,6 +2,12 @@
 
 The hosted reader uses Cloudflare Pages with Pages Functions and Supabase Postgres. Student links use `/p/<slug>`; local-file import is at `/import`. The root opens the production or blank importer selected by an approved administrator; the production directory is private. App deployment and script publication are independent. For local use, automated checks, and the security model, see the [development guide](development.md).
 
+## Crawling and search indexing
+
+Application responses carry `X-Robots-Tag: noindex`; API entrypoints set it directly because Pages static headers do not apply to Functions. The deployed `robots.txt` permits Googlebot and bingbot to fetch pages and discover that instruction, separately opts out of Google-Extended usage, and asks other cooperating crawlers not to fetch the site. Google's ownership-verification path remains accessible, including its extensionless Pages URL.
+
+These instructions are voluntary crawler preferences, not authorization controls. They do not replace protected staff APIs or request limits. Search removal and crawler refreshes are not immediate. See [Google's noindex guidance](https://developers.google.com/search/docs/crawling-indexing/block-indexing).
+
 ## Local development and checks
 
 Requires Node 22.12+. Run `npm ci`, then:
