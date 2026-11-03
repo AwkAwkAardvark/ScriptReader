@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.27 — 2026-11-03
+
+- Add a crawler policy that lets search engines read noindex headers while asking other cooperating crawlers to stay out.
+- Apply noindex to static and API responses, preserve Google verification, and describe the hosted reader accurately.
+
 ## v0.3.26 — 2026-11-03
 
 - Add Cloudflare Web Analytics to canonical public student readers, excluding staff workspaces, local imports, previews and the offline demo.
