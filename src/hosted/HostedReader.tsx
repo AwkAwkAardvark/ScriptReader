@@ -64,7 +64,7 @@ export function HostedReader({ slug }: { slug: string }) {
   const reading = unpacked ? applyActionVisibility(unpacked, hideActions) : null;
   const busy = !problem && (!production || Boolean(character && !reading));
   const reset = problem?.resetAt ?? (problem?.retryAfter ? new Date(Date.now() + problem.retryAfter * 1000).toISOString() : null);
-  return <div className="app-shell">
+  return <div className="app-shell" onContextMenu={event => event.preventDefault()}>
     <header className="masthead"><a className="brand" href={`/p/${slug}`}><BrandMark /><span>Script Reader</span></a>
       <div className="language-switch" role="group" aria-label={text.interfaceLanguage}>
         <button lang="en" aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>ENG</button>

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.25 — 2026-11-03
+
+- Silently suppress the context menu in the hosted student reader while preserving selection, keyboard shortcuts and printing.
+
 ## v0.3.24 — 2026-11-03
 
 - Serve the Google Search Console ownership-verification file at its required public address.
