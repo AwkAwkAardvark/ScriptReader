@@ -9,7 +9,7 @@ export default defineConfig({
     apply: 'build',
     writeBundle(options) {
       const output = options.dir ?? 'dist';
-      for (const file of ['_headers', '_redirects']) copyFileSync(resolve('deployment', file), resolve(output, file));
+      for (const file of ['_headers', '_redirects', 'google253c990321f12879.html']) copyFileSync(resolve('deployment', file), resolve(output, file));
     },
   }],
   build: { sourcemap: false },
