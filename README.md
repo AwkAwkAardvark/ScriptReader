@@ -1,6 +1,12 @@
 # Script Reader
 
+[Open the live reader](https://ebenezer-script-reader.pages.dev/p/aladdin)
+
 A mobile-friendly rehearsal reader with character selection, context controls, bilingual display, YouTube embeds, and Print / Save PDF. Hosted reading requires no student login; local CSV import is also available. Google-authenticated administration is at `/admin`.
+
+![Teacher viewer with class highlighting and bilingual dialogue](docs/images/teacher-viewer.png)
+
+Teacher Viewer with fictional casting: **Bob Kim · EBCD**, playing Merchant Sept in 1부. Staff viewing and casting tools require approved access.
 
 Hosted `/` opens the main production. CSV import is at `/import`; the offline HTML demo remains available.
 

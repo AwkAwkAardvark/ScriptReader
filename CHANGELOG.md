@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.29 — 2026-11-03
+
+- Add a Teacher Viewer screenshot with fictional casting and a prominent live-reader link to the README.
+
 ## v0.3.28 — 2026-11-03
 
 - Return real 404 pages for missing files and unsupported page routes while preserving reader/staff deep links, queries and trailing slashes.
