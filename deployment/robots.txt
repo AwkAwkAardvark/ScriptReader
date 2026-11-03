@@ -1,0 +1,15 @@
+# Search engines may fetch pages to discover the noindex response header.
+User-agent: Googlebot
+Disallow:
+
+User-agent: bingbot
+Disallow:
+
+# Google uses a separate token for its documented AI content-use controls.
+User-agent: Google-Extended
+Disallow: /
+
+# Other cooperating crawlers are asked not to fetch the rehearsal app.
+User-agent: *
+Allow: /google253c990321f12879
+Disallow: /
