@@ -22,6 +22,8 @@ npm run preview
 
 The hosted root opens the main production; use `/import` for CSV import in a production preview. Local Vite development at `/` and the portable file demo retain their import entry points. The preview serves only the built application. Private script files are never included in it.
 
+The hosted student reader silently suppresses its context menu as a copying deterrent. Text selection, keyboard copying and printing remain available; staff viewers, local imports and the offline demo retain their normal context menus. Embedded third-party players handle their own menus.
+
 Reader controls remain reachable while scrolling: the desktop sidebar stays in view, and the compact mobile settings strip opens a bounded panel without moving the script. Escape closes the mobile panel and returns focus to its settings button.
 
 Balanced parentheses within dialogue, including nested or multiline actions, are italicized on screen and in print. The original text is preserved; unmatched parentheses and square brackets remain literal text. Structural headings and songs are not parsed as dialogue.
