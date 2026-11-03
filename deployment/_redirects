@@ -1,1 +1,22 @@
-# The application resolves the administrator-selected homepage at runtime.
+# Serve the app only for supported page routes. Other missing paths use 404.html.
+# Production existence is checked by the reader API after the page shell loads.
+/import / 200
+/import/ / 200
+/admin / 200
+/admin/ / 200
+/admin/scripts / 200
+/admin/scripts/ / 200
+/admin/accounts / 200
+/admin/accounts/ / 200
+/admin/songs / 200
+/admin/songs/ / 200
+/admin/viewer / 200
+/admin/viewer/ / 200
+/admin/assignments / 200
+/admin/assignments/ / 200
+/admin/roster-preview / 200
+/admin/roster-preview/ / 200
+/admin/roster / 200
+/admin/roster/ / 200
+/p/:slug / 200
+/p/:slug/ / 200

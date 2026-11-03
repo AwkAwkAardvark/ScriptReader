@@ -37,6 +37,8 @@ jobs:
         run: npm run build:demo
       - name: Check for exposed credentials and private build artifacts
         run: npm run check:exposure
+      - name: Check Cloudflare Pages routing
+        run: npm run test:pages-routing
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Check fictional hosted workflow
