@@ -8,6 +8,12 @@ Application responses carry `X-Robots-Tag: noindex`; API entrypoints set it dire
 
 These instructions are voluntary crawler preferences, not authorization controls. They do not replace protected staff APIs or request limits. Search removal and crawler refreshes are not immediate. See [Google's noindex guidance](https://developers.google.com/search/docs/crawling-indexing/block-indexing).
 
+## Page routing and missing URLs
+
+The deployment includes a static `404.html` and explicit app-shell rewrites for supported import, staff and production-reader routes. Missing assets, common nonexistent-file probes and unsupported route shapes receive HTTP 404 instead of the app shell. Supported routes retain their original URL, query and trailing slash. Production-shaped URLs still load the shell; the existing reader API checks whether that production exists, avoiding an extra database lookup for each page request.
+
+After `npm run build:demo`, run `npm run test:pages-routing` to check the actual local Pages runtime with synthetic bindings. This verifies route/status/header behavior without production database or authentication calls; generated runtime logs stay in the ignored output directory. It complements browser checks against the Vite development server, whose fallback behavior differs from Pages.
+
 ## Local development and checks
 
 Requires Node 22.12+. Run `npm ci`, then:

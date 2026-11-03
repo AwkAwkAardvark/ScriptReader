@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.28 — 2026-11-03
+
+- Return real 404 pages for missing files and unsupported page routes while preserving reader/staff deep links, queries and trailing slashes.
+- Check routing, crawler headers, Google verification and OAuth failure redirects against the local Cloudflare Pages runtime in CI.
+
 ## v0.3.27 — 2026-11-03
 
 - Add a crawler policy that lets search engines read noindex headers while asking other cooperating crawlers to stay out.

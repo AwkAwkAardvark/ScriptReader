@@ -38,8 +38,10 @@ try {
     const response = await fetch(base + path);
     assert.equal(response.status, 200, path);
     assert.equal(new URL(response.url).pathname, new URL(path, base).pathname, path + ' must retain its route');
+    assert.equal(new URL(response.url).search, new URL(path, base).search, path + ' must retain its query');
     assert.equal(await response.text(), index, path);
     assert.ok(response.headers.get('Content-Security-Policy'), path);
+    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex', path);
   }
   for (const path of ['/unknown-route', '/.env', '/.git/config', '/data/missing.csv', '/assets/missing.js', '/p/', '/p/a/b', '/admin/missing']) {
     const response = await fetch(base + path);
@@ -48,17 +50,23 @@ try {
     assert.match(body, /Page not found/, path);
     assert.ok(!body.includes('<div id="root">'), path);
     assert.ok(!body.includes('cloudflareinsights'), path);
+    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex', path);
   }
   const asset = index.match(/src="([^"]+\.js)"/)[1];
   assert.equal((await fetch(base + asset)).status, 200);
   const verification = await fetch(base + '/google253c990321f12879.html');
   assert.equal(verification.status, 200);
   assert.equal((await verification.text()).trim(), 'google-site-verification: google253c990321f12879.html');
+  const robots = await fetch(base + '/robots.txt');
+  assert.equal(robots.status, 200);
+  assert.match(robots.headers.get('Content-Type'), /^text\/plain/);
+  assert.match(await robots.text(), /User-agent: Googlebot/);
   assert.equal((await fetch(base + '/api/missing')).status, 404);
   assert.equal((await fetch(base + '/api/admin/missing')).status, 404);
   const callback = await fetch(base + '/api/admin/auth/callback?error=access_denied', { redirect: 'manual' });
   assert.equal(callback.status, 303);
   assert.equal(callback.headers.get('Location'), '/admin?auth=failed');
+  assert.equal(callback.headers.get('X-Robots-Tag'), 'noindex');
   console.log('Pages routing checks passed: supported deep links, real missing-path 404s, assets, verification and API/OAuth boundaries.');
 } finally {
   child.kill('SIGTERM');
