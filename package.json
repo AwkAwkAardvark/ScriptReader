@@ -1,6 +1,6 @@
 {
   "name": "script-reader",
-  "version": "0.3.25",
+  "version": "0.3.26",
   "private": true,
   "type": "module",
   "engines": {
@@ -20,7 +20,8 @@
     "preview:cloudflare": "wrangler pages dev dist",
     "test:hosted-browser": "tsx scripts/check-hosted.ts",
     "check:exposure": "node scripts/check-exposure.mjs",
-    "test:admin-browser": "tsx scripts/check-admin.ts"
+    "test:admin-browser": "tsx scripts/check-admin.ts",
+    "test:analytics-browser": "tsx scripts/check-student-analytics.ts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
