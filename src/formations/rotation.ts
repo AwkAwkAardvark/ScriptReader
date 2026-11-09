@@ -135,25 +135,57 @@ function findConflict(first: Track, second: Track, separation: number, duration:
 }
 
 function settleArrivals(tracks: Track[], separation: number, duration: number): Track[] {
-  // Keep the final leg on its original line and preserve its arrival time.
-  // Validate the same linear segments that playback will actually draw.
+  // Start easing on the approach to the slot. Retiming only the short
+  // final step can make an early arrival look abrupt at playback speed.
+  const leaderArrival = new Map<string, number>();
+  for (const side of ['A', 'B'] as const) {
+    const sign = side === 'A' ? 1 : -1;
+    const group = tracks.filter(track => track.performer.side === side)
+      .sort((a, b) => sign * (a.performer.start.x - b.performer.start.x));
+    for (let i = 1; i < group.length; i++) {
+      leaderArrival.set(group[i].performer.id, group[i - 1].frames.at(-1)!.time);
+    }
+  }
   for (const strength of [1, 0.75, 0.5, 0.25]) {
     const settled = tracks.map(track => {
-      const from = track.frames.at(-2);
-      const to = track.frames.at(-1)!;
-      if (!from || (from.x === to.x && from.y === to.y)) return track;
-      const frames = track.frames.slice(0, -1);
-      for (let step = 1; step < 16; step++) {
-        const progress = step / 16;
-        // Begin at the original speed, then ease toward zero at the destination.
-        const distance = progress + strength * progress ** 2 * (1 - progress);
-        frames.push({
-          x: from.x + (to.x - from.x) * distance,
-          y: from.y + (to.y - from.y) * distance,
-          time: from.time + (to.time - from.time) * progress,
-        });
+      const end = track.frames.at(-1)!;
+      // The shared clock already gives the cue's last arrival a longer brake.
+      const finishesCue = end.time >= duration - epsilon;
+      const includesRearLane = track.performer.side && !finishesCue;
+      const approach = track.frames.at(includesRearLane ? -3 : -2);
+      if (!approach || (approach.x === end.x && approach.y === end.y)) return track;
+      // Keep the original route timing until the preceding performer has settled.
+      const start = Math.max(approach.time, end.time - 1.6, leaderArrival.get(track.performer.id) ?? 0);
+      if (start >= end.time) return track;
+      const span = end.time - start;
+      const distanceAt = (progress: number) => {
+        const remaining = 1 - progress;
+        const eased = finishesCue
+          ? progress + progress ** 2 * remaining
+          : 1 - remaining ** 4 * (4 - 3 * remaining);
+        return progress + strength * (eased - progress);
+      };
+      const frames = track.frames.filter(frame => frame.time < start);
+
+      for (let step = 0; step < 32; step++) {
+        const progress = step / 32;
+        frames.push({ ...positionAt(track, start + distanceAt(progress) * span), time: start + progress * span });
       }
-      frames.push(to);
+      // Retain any corner inside the eased span. The renderer and clearance
+      // check both use these segments, so the marker never cuts the corner.
+      for (const corner of track.frames.filter(frame => frame.time > start && frame.time < end.time)) {
+        const distance = (corner.time - start) / span;
+        let low = 0;
+        let high = 1;
+        for (let step = 0; step < 36; step++) {
+          const mid = (low + high) / 2;
+          if (distanceAt(mid) < distance) low = mid;
+          else high = mid;
+        }
+        frames.push({ ...corner, time: start + (low + high) / 2 * span });
+      }
+      frames.sort((a, b) => a.time - b.time);
+      frames.push(end);
       return { ...track, frames };
     });
     const clear = settled.every((track, index) => settled.slice(index + 1)

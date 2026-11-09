@@ -62,7 +62,7 @@ describe('formation rotation', () => {
   });
 
   it('slows each individual arrival while keeping its original slot and timing', () => {
-    const { tracks, smoothTracks } = planRotation(cue);
+    const { tracks, smoothTracks, duration } = planRotation(cue);
     for (const [index, track] of tracks.entries()) {
       const smooth = smoothTracks[index];
       const start = track.frames.at(-2)!;
@@ -74,7 +74,11 @@ describe('formation rotation', () => {
       const finalStep = Math.hypot(end.x - late.x, end.y - late.y);
 
       expect(smooth.frames.at(-1)).toEqual(end);
-      expect(positionAt(smooth, start.time)).toMatchObject({ x: start.x, y: start.y });
+      const approach = smooth.frames.find(frame => frame.x === start.x && frame.y === start.y)!;
+      expect(approach).toBeDefined();
+      if (track.performer.side && end.time < duration) {
+        expect(end.time - approach.time).toBeGreaterThan((end.time - start.time) * 1.3);
+      }
       expect(beforeStop).toBeGreaterThan(finalStep);
     }
   });
