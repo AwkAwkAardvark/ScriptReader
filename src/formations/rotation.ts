@@ -27,8 +27,8 @@ export type Track = { performer: Performer; frames: Keyframe[] };
 export type Rotation = { tracks: Track[]; smoothTracks: Track[]; duration: number };
 
 const epsilon = 1e-7;
-const walkSpeed = 42;
-const sideSpeed = walkSpeed * 0.5;
+const walkSpeed = 32;
+const initialSpeedRatio = 0.35;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -171,7 +171,10 @@ function easePerformers(tracks: Track[], separation: number, duration: number): 
       leaderArrival.set(group[i].performer.id, group[i - 1].frames.at(-1)!.time);
     }
   }
-  const accelerate = (progress: number) => progress ** 4 * (4 - 3 * progress);
+  // Ease from 35% of walking speed, with a modest catch-up so the paths
+  // still hit their clearance checkpoints on time.
+  const accelerate = (progress: number) => progress -
+    (1 - initialSpeedRatio) * progress * (1 - progress) ** 4;
   for (const strength of [1, 0.75, 0.5, 0.25]) {
     const blend = (progress: number, eased: number) => progress + strength * (eased - progress);
     const easedTracks = tracks.map(track => {
@@ -185,13 +188,13 @@ function easePerformers(tracks: Track[], separation: number, duration: number): 
       // For a single advancing row step, ease both ends of the same movement.
       if (!performer.side) {
         return easeSpan(track, departure, arrival,
-          progress => blend(progress, progress ** 2 * (3 - 2 * progress)));
+          progress => blend(progress, accelerate(progress) + 1 - accelerate(1 - progress) - progress));
       }
 
       // Give every return the same rules. Keep its original timing until the
       // preceding performer has settled, so followers still pass behind them.
       const approach = Math.max(frames.at(-3)!.time, arrival - 1.6, leaderArrival.get(performer.id) ?? 0);
-      const launchEnd = Math.min(departure + 0.55, frames[firstMove].time, approach);
+      const launchEnd = Math.min(departure + 0.8, frames[firstMove].time, approach);
       const launched = easeSpan(track, departure, launchEnd, progress => blend(progress, accelerate(progress)));
       return easeSpan(launched, approach, arrival, progress => blend(progress, 1 - accelerate(1 - progress)));
     });
@@ -202,7 +205,7 @@ function easePerformers(tracks: Track[], separation: number, duration: number): 
   return tracks;
 }
 
-function makeTracks(cue: Cue, gap: number): Rotation {
+function makeTracks(cue: Cue, gap: number, sideSpeed: number): Rotation {
   const { stage } = cue;
   const tracks: Track[] = cue.performers.map(performer => ({
     performer,
@@ -257,7 +260,7 @@ function makeTracks(cue: Cue, gap: number): Rotation {
   }
 
   const rowAdvanceTime = Math.max(...standing.map(({ performer: { start, end } }) =>
-    Math.hypot(end.x - start.x, end.y - start.y))) / (walkSpeed * 0.65);
+    Math.hypot(end.x - start.x, end.y - start.y))) / walkSpeed;
   const advanceEnd = frontClear + rowAdvanceTime;
   for (const track of standing) {
     append(track, track.performer.start, frontClear);
@@ -280,13 +283,19 @@ function makeTracks(cue: Cue, gap: number): Rotation {
 }
 
 export function planRotation(cue: Cue): Rotation {
-  if (cue.stage.preferredGap > cue.stage.clearance) {
-    try {
-      return makeTracks(cue, cue.stage.preferredGap);
-    } catch (error) {
-      if (!(error instanceof Error) || !error.message.startsWith('Route blocked')) throw error;
-      // A tighter path may still satisfy the required minimum.
+  const gaps = new Set([cue.stage.preferredGap, cue.stage.clearance]);
+  let blocked: Error | undefined;
+  for (const gap of gaps) {
+    // Prefer a common walking speed. Some formations need a slower side
+    // return so the advancing rows can clear the back row before re-entry.
+    for (const sideSpeed of [walkSpeed, walkSpeed * 0.5]) {
+      try {
+        return makeTracks(cue, gap, sideSpeed);
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.startsWith('Route blocked')) throw error;
+        blocked = error;
+      }
     }
   }
-  return makeTracks(cue, cue.stage.clearance);
+  throw blocked;
 }

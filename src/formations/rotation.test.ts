@@ -77,17 +77,32 @@ describe('formation rotation', () => {
       const approach = smooth.frames.find(frame => frame.x === start.x && frame.y === start.y)!;
       expect(approach).toBeDefined();
       if (track.performer.side) {
-        expect(end.time - approach.time).toBeGreaterThan((end.time - start.time) * 1.3);
+        expect(end.time - approach.time).toBeGreaterThan(end.time - start.time);
       }
       const firstMove = track.frames.findIndex((frame, index) => index > 0 &&
         (frame.x !== track.frames[index - 1].x || frame.y !== track.frames[index - 1].y));
       const departure = track.frames[firstMove - 1];
-      const step = Math.min(0.55, track.frames[firstMove].time - departure.time) / 5;
+      const step = Math.min(0.8, track.frames[firstMove].time - departure.time) / 5;
       const first = positionAt(smooth, departure.time + step);
       const second = positionAt(smooth, departure.time + 2 * step);
       expect(Math.hypot(second.x - first.x, second.y - first.y))
         .toBeGreaterThan(Math.hypot(first.x - departure.x, first.y - departure.y));
       expect(beforeStop).toBeGreaterThan(finalStep);
+    }
+  });
+
+  it('uses the same cruise speed around the side and across the rear when clearance allows', () => {
+    const centered = performers.map(performer => performer.side ? {
+      ...performer,
+      start: { ...performer.start, x: performer.start.x - 12 },
+      end: { ...performer.end, x: performer.end.x - 12 },
+    } : performer);
+    const { tracks } = planRotation({ ...cue, performers: centered });
+    const speed = (from: typeof tracks[number]['frames'][number], to: typeof from) =>
+      Math.hypot(to.x - from.x, to.y - from.y) / (to.time - from.time);
+    for (const { frames: [, turn, rear, slot, end] } of tracks.filter(track => track.performer.side)) {
+      expect(speed(turn, rear)).toBeCloseTo(speed(rear, slot));
+      expect(speed(rear, slot)).toBeCloseTo(speed(slot, end));
     }
   });
 
