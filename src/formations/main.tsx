@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { planRotation, positionAt, readCue, type Cue, type Rotation } from './rotation';
+import { smoothClock, smoothProgress } from './playback';
 import './stage.css';
 
 type LoadedCue = { cue: Cue; rotation: Rotation };
@@ -12,6 +13,7 @@ function Formations() {
   const [time, setTime] = useState(0);
   const [direction, setDirection] = useState<Direction>(0);
   const [slow, setSlow] = useState(false);
+  const [smooth, setSmooth] = useState(true);
   const [selected, setSelected] = useState('');
   const clock = useRef(0);
   const fileRequest = useRef(0);
@@ -54,15 +56,18 @@ function Formations() {
     let previous: number | undefined;
     function advance(now: number) {
       const elapsed = (now - (previous ?? now)) / 1000;
-      const next = Math.max(0, Math.min(duration, clock.current + elapsed * direction * (slow ? 0.5 : 1)));
+      const progress = clock.current / duration;
+      const current = smooth ? smoothClock(progress) : progress;
+      const step = elapsed / duration * direction * (slow ? 0.5 : 1);
+      const next = Math.max(0, Math.min(1, current + step));
       previous = now;
-      seek(next);
-      if (next === (direction === 1 ? duration : 0)) setDirection(0);
+      if (elapsed > 0) seek((smooth ? smoothProgress(next) : next) * duration);
+      if (next === (direction === 1 ? 1 : 0)) setDirection(0);
       else frame = requestAnimationFrame(advance);
     }
     frame = requestAnimationFrame(advance);
     return () => cancelAnimationFrame(frame);
-  }, [direction, duration, seek, slow]);
+  }, [direction, duration, seek, slow, smooth]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -135,6 +140,7 @@ function Formations() {
         </div>
         <div className="options">
           <label><input type="checkbox" checked={slow} onChange={event => setSlow(event.currentTarget.checked)} /> Half speed</label>
+          <label><input type="checkbox" checked={smooth} onChange={event => setSmooth(event.currentTarget.checked)} /> Smooth start and stop</label>
           <label>Highlight <select value={selected} onChange={event => setSelected(event.currentTarget.value)}>
             <option value="">All performers</option>
             {loaded.cue.performers.map(performer => <option key={performer.id} value={performer.id}>{performer.label}</option>)}
