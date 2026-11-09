@@ -10,6 +10,7 @@ export type Performer = {
 };
 export type Cue = {
   title: string;
+  advance?: 'align-early';
   performers: Performer[];
   stage: {
     width: number;
@@ -24,7 +25,7 @@ export type Cue = {
 };
 export type Keyframe = Point & { time: number };
 export type Track = { performer: Performer; frames: Keyframe[] };
-export type Rotation = { tracks: Track[]; smoothTracks: Track[]; duration: number };
+export type Rotation = { tracks: Track[]; smoothTracks: Track[]; duration: number; approachY: number };
 
 const epsilon = 1e-7;
 const walkSpeed = 32;
@@ -50,6 +51,9 @@ export function readCue(value: unknown): Cue {
       !Array.isArray(value.performers) || value.performers.length === 0 ||
       !isRecord(value.stage)) {
     throw new Error('Choose a formation file with a title, stage, and performers.');
+  }
+  if (value.advance !== undefined && value.advance !== 'align-early') {
+    throw new Error('Unknown advancing route.');
   }
   const { width, height, sideA, sideB, rear, square, clearance, preferredGap } = value.stage;
   if (!finite(width) || !finite(height) || !finite(sideA) || !finite(sideB) ||
@@ -77,7 +81,7 @@ export function readCue(value: unknown): Cue {
   if (new Set(performers.map(p => p.id)).size !== performers.length) {
     throw new Error('Each performer ID must be unique.');
   }
-  return { title: value.title, performers, stage: { width, height, sideA, sideB, rear, square, clearance, preferredGap } };
+  return { title: value.title, advance: value.advance, performers, stage: { width, height, sideA, sideB, rear, square, clearance, preferredGap } };
 }
 
 export function positionAt(track: Track, time: number): Point {
@@ -211,17 +215,23 @@ function makeTracks(cue: Cue, gap: number, sideSpeed: number): Rotation {
     performer,
     frames: [{ ...performer.start, time: 0 }],
   }));
-  const standing = tracks.filter(t => !t.performer.side);
-  if (standing.length === tracks.length || !standing.length) {
+  const returning = tracks.filter(t => t.performer.side);
+  const advancing = tracks.filter(({ performer: { side, start, end } }) => !side &&
+    (start.x !== end.x || start.y !== end.y));
+  if (!returning.length || !advancing.length) {
     throw new Error('A rotation needs both returning and advancing performers.');
   }
 
   const rowFront = Math.max(...tracks.map(t => t.performer.start.y));
-  const rowBack = Math.min(...tracks.map(t => t.performer.end.y));
+  const returnRow = returning[0].performer.end.y;
+  const rowBack = Math.min(...tracks.flatMap(t => [t.performer.start.y, t.performer.end.y]));
   const left = Math.min(...tracks.flatMap(t => [t.performer.start.x, t.performer.end.x]));
   const right = Math.max(...tracks.flatMap(t => [t.performer.start.x, t.performer.end.x]));
   const spacing = stage.square + gap;
-  const rearApproach = rowBack - stage.rear;
+  // A partial rotation can reform one row ahead of performers who hold
+  // upstage. Use the lane directly behind the target row in that case.
+  const approachY = returnRow === rowBack ? stage.rear : returnRow - spacing;
+  const rearApproach = returnRow - approachY;
   let frontClear = 0;
   let duration = 0;
 
@@ -236,7 +246,7 @@ function makeTracks(cue: Cue, gap: number, sideSpeed: number): Rotation {
     for (const track of group) {
       const { performer } = track;
       const distance = sign * (performer.start.x - lane);
-      if (performer.start.y !== rowFront || performer.end.y !== rowBack ||
+      if (performer.start.y !== rowFront || performer.end.y !== returnRow ||
           sign * (clearX - lane) < -epsilon || rearApproach < spacing - epsilon ||
           distance <= spacing) {
         throw new Error(`Route blocked for ${performer.label}. Check the side lane, rear lane, and row positions.`);
@@ -253,18 +263,24 @@ function makeTracks(cue: Cue, gap: number, sideSpeed: number): Rotation {
       previousTurn = turn;
 
       frontClear = Math.max(frontClear, turn * (1 - sign * (clearX - lane) / distance));
-      const upstage = walk(track, { x: lane, y: stage.rear }, turn, sideSpeed);
-      const behind = walk(track, { x: performer.end.x, y: stage.rear }, upstage);
+      const upstage = walk(track, { x: lane, y: approachY }, turn, sideSpeed);
+      const behind = walk(track, { x: performer.end.x, y: approachY }, upstage);
       duration = Math.max(duration, walk(track, performer.end, behind));
     }
   }
 
-  const rowAdvanceTime = Math.max(...standing.map(({ performer: { start, end } }) =>
+  const rowAdvanceTime = Math.max(...advancing.map(({ performer: { start, end } }) =>
     Math.hypot(end.x - start.x, end.y - start.y))) / walkSpeed;
   const advanceEnd = frontClear + rowAdvanceTime;
-  for (const track of standing) {
-    append(track, track.performer.start, frontClear);
-    append(track, track.performer.end, advanceEnd);
+  for (const track of advancing) {
+    const { start, end } = track.performer;
+    append(track, start, frontClear);
+    if (cue.advance === 'align-early' && start.x !== end.x) {
+      // Find the destination column before getting close to the occupied front row.
+      const fraction = 0.4;
+      append(track, { x: end.x, y: start.y + fraction * (end.y - start.y) }, frontClear + rowAdvanceTime * fraction);
+    }
+    append(track, end, advanceEnd);
   }
   duration = Math.max(duration, advanceEnd);
   const radius = stage.square / 2;
@@ -279,7 +295,7 @@ function makeTracks(cue: Cue, gap: number, sideSpeed: number): Rotation {
       }
     }
   });
-  return { tracks, smoothTracks: easePerformers(tracks, spacing, duration), duration };
+  return { tracks, smoothTracks: easePerformers(tracks, spacing, duration), duration, approachY };
 }
 
 export function planRotation(cue: Cue): Rotation {

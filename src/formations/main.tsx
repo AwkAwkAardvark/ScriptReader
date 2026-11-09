@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { planRotation, positionAt, readCue, type Cue, type Rotation } from './rotation';
+import { positionAt } from './rotation';
+import { prepareRehearsal, type Rehearsal } from './rehearsal';
 import './stage.css';
 
-type LoadedCue = { cue: Cue; rotation: Rotation };
 type Direction = -1 | 0 | 1;
 
 function Formations() {
-  const [loaded, setLoaded] = useState<LoadedCue | null>(null);
+  const [rehearsal, setRehearsal] = useState<Rehearsal | null>(null);
+  const [cueIndex, setCueIndex] = useState(0);
   const [error, setError] = useState('');
   const [time, setTime] = useState(0);
   const [direction, setDirection] = useState<Direction>(0);
@@ -16,7 +17,10 @@ function Formations() {
   const [selected, setSelected] = useState('');
   const clock = useRef(0);
   const fileRequest = useRef(0);
+  const loaded = rehearsal?.cues[cueIndex];
   const duration = loaded?.rotation.duration ?? 0;
+  const cueCount = rehearsal?.cues.length ?? 0;
+  const isSequence = cueCount > 1;
 
   const seek = useCallback((next: number) => {
     clock.current = next;
@@ -25,10 +29,17 @@ function Formations() {
 
   const play = useCallback((next: -1 | 1) => {
     if (!duration) return;
-    if (next === 1 && clock.current >= duration) seek(0);
-    if (next === -1 && clock.current <= 0) seek(duration);
+    const atEdge = next === 1 ? clock.current >= duration : clock.current <= 0;
+    if (atEdge && isSequence) {
+      const neighbor = rehearsal?.cues[cueIndex + next];
+      if (!neighbor) return;
+      setCueIndex(cueIndex + next);
+      seek(next === 1 ? 0 : neighbor.rotation.duration);
+    } else if (atEdge) {
+      seek(next === 1 ? 0 : duration);
+    }
     setDirection(next);
-  }, [duration, seek]);
+  }, [cueIndex, duration, isSequence, rehearsal, seek]);
 
   function selectMotion(next: boolean) {
     if (next === smooth) return;
@@ -38,15 +49,15 @@ function Formations() {
 
   async function load(file: File) {
     const request = ++fileRequest.current;
-    setLoaded(null);
+    setRehearsal(null);
+    setCueIndex(0);
     setDirection(0);
     seek(0);
     setSelected('');
     setError('');
     try {
-      const cue = readCue(JSON.parse(await file.text()));
-      const rotation = planRotation(cue);
-      if (request === fileRequest.current) setLoaded({ cue, rotation });
+      const next = prepareRehearsal(JSON.parse(await file.text()));
+      if (request === fileRequest.current) setRehearsal(next);
     } catch (failure) {
       if (request === fileRequest.current) {
         setError(failure instanceof SyntaxError ? 'This file is not a valid formation JSON file.' :
@@ -87,12 +98,15 @@ function Formations() {
   const tracks = smooth ? loaded?.rotation.smoothTracks : loaded?.rotation.tracks;
   const focusedTrack = tracks?.find(track => track.performer.id === selected);
   const stage = loaded?.cue.stage;
+  const atStart = time <= 0;
+  const atEnd = time >= duration;
+  const atFinalFormation = isSequence && cueIndex === cueCount - 1 && atEnd;
 
   return <main>
     <header className="page-header">
       <div>
         <p className="eyebrow">Formation rehearsal · Local prototype</p>
-        <h1>{loaded?.cue.title ?? 'Open a formation'}</h1>
+        <h1>{rehearsal?.title ?? 'Open a formation'}</h1>
       </div>
       <label className="file-picker">
         Open formation file
@@ -104,8 +118,22 @@ function Formations() {
       </label>
     </header>
     {error && <p className="error" role="alert">{error}</p>}
-    {!loaded && !error && <p className="empty">Choose the local formation JSON file to view the first rotation.</p>}
-    {loaded && stage && tracks && <>
+    {!loaded && !error && <p className="empty">Choose a local formation JSON file to rehearse a rotation or a sequence of cues.</p>}
+    {rehearsal && loaded && stage && tracks && <>
+      {isSequence && <div className="cue-panel">
+        <div>
+          <label htmlFor="formation-cue">Cue</label>{' '}
+          <select id="formation-cue" value={cueIndex} onChange={event => {
+            setDirection(0);
+            setCueIndex(Number(event.currentTarget.value));
+            seek(0);
+          }}>
+            {rehearsal.cues.map(({ cue }, index) => <option key={index} value={index}>{cue.title}</option>)}
+          </select>
+        </div>
+        <span>{loaded.from} → {loaded.to}</span>
+        <p>{atFinalFormation ? rehearsal.endNote : loaded.note}</p>
+      </div>}
       <div className="stage-shell">
         <div className="stage-labels">
           <span>A · Stage right</span><span>Upstage</span><span>B · Stage left</span>
@@ -113,7 +141,7 @@ function Formations() {
         <svg className="stage" viewBox={`0 0 ${stage.width} ${stage.height}`} role="img"
           aria-label={`Stage formation for ${loaded.cue.title}`}>
           <rect x="0.5" y="0.5" width={stage.width - 1} height={stage.height - 1} rx="2" className="stage-border" />
-          <path d={`M ${stage.sideA} ${stage.height - stage.square / 2} V ${stage.rear} H ${stage.sideB} V ${stage.height - stage.square / 2}`}
+          <path d={`M ${stage.sideA} ${stage.height - stage.square / 2} V ${loaded.rotation.approachY} H ${stage.sideB} V ${stage.height - stage.square / 2}`}
             className="lanes" />
           {focusedTrack && <polyline className="trace"
             points={focusedTrack.frames.map(({ x, y }) => `${x},${y}`).join(' ')} />}
@@ -137,8 +165,12 @@ function Formations() {
       </div>
       <section aria-label="Playback controls" className="controls">
         <div className="buttons">
-          <button onClick={() => play(-1)}>← Rewind</button>
-          <button onClick={() => play(1)}>Play →</button>
+          <button onClick={() => play(-1)} disabled={isSequence && atStart && cueIndex === 0}>
+            {isSequence && atStart && cueIndex > 0 ? '← Previous cue' : '← Rewind'}
+          </button>
+          <button onClick={() => play(1)} disabled={atFinalFormation}>
+            {atFinalFormation ? 'End of sequence' : isSequence && atEnd ? 'Next cue →' : 'Play →'}
+          </button>
           <button onClick={() => setDirection(0)} disabled={!direction}>Pause</button>
           <button onClick={() => { seek(0); setDirection(1); }}>Replay</button>
         </div>

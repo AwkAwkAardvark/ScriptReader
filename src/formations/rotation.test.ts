@@ -106,6 +106,35 @@ describe('formation rotation', () => {
     }
   });
 
+  it('leaves fixed performers in place and aligns an advancing performer before passing the held center', () => {
+    const marker = (id: string, start: Performer['start'], end: Performer['end'], side?: Performer['side']): Performer =>
+      ({ id, label: id, color: '#112233', start, end, side });
+    const partial = {
+      title: 'Partial rotation',
+      stage: { ...stage, height: 106, rear: 12 },
+      performers: [
+        marker('return', { x: 24, y: 94 }, { x: 24, y: 48 }, 'A'),
+        marker('advance', { x: 24, y: 71 }, { x: 24, y: 94 }),
+        marker('center', { x: 72, y: 94 }, { x: 72, y: 94 }),
+        marker('align', { x: 72, y: 71 }, { x: 84, y: 94 }),
+        marker('back', { x: 72, y: 25 }, { x: 72, y: 25 }),
+      ],
+    };
+    expect(() => planRotation(partial)).toThrow(/center and align/);
+    const { tracks, approachY, duration } = planRotation({ ...partial, advance: 'align-early' });
+    expect(approachY).toBeGreaterThan(25);
+    expect(approachY).toBeLessThan(48);
+    for (const track of tracks) {
+      expect(positionAt(track, duration)).toMatchObject(track.performer.end);
+      if (track.performer.id === 'center' || track.performer.id === 'back') {
+        expect(track.frames).toHaveLength(1);
+      }
+      if (track.performer.id === 'return') {
+        expect(track.frames.at(-2)).toMatchObject({ x: 24, y: approachY });
+      }
+    }
+  });
+
   it('falls back to hard clearance when the preferred spacing cannot fit', () => {
     expect(() => planRotation({ ...cue, stage: { ...stage, preferredGap: 14 } })).not.toThrow();
   });
