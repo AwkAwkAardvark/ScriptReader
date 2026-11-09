@@ -24,7 +24,7 @@ export type Cue = {
 };
 export type Keyframe = Point & { time: number };
 export type Track = { performer: Performer; frames: Keyframe[] };
-export type Rotation = { tracks: Track[]; duration: number };
+export type Rotation = { tracks: Track[]; smoothTracks: Track[]; duration: number };
 
 const epsilon = 1e-7;
 const walkSpeed = 42;
@@ -134,6 +134,35 @@ function findConflict(first: Track, second: Track, separation: number, duration:
   return false;
 }
 
+function settleArrivals(tracks: Track[], separation: number, duration: number): Track[] {
+  // Keep the final leg on its original line and preserve its arrival time.
+  // Validate the same linear segments that playback will actually draw.
+  for (const strength of [1, 0.75, 0.5, 0.25]) {
+    const settled = tracks.map(track => {
+      const from = track.frames.at(-2);
+      const to = track.frames.at(-1)!;
+      if (!from || (from.x === to.x && from.y === to.y)) return track;
+      const frames = track.frames.slice(0, -1);
+      for (let step = 1; step < 16; step++) {
+        const progress = step / 16;
+        // Begin at the original speed, then ease toward zero at the destination.
+        const distance = progress + strength * progress ** 2 * (1 - progress);
+        frames.push({
+          x: from.x + (to.x - from.x) * distance,
+          y: from.y + (to.y - from.y) * distance,
+          time: from.time + (to.time - from.time) * progress,
+        });
+      }
+      frames.push(to);
+      return { ...track, frames };
+    });
+    const clear = settled.every((track, index) => settled.slice(index + 1)
+      .every(other => !findConflict(track, other, separation, duration)));
+    if (clear) return settled;
+  }
+  return tracks;
+}
+
 function makeTracks(cue: Cue, gap: number): Rotation {
   const { stage } = cue;
   const tracks: Track[] = cue.performers.map(performer => ({
@@ -208,7 +237,7 @@ function makeTracks(cue: Cue, gap: number): Rotation {
       }
     }
   });
-  return { tracks, duration };
+  return { tracks, smoothTracks: settleArrivals(tracks, spacing, duration), duration };
 }
 
 export function planRotation(cue: Cue): Rotation {

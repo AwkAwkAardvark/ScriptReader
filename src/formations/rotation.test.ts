@@ -61,6 +61,24 @@ describe('formation rotation', () => {
     expect(positionAt(bLead, 0.1).x).toBeGreaterThan(bLead.performer.start.x);
   });
 
+  it('slows each individual arrival while keeping its original slot and timing', () => {
+    const { tracks, smoothTracks } = planRotation(cue);
+    for (const [index, track] of tracks.entries()) {
+      const smooth = smoothTracks[index];
+      const start = track.frames.at(-2)!;
+      const end = track.frames.at(-1)!;
+      const time = (fraction: number) => start.time + fraction * (end.time - start.time);
+      const middle = positionAt(smooth, time(0.75));
+      const late = positionAt(smooth, time(0.875));
+      const beforeStop = Math.hypot(late.x - middle.x, late.y - middle.y);
+      const finalStep = Math.hypot(end.x - late.x, end.y - late.y);
+
+      expect(smooth.frames.at(-1)).toEqual(end);
+      expect(positionAt(smooth, start.time)).toMatchObject({ x: start.x, y: start.y });
+      expect(beforeStop).toBeGreaterThan(finalStep);
+    }
+  });
+
   it('falls back to hard clearance when the preferred spacing cannot fit', () => {
     expect(() => planRotation({ ...cue, stage: { ...stage, preferredGap: 14 } })).not.toThrow();
   });

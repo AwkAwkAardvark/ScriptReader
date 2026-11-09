@@ -31,6 +31,12 @@ function Formations() {
     setDirection(next);
   }, [duration, seek]);
 
+  function selectMotion(next: boolean) {
+    if (next === smooth) return;
+    if (clock.current > 0 && clock.current < duration) seek(direction === -1 ? duration : 0);
+    setSmooth(next);
+  }
+
   async function load(file: File) {
     const request = ++fileRequest.current;
     setLoaded(null);
@@ -81,7 +87,8 @@ function Formations() {
     return () => window.removeEventListener('keydown', onKey);
   }, [duration, play]);
 
-  const focusedTrack = loaded?.rotation.tracks.find(track => track.performer.id === selected);
+  const tracks = smooth ? loaded?.rotation.smoothTracks : loaded?.rotation.tracks;
+  const focusedTrack = tracks?.find(track => track.performer.id === selected);
   const stage = loaded?.cue.stage;
 
   return <main>
@@ -101,7 +108,7 @@ function Formations() {
     </header>
     {error && <p className="error" role="alert">{error}</p>}
     {!loaded && !error && <p className="empty">Choose the local formation JSON file to view the first rotation.</p>}
-    {loaded && stage && <>
+    {loaded && stage && tracks && <>
       <div className="stage-shell">
         <div className="stage-labels">
           <span>A · Stage right</span><span>Upstage</span><span>B · Stage left</span>
@@ -113,7 +120,7 @@ function Formations() {
             className="lanes" />
           {focusedTrack && <polyline className="trace"
             points={focusedTrack.frames.map(({ x, y }) => `${x},${y}`).join(' ')} />}
-          {[...loaded.rotation.tracks].sort((a, b) => Number(a === focusedTrack) - Number(b === focusedTrack)).map(track => {
+          {[...tracks].sort((a, b) => Number(a === focusedTrack) - Number(b === focusedTrack)).map(track => {
             const { performer } = track;
             const { x, y } = positionAt(track, time);
             const size = stage.square;
@@ -140,15 +147,16 @@ function Formations() {
         </div>
         <div className="options">
           <label><input type="checkbox" checked={slow} onChange={event => setSlow(event.currentTarget.checked)} /> Half speed</label>
-          <div className="motion-options" role="group" aria-label="Playback motion">
-            <button type="button" aria-pressed={smooth} onClick={() => setSmooth(true)}>Smooth</button>
-            <button type="button" aria-pressed={!smooth} onClick={() => setSmooth(false)}>Steady</button>
+          <div className="motion-options" role="group" aria-label="Playback motion" aria-describedby="motion-hint">
+            <button type="button" aria-pressed={smooth} onClick={() => selectMotion(true)}>Smooth</button>
+            <button type="button" aria-pressed={!smooth} onClick={() => selectMotion(false)}>Steady</button>
           </div>
           <label>Highlight <select value={selected} onChange={event => setSelected(event.currentTarget.value)}>
             <option value="">All performers</option>
             {loaded.cue.performers.map(performer => <option key={performer.id} value={performer.id}>{performer.label}</option>)}
           </select></label>
         </div>
+        <small id="motion-hint" className="motion-hint">Switching motion modes restarts a cue in progress.</small>
         <div className="timeline">
           <label htmlFor="position">Position</label>
           <input id="position" type="range" min={0} max={duration} step="any" value={time}
