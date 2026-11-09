@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { planRotation, positionAt, readCue, type Cue, type Rotation } from './rotation';
-import { smoothClock, smoothProgress } from './playback';
 import './stage.css';
 
 type LoadedCue = { cue: Cue; rotation: Rotation };
@@ -62,18 +61,16 @@ function Formations() {
     let previous: number | undefined;
     function advance(now: number) {
       const elapsed = (now - (previous ?? now)) / 1000;
-      const progress = clock.current / duration;
-      const current = smooth ? smoothClock(progress) : progress;
-      const step = elapsed / duration * direction * (slow ? 0.5 : 1);
-      const next = Math.max(0, Math.min(1, current + step));
+      const step = elapsed * direction * (slow ? 0.5 : 1);
+      const next = Math.max(0, Math.min(duration, clock.current + step));
       previous = now;
-      if (elapsed > 0) seek((smooth ? smoothProgress(next) : next) * duration);
-      if (next === (direction === 1 ? 1 : 0)) setDirection(0);
+      if (elapsed > 0) seek(next);
+      if (next === (direction === 1 ? duration : 0)) setDirection(0);
       else frame = requestAnimationFrame(advance);
     }
     frame = requestAnimationFrame(advance);
     return () => cancelAnimationFrame(frame);
-  }, [direction, duration, seek, slow, smooth]);
+  }, [direction, duration, seek, slow]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {

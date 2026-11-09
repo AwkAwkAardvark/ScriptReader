@@ -134,9 +134,34 @@ function findConflict(first: Track, second: Track, separation: number, duration:
   return false;
 }
 
-function settleArrivals(tracks: Track[], separation: number, duration: number): Track[] {
-  // Start easing on the approach to the slot. Retiming only the short
-  // final step can make an early arrival look abrupt at playback speed.
+function easeSpan(track: Track, start: number, end: number, distanceAt: (progress: number) => number): Track {
+  if (end <= start) return track;
+  const span = end - start;
+  const frames = track.frames.filter(frame => frame.time < start || frame.time > end);
+  frames.push({ ...positionAt(track, start), time: start });
+  for (let step = 1; step < 32; step++) {
+    const progress = step / 32;
+    frames.push({ ...positionAt(track, start + distanceAt(progress) * span), time: start + progress * span });
+  }
+  frames.push({ ...positionAt(track, end), time: end });
+  // Keep any original corner exactly on the path after retiming. Clearance
+  // is checked continuously over the same linear segments used for playback.
+  for (const corner of track.frames.filter(frame => frame.time > start && frame.time < end)) {
+    const distance = (corner.time - start) / span;
+    let low = 0;
+    let high = 1;
+    for (let step = 0; step < 36; step++) {
+      const mid = (low + high) / 2;
+      if (distanceAt(mid) < distance) low = mid;
+      else high = mid;
+    }
+    frames.push({ ...corner, time: start + (low + high) / 2 * span });
+  }
+  frames.sort((a, b) => a.time - b.time);
+  return { ...track, frames };
+}
+
+function easePerformers(tracks: Track[], separation: number, duration: number): Track[] {
   const leaderArrival = new Map<string, number>();
   for (const side of ['A', 'B'] as const) {
     const sign = side === 'A' ? 1 : -1;
@@ -146,51 +171,33 @@ function settleArrivals(tracks: Track[], separation: number, duration: number): 
       leaderArrival.set(group[i].performer.id, group[i - 1].frames.at(-1)!.time);
     }
   }
+  const accelerate = (progress: number) => progress ** 4 * (4 - 3 * progress);
   for (const strength of [1, 0.75, 0.5, 0.25]) {
-    const settled = tracks.map(track => {
-      const end = track.frames.at(-1)!;
-      // The shared clock already gives the cue's last arrival a longer brake.
-      const finishesCue = end.time >= duration - epsilon;
-      const includesRearLane = track.performer.side && !finishesCue;
-      const approach = track.frames.at(includesRearLane ? -3 : -2);
-      if (!approach || (approach.x === end.x && approach.y === end.y)) return track;
-      // Keep the original route timing until the preceding performer has settled.
-      const start = Math.max(approach.time, end.time - 1.6, leaderArrival.get(track.performer.id) ?? 0);
-      if (start >= end.time) return track;
-      const span = end.time - start;
-      const distanceAt = (progress: number) => {
-        const remaining = 1 - progress;
-        const eased = finishesCue
-          ? progress + progress ** 2 * remaining
-          : 1 - remaining ** 4 * (4 - 3 * remaining);
-        return progress + strength * (eased - progress);
-      };
-      const frames = track.frames.filter(frame => frame.time < start);
+    const blend = (progress: number, eased: number) => progress + strength * (eased - progress);
+    const easedTracks = tracks.map(track => {
+      const { frames, performer } = track;
+      const firstMove = frames.findIndex((frame, index) => index > 0 &&
+        (frame.x !== frames[index - 1].x || frame.y !== frames[index - 1].y));
+      if (firstMove < 0) return track;
+      const departure = frames[firstMove - 1].time;
+      const arrival = frames.at(-1)!.time;
 
-      for (let step = 0; step < 32; step++) {
-        const progress = step / 32;
-        frames.push({ ...positionAt(track, start + distanceAt(progress) * span), time: start + progress * span });
+      // For a single advancing row step, ease both ends of the same movement.
+      if (!performer.side) {
+        return easeSpan(track, departure, arrival,
+          progress => blend(progress, progress ** 2 * (3 - 2 * progress)));
       }
-      // Retain any corner inside the eased span. The renderer and clearance
-      // check both use these segments, so the marker never cuts the corner.
-      for (const corner of track.frames.filter(frame => frame.time > start && frame.time < end.time)) {
-        const distance = (corner.time - start) / span;
-        let low = 0;
-        let high = 1;
-        for (let step = 0; step < 36; step++) {
-          const mid = (low + high) / 2;
-          if (distanceAt(mid) < distance) low = mid;
-          else high = mid;
-        }
-        frames.push({ ...corner, time: start + (low + high) / 2 * span });
-      }
-      frames.sort((a, b) => a.time - b.time);
-      frames.push(end);
-      return { ...track, frames };
+
+      // Give every return the same rules. Keep its original timing until the
+      // preceding performer has settled, so followers still pass behind them.
+      const approach = Math.max(frames.at(-3)!.time, arrival - 1.6, leaderArrival.get(performer.id) ?? 0);
+      const launchEnd = Math.min(departure + 0.55, frames[firstMove].time, approach);
+      const launched = easeSpan(track, departure, launchEnd, progress => blend(progress, accelerate(progress)));
+      return easeSpan(launched, approach, arrival, progress => blend(progress, 1 - accelerate(1 - progress)));
     });
-    const clear = settled.every((track, index) => settled.slice(index + 1)
+    const clear = easedTracks.every((track, index) => easedTracks.slice(index + 1)
       .every(other => !findConflict(track, other, separation, duration)));
-    if (clear) return settled;
+    if (clear) return easedTracks;
   }
   return tracks;
 }
@@ -269,7 +276,7 @@ function makeTracks(cue: Cue, gap: number): Rotation {
       }
     }
   });
-  return { tracks, smoothTracks: settleArrivals(tracks, spacing, duration), duration };
+  return { tracks, smoothTracks: easePerformers(tracks, spacing, duration), duration };
 }
 
 export function planRotation(cue: Cue): Rotation {
