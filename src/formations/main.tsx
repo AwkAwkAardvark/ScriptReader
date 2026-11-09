@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { planRotation, positionAt, readCue, type Cue, type Rotation } from './rotation';
 import './stage.css';
@@ -17,10 +17,17 @@ function Formations() {
   const fileRequest = useRef(0);
   const duration = loaded?.rotation.duration ?? 0;
 
-  function seek(next: number) {
+  const seek = useCallback((next: number) => {
     clock.current = next;
     setTime(next);
-  }
+  }, []);
+
+  const play = useCallback((next: -1 | 1) => {
+    if (!duration) return;
+    if (next === 1 && clock.current >= duration) seek(0);
+    if (next === -1 && clock.current <= 0) seek(duration);
+    setDirection(next);
+  }, [duration, seek]);
 
   async function load(file: File) {
     const request = ++fileRequest.current;
@@ -44,18 +51,18 @@ function Formations() {
   useEffect(() => {
     if (!direction || !duration) return;
     let frame = 0;
-    let previous = performance.now();
+    let previous: number | undefined;
     function advance(now: number) {
-      const next = Math.max(0, Math.min(duration, clock.current + (now - previous) / 1000 * direction * (slow ? 0.5 : 1)));
+      const elapsed = (now - (previous ?? now)) / 1000;
+      const next = Math.max(0, Math.min(duration, clock.current + elapsed * direction * (slow ? 0.5 : 1)));
       previous = now;
-      clock.current = next;
-      setTime(next);
-      if (next === 0 || next === duration) setDirection(0);
+      seek(next);
+      if (next === (direction === 1 ? duration : 0)) setDirection(0);
       else frame = requestAnimationFrame(advance);
     }
     frame = requestAnimationFrame(advance);
     return () => cancelAnimationFrame(frame);
-  }, [direction, duration, slow]);
+  }, [direction, duration, seek, slow]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -63,12 +70,11 @@ function Formations() {
           (event.target instanceof HTMLElement && event.target.closest('input:not([type="file"]):not([type="checkbox"]), select, textarea, [contenteditable]'))) return;
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
       event.preventDefault();
-      if (event.key === 'ArrowLeft' && clock.current > 0) setDirection(-1);
-      if (event.key === 'ArrowRight' && clock.current < duration) setDirection(1);
+      if (!event.repeat) play(event.key === 'ArrowLeft' ? -1 : 1);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [duration]);
+  }, [duration, play]);
 
   const focusedTrack = loaded?.rotation.tracks.find(track => track.performer.id === selected);
   const stage = loaded?.cue.stage;
@@ -122,8 +128,8 @@ function Formations() {
       </div>
       <section aria-label="Playback controls" className="controls">
         <div className="buttons">
-          <button onClick={() => setDirection(-1)} disabled={time <= 0}>← Rewind</button>
-          <button onClick={() => setDirection(1)} disabled={time >= duration}>Play →</button>
+          <button onClick={() => play(-1)}>← Rewind</button>
+          <button onClick={() => play(1)}>Play →</button>
           <button onClick={() => setDirection(0)} disabled={!direction}>Pause</button>
           <button onClick={() => { seek(0); setDirection(1); }}>Replay</button>
         </div>

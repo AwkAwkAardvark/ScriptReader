@@ -27,8 +27,8 @@ export type Track = { performer: Performer; frames: Keyframe[] };
 export type Rotation = { tracks: Track[]; duration: number };
 
 const epsilon = 1e-7;
-const walkSpeed = 58;
-const rowAdvanceTime = 1.0;
+const walkSpeed = 42;
+const sideSpeed = walkSpeed * 0.5;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -97,10 +97,10 @@ function append(track: Track, point: Point, time: number) {
   if (time > last.time) track.frames.push({ x: point.x, y: point.y, time });
 }
 
-function walk(track: Track, point: Point, start: number) {
+function walk(track: Track, point: Point, start: number, speed = walkSpeed) {
   const last = track.frames[track.frames.length - 1];
   append(track, last, start);
-  const end = start + Math.hypot(point.x - last.x, point.y - last.y) / walkSpeed;
+  const end = start + Math.hypot(point.x - last.x, point.y - last.y) / speed;
   append(track, point, end);
   return end;
 }
@@ -140,51 +140,62 @@ function makeTracks(cue: Cue, gap: number): Rotation {
     performer,
     frames: [{ ...performer.start, time: 0 }],
   }));
-  const sideA = tracks.filter(t => t.performer.side === 'A')
-    .sort((a, b) => a.performer.start.x - b.performer.start.x);
-  const sideB = tracks.filter(t => t.performer.side === 'B')
-    .sort((a, b) => b.performer.start.x - a.performer.start.x);
-  const returns = Array.from({ length: Math.max(sideA.length, sideB.length) },
-    (_, index) => [sideA[index], sideB[index]].filter(Boolean).map(track => ({ track, index }))).flat();
   const standing = tracks.filter(t => !t.performer.side);
-  if (!returns.length || !standing.length) throw new Error('A rotation needs both returning and advancing performers.');
+  if (standing.length === tracks.length || !standing.length) {
+    throw new Error('A rotation needs both returning and advancing performers.');
+  }
 
   const rowFront = Math.max(...tracks.map(t => t.performer.start.y));
   const rowBack = Math.min(...tracks.map(t => t.performer.end.y));
   const left = Math.min(...tracks.flatMap(t => [t.performer.start.x, t.performer.end.x]));
   const right = Math.max(...tracks.flatMap(t => [t.performer.start.x, t.performer.end.x]));
   const spacing = stage.square + gap;
-  let time = 0;
-  let advanceEnd = 0;
-  for (const [order, { track, index }] of returns.entries()) {
-    const { performer } = track;
-    const x = performer.side === 'A' ? stage.sideA : stage.sideB;
-    const y = stage.rear + (index + 1) * spacing;
-    const sideClearance = performer.side === 'A' ? left - x : x - right;
-    if (performer.start.y !== rowFront || performer.end.y !== rowBack ||
-        sideClearance < spacing - epsilon || rowBack - stage.rear < spacing - epsilon ||
-        y > rowFront) {
-      throw new Error(`Route blocked for ${performer.label}. Check the side lane, rear lane, and row positions.`);
-    }
-    const clear = walk(track, { x, y: rowFront }, time);
-    if (order === returns.length - 1) {
-      advanceEnd = clear + rowAdvanceTime;
-      for (const rowTrack of standing) {
-        append(rowTrack, rowTrack.performer.start, clear);
-        append(rowTrack, rowTrack.performer.end, advanceEnd);
+  const rearApproach = rowBack - stage.rear;
+  let frontClear = 0;
+  let duration = 0;
+
+  for (const side of ['A', 'B'] as const) {
+    const sign = side === 'A' ? 1 : -1;
+    const lane = side === 'A' ? stage.sideA : stage.sideB;
+    const clearX = side === 'A' ? left - spacing : right + spacing;
+    const group = tracks.filter(t => t.performer.side === side)
+      .sort((a, b) => sign * (a.performer.start.x - b.performer.start.x));
+    let previousTurn: number | undefined;
+
+    for (const track of group) {
+      const { performer } = track;
+      const distance = sign * (performer.start.x - lane);
+      if (performer.start.y !== rowFront || performer.end.y !== rowBack ||
+          sign * (clearX - lane) < -epsilon || rearApproach < spacing - epsilon ||
+          distance <= spacing) {
+        throw new Error(`Route blocked for ${performer.label}. Check the side lane, rear lane, and row positions.`);
       }
+
+      // Everyone starts together. A follower slows its first leg so it stays
+      // one square plus clearance away until the leader is clear of the turn.
+      let turn = distance / walkSpeed;
+      if (previousTurn !== undefined) {
+        const corner = (previousTurn + spacing / sideSpeed) / (1 - spacing / distance);
+        turn = Math.max(turn, corner, previousTurn + rearApproach / walkSpeed);
+      }
+      append(track, { x: lane, y: rowFront }, turn);
+      previousTurn = turn;
+
+      frontClear = Math.max(frontClear, turn * (1 - sign * (clearX - lane) / distance));
+      const upstage = walk(track, { x: lane, y: stage.rear }, turn, sideSpeed);
+      const behind = walk(track, { x: performer.end.x, y: stage.rear }, upstage);
+      duration = Math.max(duration, walk(track, performer.end, behind));
     }
-    time = walk(track, { x, y }, clear);
   }
 
-  for (const { track } of returns) {
-    const { end, side } = track.performer;
-    time = walk(track, { x: side === 'A' ? stage.sideA : stage.sideB, y: stage.rear }, time);
-    time = walk(track, { x: end.x, y: stage.rear }, time);
-    time = walk(track, end, Math.max(time, advanceEnd));
+  const rowAdvanceTime = Math.max(...standing.map(({ performer: { start, end } }) =>
+    Math.hypot(end.x - start.x, end.y - start.y))) / (walkSpeed * 0.65);
+  const advanceEnd = frontClear + rowAdvanceTime;
+  for (const track of standing) {
+    append(track, track.performer.start, frontClear);
+    append(track, track.performer.end, advanceEnd);
   }
-
-  const duration = Math.max(time, advanceEnd);
+  duration = Math.max(duration, advanceEnd);
   const radius = stage.square / 2;
   tracks.forEach((track, index) => {
     if (track.frames.some(({ x, y }) => x < radius || x > stage.width - radius ||

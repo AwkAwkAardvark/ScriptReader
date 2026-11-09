@@ -33,15 +33,32 @@ describe('formation rotation', () => {
     }
     const byId = (id: string) => tracks.find(track => track.performer.id === id)!;
     const lastToLeave = byId('r0c5');
-    const clears = lastToLeave.frames.find(frame => frame.x === stage.sideA && frame.y === 58)!;
     const standing = byId('r1c0');
-    expect(standing.frames[1].time).toBe(clears.time);
+    const advanceStart = standing.frames[1].time;
+    const lastTurn = lastToLeave.frames[1].time;
+    expect(advanceStart).toBeLessThan(lastTurn);
+    const clearX = positionAt(lastToLeave, advanceStart).x;
+    expect(clearX).toBeGreaterThanOrEqual(24 - stage.square - stage.preferredGap - 0.001);
+    expect(clearX).toBeLessThanOrEqual(24 - stage.square - stage.clearance + 0.001);
+
     const lead = byId('r0c2');
     const bLead = byId('r0c7');
     const follower = byId('r0c3');
-    expect(lead.frames.find(frame => frame.y === stage.rear)!.time).toBeLessThan(frameEnd(standing));
-    expect(frameEnd(lead)).toBeLessThan(frameEnd(bLead));
-    expect(follower.frames.find(frame => frame.y === stage.rear)!.time).toBeGreaterThan(frameEnd(lead));
+    for (const track of tracks.filter(track => track.performer.side)) {
+      expect(positionAt(track, 0.1)).not.toEqual(track.performer.start);
+    }
+    expect(positionAt(standing, (advanceStart + frameEnd(standing)) / 2).y)
+      .toBeGreaterThan(standing.performer.start.y);
+    const overlappingTime = (advanceStart + frameEnd(standing)) / 2;
+    expect(positionAt(lastToLeave, overlappingTime)).not.toEqual(positionAt(lastToLeave, overlappingTime + 0.01));
+
+    // When the follower crosses the leader's column, the leader is already in place.
+    const rear = follower.frames.find(frame => frame.y === stage.rear)!;
+    const approach = follower.frames.at(-2)!;
+    const fraction = (lead.performer.end.x - rear.x) / (approach.x - rear.x);
+    const passing = rear.time + fraction * (approach.time - rear.time);
+    expect(passing).toBeGreaterThanOrEqual(frameEnd(lead));
+    expect(positionAt(bLead, 0.1).x).toBeGreaterThan(bLead.performer.start.x);
   });
 
   it('falls back to hard clearance when the preferred spacing cannot fit', () => {
