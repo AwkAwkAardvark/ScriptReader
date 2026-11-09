@@ -140,7 +140,10 @@ function Formations() {
         </div>
         <div className="options">
           <label><input type="checkbox" checked={slow} onChange={event => setSlow(event.currentTarget.checked)} /> Half speed</label>
-          <label><input type="checkbox" checked={smooth} onChange={event => setSmooth(event.currentTarget.checked)} /> Smooth start and stop</label>
+          <div className="motion-options" role="group" aria-label="Playback motion">
+            <button type="button" aria-pressed={smooth} onClick={() => setSmooth(true)}>Smooth</button>
+            <button type="button" aria-pressed={!smooth} onClick={() => setSmooth(false)}>Steady</button>
+          </div>
           <label>Highlight <select value={selected} onChange={event => setSelected(event.currentTarget.value)}>
             <option value="">All performers</option>
             {loaded.cue.performers.map(performer => <option key={performer.id} value={performer.id}>{performer.label}</option>)}
