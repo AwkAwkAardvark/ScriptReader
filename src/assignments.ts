@@ -42,9 +42,9 @@ export function parseAssignments(csv: string, characters: readonly Character[]):
   return errors.length ? { ok: false, errors } : { ok: true, assignments, warnings };
 }
 
-export type ViewerSelection = { performance: Performance | 'both'; classes: string[] };
+export type ViewerSelection = { performance: Performance | 'both'; classes: string[]; studentIds?: string[] };
 export function assignmentMatches(assignment: Assignment, selection: ViewerSelection) {
-  const active = selection.performance !== 'both' || selection.classes.length > 0;
-  return active && (selection.performance === 'both' || assignment.performance === selection.performance)
-    && (!selection.classes.length || selection.classes.includes(assignment.className));
+  if (selection.performance !== 'both' && assignment.performance !== selection.performance) return false;
+  if (!selection.classes.length && !selection.studentIds?.length) return selection.performance !== 'both';
+  return selection.classes.includes(assignment.className) || Boolean(selection.studentIds?.includes(assignment.studentId));
 }

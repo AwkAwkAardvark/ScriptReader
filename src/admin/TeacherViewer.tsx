@@ -16,6 +16,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
   const [selected, setSelected] = useState('');
   const [context, setContext] = useState<TeacherContext | null>(null);
   const [selection, setSelection] = useState<ViewerSelection>({ performance: 'both', classes: [] });
+  const [studentSearch, setStudentSearch] = useState('');
   const [role, setRole] = useState('');
   const [focusContext, setFocusContext] = useState<Context>(DEFAULT_CONTEXT);
   const [hideActions, setHideActions] = useState(false);
@@ -37,6 +38,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
   }, []);
   useEffect(() => {
     setContext(null); setSelection({ performance: 'both', classes: [] });
+    setStudentSearch('');
     setRole(''); setHideActions(false);
     const production = list?.productions.find(p => p.slug === selected);
     setFocusContext({ before: validContextCount(production?.before) ? production.before : DEFAULT_CONTEXT.before, after: validContextCount(production?.after) ? production.after : DEFAULT_CONTEXT.after });
@@ -65,6 +67,14 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     return () => document.removeEventListener('visibilitychange', check);
   }, [selected]);
   const classes = useMemo(() => [...new Set([...(context?.assignments.map(a => a.className).filter(Boolean) ?? []), ...selection.classes])].sort(), [context, selection.classes]);
+  const students = useMemo(() => {
+    const assigned = new Map(context?.assignments.map(a => [a.studentId, a]));
+    return [...assigned.values()].sort((a, b) => a.studentName.localeCompare(b.studentName, locale));
+  }, [context, locale]);
+  const studentIds = selection.studentIds ?? [];
+  const studentCount = studentIds.length;
+  const matchedStudents = students.filter(student => (student.studentName + ' ' + student.className).toLocaleLowerCase().includes(studentSearch.trim().toLocaleLowerCase()));
+  const rehearsalSelection = role ? { ...selection, studentIds: [] } : selection;
   useEffect(() => { if (context && role && !context.payload.script.characters.some(c => c.tag === role)) setRole(''); }, [context, role]);
   const reading = useMemo(() => context && (!role ? buildTeacherDocument(context.payload.script, context.assignments, selection, showKorean)
     : context.payload.script.characters.some(c => c.tag === role) ? buildFocusedTeacherDocument(context.payload.script, role, focusContext, showKorean, hideActions) : null), [context, role, focusContext, hideActions, selection, showKorean]);
@@ -99,6 +109,22 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
       <label className="toggle-row"><input type="checkbox" checked={hideActions} onChange={e => setHideActions(e.target.checked)}/><span className="toggle-track" aria-hidden="true"/><span>{copy[locale].actions}</span></label></>}
       <fieldset className="teacher-performance"><legend className="control-label">{ko ? '공연 회차' : 'Performance'}</legend>{(['both', ...PERFORMANCES] as const).map(value => <label key={value}><input type="radio" name="performance" value={value} checked={selection.performance === value} onChange={() => setSelection(s => ({ ...s, performance: value }))} />{value === 'both' ? both : value}</label>)}</fieldset>
       <fieldset className="teacher-classes"><legend className="control-label">{ko ? '반' : 'Classes'}</legend>{classes.map(value => <label key={value}><input type="checkbox" checked={selection.classes.includes(value)} onChange={() => setSelection(s => ({ ...s, classes: s.classes.includes(value) ? s.classes.filter(c => c !== value) : [...s.classes, value] }))} />{value}</label>)}{!classes.length && <small>{ko ? '등록된 반이 없습니다.' : 'No classes assigned.'}</small>}</fieldset>
+      {!role && students.length > 0 && <details className="teacher-students">
+        <summary>{ko ? '학생 강조' : 'Highlight students'}{studentCount > 0 && <span>{ko ? `${studentCount}명 선택` : `${studentCount} selected`}</span>}</summary>
+        <label className="visually-hidden" htmlFor="teacher-student-search">{ko ? '이름 또는 반 검색' : 'Search name or class'}</label>
+        <input id="teacher-student-search" type="search" placeholder={ko ? '이름 또는 반 검색' : 'Search name or class'} value={studentSearch} onChange={event => setStudentSearch(event.target.value)}/>
+        <div className="teacher-student-options">
+          {matchedStudents.map(student => <label key={student.studentId}>
+            <input type="checkbox" checked={studentIds.includes(student.studentId)} onChange={() => setSelection(current => {
+              const ids = current.studentIds ?? [];
+              return { ...current, studentIds: ids.includes(student.studentId) ? ids.filter(id => id !== student.studentId) : [...ids, student.studentId] };
+            })}/>
+            <span>{student.studentName}{student.className && <small>{student.className}</small>}</span>
+          </label>)}
+          {!matchedStudents.length && <p>{ko ? '검색 결과가 없습니다.' : 'No matching students.'}</p>}
+        </div>
+        {studentCount > 0 && <button type="button" className="teacher-clear-students" onClick={() => setSelection(current => ({ ...current, studentIds: [] }))}>{ko ? '학생 선택 해제' : 'Clear students'}</button>}
+      </details>}
       <label className="toggle-row teacher-korean"><input type="checkbox" checked={showKorean} onChange={e => setShowKorean(e.target.checked)} /><span className="toggle-track" aria-hidden="true"/><span>{ko ? '한국어 표기' : 'Display Korean lines'}</span></label>
       {chapters.length>0&&<nav className="teacher-chapters" aria-label={ko?'장 바로가기':'Chapters'}><h3>{ko?'장 바로가기':'Chapters'}</h3><ol>{chapters.map(chapter=><li key={chapter.no}><a href={`#teacher-scene-${chapter.no}`} onClick={event=>{event.preventDefault();jumpToChapter(chapter.no);}}><span>{ko?'장':'Scene'} {chapter.scene}</span><span>{chapter.english}</span></a></li>)}</ol></nav>}
       {selected && <AdminActionLink href={`/admin/roster?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 편집' : 'Edit roster'}</AdminActionLink>}
@@ -118,8 +144,8 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
       <ReadingContent sceneIdPrefix="teacher-scene-" document={reading} text={copy[locale]} media={context.payload.media} attribution={entry => {
         const tags = entry.tags ?? [];
         const assigned = context.assignments.filter(a => tags.includes(a.tag));
-        return <><span className="entry-name">{tags.length ? tags.map((tag, index) => <Fragment key={tag}>{index > 0 && ', '}<span className={assigned.some(a => a.tag === tag && assignmentMatches(a, selection)) ? 'teacher-role-selected' : undefined}>{context.characters.find(c => c.tag === tag)?.label ?? tag}</span></Fragment>) : entry.speaker}</span>
-          {PERFORMANCES.map(performance => <span className="teacher-cast" key={performance} aria-label={performance}>{assigned.filter(a => a.performance === performance).length ? assigned.filter(a => a.performance === performance).map(a => <span className={assignmentMatches(a, selection) ? 'teacher-student-selected' : undefined} key={a.tag}>{a.studentName}</span>) : <span className="teacher-unassigned">—</span>}</span>)}</>;
+        return <><span className="entry-name">{tags.length ? tags.map((tag, index) => <Fragment key={tag}>{index > 0 && ', '}<span className={assigned.some(a => a.tag === tag && assignmentMatches(a, rehearsalSelection)) ? 'teacher-role-selected' : undefined}>{context.characters.find(c => c.tag === tag)?.label ?? tag}</span></Fragment>) : entry.speaker}</span>
+          {PERFORMANCES.map(performance => <span className="teacher-cast" key={performance} aria-label={performance}>{assigned.filter(a => a.performance === performance).length ? assigned.filter(a => a.performance === performance).map(a => <span className={assignmentMatches(a, rehearsalSelection) ? 'teacher-student-selected' : undefined} key={a.tag}>{a.studentName}</span>) : <span className="teacher-unassigned">—</span>}</span>)}</>;
       }} />
     </>}
     </div>
