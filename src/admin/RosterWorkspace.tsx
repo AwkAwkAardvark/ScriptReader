@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import type { RosterDraft, RosterStudent } from '../roster';
 import { ProductionFailure } from './productions';
 import {AdminLayout} from './AdminLayout';
@@ -10,6 +10,12 @@ type Slot = { role: string; performance: '1부' | '2부' };
 type Modal = { kind: 'pick'; slot: Slot } | { kind: 'student'; id?: string; slot?: Slot } | { kind: 'review' } | null;
 const performances = ['1부','2부'] as const;
 const slotKey = (slot: Slot) => slot.role + ':' + slot.performance;
+
+function isBackdrop(event: MouseEvent<HTMLDialogElement>) {
+  if (event.target !== event.currentTarget) return false;
+  const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();
+  return event.clientX < left || event.clientX >= right || event.clientY < top || event.clientY >= bottom;
+}
 
 export function RosterWorkspace({ locale, onLocale, master = false, initial, roles, title, sampleMode=false, productionPicker, onSave, onReload, onDirtyChange, embedded=false, tools, externalUnsavedGuard=false, externalBusy=false }: {
  externalBusy?:boolean; tools?:ReactNode; externalUnsavedGuard?:boolean; embedded?:boolean; locale: Locale; onLocale:(locale:Locale)=>void; master?:boolean; initial:Draft; roles:{tag:string;label:string;ko?:string}[]; title:string; sampleMode?:boolean;
@@ -27,6 +33,9 @@ export function RosterWorkspace({ locale, onLocale, master = false, initial, rol
   const [message, setMessage] = useState(''); const [error, setError] = useState('');
   const [busy,setBusy]=useState(false);const [saveError,setSaveError]=useState('');
   const dialog = useRef<HTMLDialogElement>(null);
+  const studentOptions = useRef<HTMLUListElement>(null);
+  const scrollMarker = useRef<HTMLSpanElement>(null);
+  const startedOnBackdrop = useRef(false);
   const dirty = JSON.stringify(draft) !== JSON.stringify(baseline);
   const changedSlots = roles.flatMap(role => performances.map(performance => ({ role: role.tag, performance }))).filter(slot => draft.casting[slotKey(slot)] !== baseline.casting[slotKey(slot)]);
   const student = (id?: string) => draft.students.find(s => s.id === id);
@@ -57,6 +66,32 @@ export function RosterWorkspace({ locale, onLocale, master = false, initial, rol
   }
   useEffect(() => { if (modal) { if (!dialog.current?.open) dialog.current?.showModal(); dialog.current?.querySelector<HTMLInputElement>('input')?.focus(); } else dialog.current?.close(); }, [modal]);
   useEffect(() => {
+    const list = studentOptions.current;
+    const marker = scrollMarker.current;
+    if (!list || !marker) return;
+
+    const updateMarker = () => {
+      const { clientHeight, clientWidth, offsetWidth, scrollHeight, scrollTop } = list;
+      const scrollRange = scrollHeight - clientHeight;
+      // A visible native scrollbar already provides this cue.
+      marker.hidden = !clientHeight || scrollRange <= 1 || offsetWidth > clientWidth;
+      if (marker.hidden) return;
+      const size = Math.min(clientHeight, Math.max(12, clientHeight ** 2 / scrollHeight));
+      const progress = Math.max(0, Math.min(1, scrollTop / scrollRange));
+      marker.style.setProperty('--marker-size', `${size}px`);
+      marker.style.setProperty('--marker-offset', `${progress * (clientHeight - size)}px`);
+    };
+
+    updateMarker();
+    list.addEventListener('scroll', updateMarker, { passive: true });
+    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(updateMarker);
+    observer?.observe(list);
+    return () => {
+      observer?.disconnect();
+      list.removeEventListener('scroll', updateMarker);
+    };
+  }, [modal?.kind, pickerSearch, draft.students, locale]);
+  useEffect(() => {
     if (!dirty||externalUnsavedGuard) return;
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn);
@@ -77,10 +112,23 @@ export function RosterWorkspace({ locale, onLocale, master = false, initial, rol
         <div className="roster-savebar"><span role="status">{message || (dirty ? (sampleMode?(ko ? '저장하지 않은 예시 변경' : 'Unsaved sample changes'):(ko?'저장하지 않은 변경':'Unsaved changes')) : (ko ? '변경 사항 없음' : 'No changes'))}</span><button className="roster-undo" disabled={!history.length||externalBusy} onClick={() => { setDraft(history.at(-1)!); setHistory(values => values.slice(0,-1)); setMessage(''); }}>{ko ? '실행 취소' : 'Undo'}</button><button className="admin-primary" disabled={!dirty||busy||externalBusy} onClick={() => setModal({kind:'review'})}>{ko ? '변경 검토' : 'Review changes'}</button></div>
       </div>
     <span id="roster-shared-name" className="visually-hidden">{ko ? '별표는 동명이인을 표시합니다.' : 'An asterisk marks a shared name.'}</span>
-    <dialog ref={dialog} className="roster-dialog" aria-labelledby="roster-dialog-title" onCancel={event => { event.preventDefault(); if(!busy)setModal(null); }}>
+    <dialog
+      ref={dialog}
+      className={modal?.kind === 'pick' ? 'roster-dialog roster-picker-dialog' : 'roster-dialog'}
+      aria-labelledby="roster-dialog-title"
+      onCancel={event => { event.preventDefault(); if(!busy)setModal(null); }}
+      onPointerDown={event => { startedOnBackdrop.current = isBackdrop(event); }}
+      onClick={event => {
+        if (modal?.kind === 'pick' && !busy && !externalBusy && startedOnBackdrop.current && isBackdrop(event)) setModal(null);
+        startedOnBackdrop.current = false;
+      }}
+    >
       <div className="roster-dialog-heading"><h2 id="roster-dialog-title">{modal?.kind === 'pick' ? `${roleName(modal.slot.role)} · ${modal.slot.performance}` : modal?.kind === 'student' ? (ko ? '학생 정보' : 'Student details') : (sampleMode?(ko ? '예시 변경 검토' : 'Review sample changes'):(ko?'변경 검토':'Review changes'))}</h2><button disabled={busy} aria-label={ko ? '닫기' : 'Close'} onClick={() => setModal(null)}>×</button></div>
       <fieldset disabled={busy||externalBusy} className="roster-dialog-body">{modal?.kind === 'pick' && <><label className="visually-hidden" htmlFor="roster-student-search">{ko ? '학생 검색' : 'Search students'}</label><input id="roster-student-search" type="search" placeholder={ko ? '이름 또는 반 검색' : 'Search name or class'} value={pickerSearch} onChange={event => setPickerSearch(event.target.value)} />
-        <ul className="roster-student-options">{draft.students.filter(s => identity(s).toLowerCase().includes(pickerSearch.toLowerCase())).map(s => <li key={s.id} className={multipleRoles(s.id) ? 'roster-multi-role' : undefined}><button className="roster-student-option" aria-label={`${identity(s)} · ${assignedRoles(s.id) || (ko ? '현재 배역 없음' : 'No current roles')}`} aria-describedby={duplicateName(s) ? 'roster-shared-name' : undefined} onClick={() => assign(modal.slot, s.id)}><span className="roster-student-name"><strong>{s.name}{nameMarker(s)}</strong><small>{s.className || (ko?'반 미지정':'No class')}</small></span>{s.label&&<span>{s.label}</span>}<small>{assignedRoles(s.id) || (ko ? '현재 배역 없음' : 'No current roles')}</small></button><button className="roster-student-edit" aria-label={`${ko ? '정보 수정' : 'Edit details'}: ${s.name} · ${assignedRoles(s.id)}`} onClick={() => openStudent(s, modal.slot)}>{ko ? '수정' : 'Edit'}</button></li>)}</ul>
+        <div className="roster-picker-list">
+        <ul ref={studentOptions} className="roster-student-options">{draft.students.filter(s => identity(s).toLowerCase().includes(pickerSearch.toLowerCase())).map(s => <li key={s.id} className={multipleRoles(s.id) ? 'roster-multi-role' : undefined}><button className="roster-student-option" aria-label={`${identity(s)} · ${assignedRoles(s.id) || (ko ? '현재 배역 없음' : 'No current roles')}`} aria-describedby={duplicateName(s) ? 'roster-shared-name' : undefined} onClick={() => assign(modal.slot, s.id)}><span className="roster-student-name"><strong>{s.name}{nameMarker(s)}</strong><small>{s.className || (ko?'반 미지정':'No class')}</small></span>{s.label&&<span>{s.label}</span>}<small>{assignedRoles(s.id) || (ko ? '현재 배역 없음' : 'No current roles')}</small></button><button className="roster-student-edit" aria-label={`${ko ? '정보 수정' : 'Edit details'}: ${s.name} · ${assignedRoles(s.id)}`} onClick={() => openStudent(s, modal.slot)}>{ko ? '수정' : 'Edit'}</button></li>)}</ul>
+        <span ref={scrollMarker} className="roster-scroll-marker" hidden aria-hidden="true" />
+        </div>
         <div className="roster-dialog-actions"><button onClick={() => assign(modal.slot, '')}>{ko ? '배정 해제' : 'Clear assignment'}</button><button className="admin-secondary" onClick={() => openStudent(undefined, modal.slot)}>{ko ? '새 학생 추가' : 'Add new student'}</button></div></>}
       {modal?.kind === 'student' && <form onSubmit={event => { event.preventDefault(); saveStudent(); }}><label>{ko ? '이름' : 'Name'}<input value={name} maxLength={100} onChange={event => setName(event.target.value)} /></label><label>{ko ? '반' : 'Class'}<input value={className} maxLength={100} onChange={event => setClassName(event.target.value)} /></label><label>{ko ? '구분 메모 (선택)' : 'Distinguishing label (optional)'}<input value={label} maxLength={60} onChange={event => setLabel(event.target.value)} /></label>{error && <p role="alert">{error}</p>}<div className="roster-dialog-actions"><button type="button" onClick={() => setModal(null)}>{ko ? '취소' : 'Cancel'}</button><button className="admin-primary" type="submit">{sampleMode?(ko ? '예시에 반영' : 'Update sample'):(ko?'반영':'Update student')}</button></div></form>}
       {modal?.kind === 'review' && <>{sampleMode&&<p>{ko ? '이 변경은 체험용 예시에만 반영됩니다.' : 'These changes apply only to this sample.'}</p>}<ul className="roster-change-list">{changedSlots.map(slot => <li key={slotKey(slot)} className={[baseline.casting[slotKey(slot)],draft.casting[slotKey(slot)]].some(id => id && multipleRoles(id)) ? 'roster-multi-role' : undefined}><strong>{roleName(slot.role)} · {slot.performance}</strong><span>{identity(baseline.students.find(s => s.id === baseline.casting[slotKey(slot)]))} → {identity(student(draft.casting[slotKey(slot)]))}</span></li>)}{draft.students.filter(s=>JSON.stringify(s)!==JSON.stringify(baseline.students.find(old=>old.id===s.id))).map(s=><li key={s.id}><strong>{ko?'학생 정보':'Student details'}</strong><span>{baseline.students.some(old=>old.id===s.id)?identity(baseline.students.find(old=>old.id===s.id))+' → ':''}{identity(s)}</span></li>)}</ul><div className="roster-dialog-actions"><button onClick={() => setModal(null)}>{ko ? '돌아가기' : 'Back'}</button><button className="admin-primary" onClick={() => void apply()}>{busy?(ko?'저장 중…':'Saving…'):sampleMode?(ko ? '예시에 적용' : 'Apply to sample'):(ko?'변경 저장':'Save changes')}</button></div></>}

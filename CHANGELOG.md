@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.30 — 2026-11-10
+
+- Keep search and assignment actions visible in the roster picker, with a scroll position marker for long lists.
+- Distinguish Teacher Viewer settings from staff navigation and support outside-click dismissal for the reader settings and roster picker.
+
 ## v0.3.29 — 2026-11-03
 
 - Add a Teacher Viewer screenshot with fictional casting and a prominent live-reader link to the README.
