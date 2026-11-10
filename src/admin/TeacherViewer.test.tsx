@@ -117,33 +117,44 @@ it('closes the contextual panel with Escape and returns focus to its compact tri
  fireEvent.keyDown(screen.getByRole('slider',{name:/글자 크기/}),{key:'Escape'});expect(document.querySelector('.teacher-settings')).not.toHaveAttribute('open');expect(summary).toHaveFocus();
 });
 
+function chooseRoles(...tags: string[]) {
+ const filter = document.querySelector<HTMLDetailsElement>('.teacher-role-filter')!;
+ if (!filter.open) fireEvent.click(filter.querySelector('summary')!);
+ for (const checkbox of filter.querySelectorAll<HTMLInputElement>('input[type=checkbox]')) {
+  if (checkbox.checked !== tags.includes(checkbox.value)) fireEvent.click(checkbox);
+ }
+}
+
 it('focuses roles locally using production defaults, preserving context across roles and resetting on production change',async()=>{
  const productions={productions:[{slug:'workshop',title:'Workshop',before:1,after:0},{slug:'other',title:'Other',before:4,after:3}],home:{slug:'workshop'}};
  vi.mocked(productionCall).mockImplementation(async path=>path==='productions'?productions:context);
  render(<TeacherViewer locale="en"/>);await screen.findAllByText('Student Two');
  fireEvent.click(document.querySelector('.teacher-settings > summary')!);
- expect(screen.getByRole('combobox',{name:'Character'})).toHaveValue('');
+ expect(document.querySelector('.teacher-role-filter > summary')).toHaveTextContent('All roles');
  expect(screen.queryByRole('slider',{name:'Before'})).not.toBeInTheDocument();
  const all=document.querySelectorAll('[data-record]').length;
  const requests=vi.mocked(productionCall).mock.calls.length;
- fireEvent.change(screen.getByRole('combobox',{name:'Character'}),{target:{value:'Ro'}});
+ chooseRoles('Ro');
  expect(screen.getByRole('slider',{name:'Before'})).toHaveValue('1');expect(screen.getByRole('slider',{name:'After'})).toHaveValue('0');
  expect(screen.getByLabelText('Hide actions & cues')).not.toBeChecked();
  expect(document.querySelectorAll('[data-record]').length).toBeLessThan(all);
  fireEvent.change(screen.getByRole('slider',{name:'Before'}),{target:{value:'5'}});
  fireEvent.change(screen.getByRole('slider',{name:'After'}),{target:{value:'2'}});
  fireEvent.click(screen.getByLabelText('Hide actions & cues'));
- fireEvent.change(screen.getByRole('combobox',{name:'Character'}),{target:{value:'Mi'}});
+ chooseRoles('Ro', 'Mi');
+ expect(document.querySelector('.teacher-role-filter > summary')).toHaveTextContent('2 roles');
+ expect(document.querySelector('[data-record="2"]')).toHaveClass('highlighted');
+ expect(document.querySelector('[data-record="4"]')).toHaveClass('highlighted');
  expect(screen.getByRole('slider',{name:'Before'})).toHaveValue('5');expect(screen.getByRole('slider',{name:'After'})).toHaveValue('2');expect(screen.getByLabelText('Hide actions & cues')).toBeChecked();
- fireEvent.change(screen.getByRole('combobox',{name:'Character'}),{target:{value:''}});
+ chooseRoles();
  expect(document.querySelectorAll('[data-record]')).toHaveLength(all);
- fireEvent.change(screen.getByRole('combobox',{name:'Character'}),{target:{value:'Ro'}});
+ chooseRoles('Ro');
  expect(screen.getByRole('slider',{name:'Before'})).toHaveValue('5');
  expect(vi.mocked(productionCall).mock.calls.length).toBe(requests);
  fireEvent.change(screen.getByLabelText('Production'),{target:{value:'other'}});
  await waitFor(()=>expect(productionCall).toHaveBeenCalledWith('productions/other/viewer'));
- await screen.findAllByText('Student Two');expect(screen.getByRole('combobox',{name:'Character'})).toHaveValue('');
- fireEvent.change(screen.getByRole('combobox',{name:'Character'}),{target:{value:'Ro'}});
+ await screen.findAllByText('Student Two');expect(document.querySelector('.teacher-role-filter > summary')).toHaveTextContent('All roles');
+ chooseRoles('Ro');
  expect(screen.getByRole('slider',{name:'Before'})).toHaveValue('4');expect(screen.getByRole('slider',{name:'After'})).toHaveValue('3');expect(screen.getByLabelText('Hide actions & cues')).not.toBeChecked();
 });
 
@@ -151,7 +162,7 @@ it('keeps focused target highlights independent from class/performance emphasis 
  const script=scriptFor();const joint={...context,payload:{...context.payload,script:{...script,records:script.records.map(r=>r.no===2?{...r,tags:['Ro','Mi'],source:{...r.source,English:'(quietly) Shared line'}}:r)}}};
  vi.mocked(productionCall).mockImplementation(async path=>path==='productions'?list:joint);
  render(<TeacherViewer locale="en"/>);await screen.findAllByText('Student Two');fireEvent.click(document.querySelector('.teacher-settings > summary')!);
- fireEvent.change(screen.getByRole('combobox',{name:'Character'}),{target:{value:'Ro'}});
+ chooseRoles('Ro');
  const initial=[...document.querySelectorAll('[data-record]')].map(e=>e.getAttribute('data-record'));
  fireEvent.click(screen.getByLabelText('Class B'));fireEvent.click(screen.getByRole('radio',{name:'2부'}));
  const line=document.querySelector('.script-entry[data-record="2"]')!;
@@ -165,10 +176,10 @@ it('localizes focus controls, shows an empty focused role and limits chapter lin
  const script=scriptFor();const characters=[...script.characters,{tag:'Nil1',label:'Empty role'}];
  vi.mocked(productionCall).mockImplementation(async path=>path==='productions'?list:{...context,characters,payload:{...context.payload,script:{...script,characters}}});
  render(<TeacherViewer locale="ko"/>);await screen.findAllByText('Student Two');fireEvent.click(document.querySelector('.teacher-settings > summary')!);
- expect(screen.getByRole('option',{name:'전체 배역'})).toHaveValue('');
- fireEvent.change(screen.getByRole('combobox',{name:'배역'}),{target:{value:'Mi'}});
+ expect(document.querySelector('.teacher-role-filter > summary')).toHaveTextContent('전체 배역');
+ chooseRoles('Mi');
  expect(screen.getByRole('slider',{name:'앞'})).toHaveAttribute('max','5');expect(screen.getByLabelText('동작·큐 숨기기')).not.toBeChecked();
  expect(screen.getByRole('navigation',{name:'장 바로가기'}).querySelectorAll('a')).toHaveLength(2);
- fireEvent.change(screen.getByRole('combobox',{name:'배역'}),{target:{value:'Nil1'}});
+ chooseRoles('Nil1');
  expect(screen.queryByRole('navigation',{name:'장 바로가기'})).not.toBeInTheDocument();expect(document.querySelectorAll('[data-record]')).toHaveLength(0);expect(screen.getByText('해당 내용이 없습니다.')).toHaveAttribute('role','status');
 });

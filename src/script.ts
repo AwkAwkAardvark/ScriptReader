@@ -90,7 +90,7 @@ export function attribution(record: ScriptRecord, script: Script): string {
   return record.source.Role || (record.types.includes('Line') ? names.join(', ') : '');
 }
 
-export interface FilterOptions { character: string; before: number; after: number; includeNonDialogue: boolean }
+export interface FilterOptions { character: string | readonly string[]; before: number; after: number; includeNonDialogue: boolean }
 export interface FilteredItem { record: ScriptRecord; highlighted: boolean; passage: number | null }
 export interface FilteredScript { items: FilteredItem[]; passageCount: number }
 
@@ -99,7 +99,10 @@ export function filterScript(records: readonly ScriptRecord[], options: FilterOp
   for (const count of [options.before, options.after]) {
     if (!Number.isSafeInteger(count) || count < 0) throw new RangeError('Context counts must be nonnegative safe integers.');
   }
-  if (!options.character) return { items: [], passageCount: 0 };
+  const characters = new Set(typeof options.character === 'string' ? [options.character] : options.character);
+  characters.delete('');
+  if (!characters.size) return { items: [], passageCount: 0 };
+  const matches = (record: ScriptRecord) => record.tags.some(tag => characters.has(tag));
   const segments: ScriptRecord[][] = [];
   let segment: ScriptRecord[] = [];
   let scene: number | undefined;
@@ -112,7 +115,7 @@ export function filterScript(records: readonly ScriptRecord[], options: FilterOp
       scene = record.scene;
     }
     if (isStructural(record)) {
-      if (record.types.includes('Song') && options.includeNonDialogue && record.tags.includes(options.character)) {
+      if (record.types.includes('Song') && options.includeNonDialogue && matches(record)) {
         includedScenes.add(record.scene);
       }
     } else segment.push(record);
@@ -121,7 +124,7 @@ export function filterScript(records: readonly ScriptRecord[], options: FilterOp
 
   for (const group of segments) {
     group.forEach((record, index) => {
-      if (!record.tags.includes(options.character) || (!record.types.includes('Line') && !options.includeNonDialogue)) return;
+      if (!matches(record) || (!record.types.includes('Line') && !options.includeNonDialogue)) return;
       includedScenes.add(record.scene);
       const start = Math.max(0, index - options.before);
       const end = Math.min(group.length - 1, index + options.after);
@@ -150,6 +153,6 @@ export function filterScript(records: readonly ScriptRecord[], options: FilterOp
     passageCount,
     items: records.filter(record => selected.has(record.no) || (isStructural(record) && includedScenes.has(record.scene)))
       .map(record => ({ record, passage: passages.get(record.no) ?? null,
-        highlighted: record.tags.includes(options.character) && !record.types.includes('Title') })),
+        highlighted: matches(record) && !record.types.includes('Title') })),
   };
 }

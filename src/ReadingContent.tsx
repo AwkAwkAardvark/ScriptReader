@@ -25,11 +25,11 @@ function ScriptEntry({ entry, text, video, active, onToggle, attribution }: { at
     {attribution ? attribution(entry) : <span className="entry-name">{entry.speaker}</span>}<ScriptText entry={entry} />
   </article>;
 }
-export function ReadingContent({ document, text, media = {}, attribution, sceneIdPrefix }: { sceneIdPrefix?: string; document: Pick<ReadingDocument, 'blocks'> & Partial<Omit<ReadingDocument, 'blocks'>>; text: Copy; media?: Record<string, string>; attribution?: (entry: ReadingEntry) => ReactNode }) {
+export function ReadingContent({ document, text, media = {}, attribution, sceneIdPrefix, focusKey = document.character?.tag }: { sceneIdPrefix?: string; focusKey?: string; document: Pick<ReadingDocument, 'blocks'> & Partial<Omit<ReadingDocument, 'blocks'>>; text: Copy; media?: Record<string, string>; attribution?: (entry: ReadingEntry) => ReactNode }) {
   const [active, setActive] = useState<number | null>(null);
   const songIds = document.blocks.flatMap(block => block.kind === 'passage' ? block.entries.filter(entry => entry.kind === 'song').map(entry => entry.no) : []);
   const visible = active !== null && songIds.includes(active) && /^[A-Za-z0-9_-]{11}$/.test(media[active] ?? '');
-  useEffect(() => { setActive(null); }, [document.character?.tag]);
+  useEffect(() => { setActive(null); }, [focusKey]);
   useEffect(() => { if (!visible) setActive(null); }, [visible]);
   return <div className="script-pages">{document.blocks.map(block => block.kind === 'passage'
     ? <section key={`window-${block.passage}`} className="passage-window" aria-label={text.passage} data-passage={block.passage}>
