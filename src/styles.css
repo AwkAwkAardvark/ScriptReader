@@ -471,13 +471,7 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .teacher-role-options input { flex: none; }
 .teacher-role-options .role-divider { border-top: 1px solid #dce5df; }
 .teacher-clear-roles {
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #315e44;
-  text-decoration: underline;
-  cursor: pointer;
+  margin-top: 8px;
 }
 .settings-summary:focus-visible { border-radius: 10px; }
 

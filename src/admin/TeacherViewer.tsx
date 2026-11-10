@@ -114,7 +114,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
           </label>)}
           {context && !roleChoices.length && <p>{ko ? '검색 결과가 없습니다.' : 'No matching roles.'}</p>}
         </div>
-        {isFocused && <button type="button" className="teacher-clear-roles" onClick={() => setRoles([])}>{ko ? '전체 배역 보기' : 'Show all roles'}</button>}
+        {isFocused && <button type="button" className="admin-secondary teacher-clear-roles" onClick={() => setRoles([])}>{ko ? '전체 배역 보기' : 'Show all roles'}</button>}
       </details>
       {isFocused && <><ContextPicker idPrefix="teacher-context" value={focusContext} onChange={setFocusContext} disabled={!context || loading} text={copy[locale]}/>
       <label className="toggle-row"><input type="checkbox" checked={hideActions} onChange={e => setHideActions(e.target.checked)}/><span className="toggle-track" aria-hidden="true"/><span>{copy[locale].actions}</span></label></>}
