@@ -50,7 +50,13 @@ async function checkRosterRecovery(staff:Page,master:Page,origin:string){
  for(const action of ['restore','clear','csv_import']){assert.equal((await staff.request.post(url+'/bulk',{headers:{Origin:origin},data:{action,expected:committed.version,productionVersion:committed.productionVersion}})).status(),403);}
  assert.equal((await staff.request.patch(origin+'/api/admin/productions/guard-check/assignments',{headers:{Origin:origin},data:{clear:true,expected:committed.version,productionVersion:committed.productionVersion}})).status(),403);
  await master.goto(origin+'/admin/roster?production=guard-check&lang=ko');await master.locator('.roster-cast-button').first().waitFor();await master.locator('.roster-transfer > summary').click();
- const input=master.getByLabel('배역 파일 (CSV / JSON)',{exact:true});await input.setInputFiles({name:'empty.csv',mimeType:'text/csv',buffer:Buffer.from('')});await master.getByLabel('공연 선택',{exact:true}).selectOption('synthetic-garden');const warning=master.getByRole('dialog',{name:'저장하지 않은 변경',exact:true});await warning.waitFor();assert.equal(await master.getByLabel('공연 선택',{exact:true}).inputValue(),'guard-check');await master.keyboard.press('Escape');
+ const input=master.getByLabel('배역 파일 (CSV / JSON)',{exact:true});
+ await input.setInputFiles({name:'empty.csv',mimeType:'text/csv',buffer:Buffer.from('')});
+ // Wait for the asynchronous file read before attempting to change productions.
+ await master.waitForFunction(() => document.querySelector('.roster-transfer > button.admin-primary:enabled') !== null);
+ await master.getByLabel('공연 선택',{exact:true}).selectOption('synthetic-garden');
+ const warning=master.getByRole('dialog',{name:'저장하지 않은 변경',exact:true});
+ await warning.waitFor();assert.equal(await master.getByLabel('공연 선택',{exact:true}).inputValue(),'guard-check');await master.keyboard.press('Escape');
  const csv='StudentId,StudentName,Class,Performance,Tag\nnew-a,이서연,EPG,1부,Ro\nnew-b,이서연,EPI,2부,Mi';await input.setInputFiles({name:'casting.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});await master.getByRole('button',{name:'검증 및 미리보기',exact:true}).click();await master.getByRole('heading',{name:'교체 미리보기',exact:true}).waitFor();await master.getByText('배정 확인',{exact:true}).click();assert.ok(await master.getByRole('region',{name:'배정 미리보기',exact:true}).isVisible());assert.ok((await master.locator('.roster-transfer-preview').innerText()).includes('서로 다른 학생인지 확인'));
  for(const width of [320,390,1440]){await master.setViewportSize({width,height:950});assert.ok(await master.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
  await master.getByRole('button',{name:'배정 가져오기',exact:true}).click();await Promise.all([master.waitForResponse(r=>r.url()===url&&r.request().method()==='GET'),master.getByRole('dialog',{name:'배정 가져오기',exact:true}).getByRole('button',{name:'배정 가져오기',exact:true}).click()]);await master.locator('.roster-cast-button').first().waitFor();
