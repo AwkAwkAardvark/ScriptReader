@@ -455,6 +455,27 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .roster-student-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; }
 .roster-student-name > small { font-size: 11px; font-weight: 400; color: #657168; }
 .roster-dialog-body { border: 0; margin: 0; padding: 0; min-width: 0; }
+.roster-picker-dialog[open] { display: flex; flex-direction: column; }
+.roster-picker-dialog .roster-dialog-body { display: contents; }
+.roster-picker-dialog .roster-student-options {
+  min-height: 0;
+  max-height: min(45dvh, 24rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.roster-picker-dialog .roster-dialog-heading,
+.roster-picker-dialog input[type=search],
+.roster-picker-dialog .roster-dialog-actions { flex-shrink: 0; }
+.roster-picker-dialog .roster-dialog-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.roster-picker-dialog .roster-dialog-actions > button:not(.admin-primary) {
+  padding-inline: 8px;
+  font-size: .875rem;
+}
+@media (max-height: 480px) {
+  .roster-picker-dialog { padding: 12px; }
+  .roster-picker-dialog .roster-dialog-heading { margin-bottom: 8px; }
+  .roster-picker-dialog .roster-dialog-actions { margin-top: 8px; }
+}
 .roster-production-picker { display: grid; gap: 8px; font-size: 12px; color: #657168; min-width: 0; flex: 1; }
 .roster-production-picker select { min-width: 0; max-width: 100%; color: #253c2d; }
 .roster-production > div:has(.roster-production-picker) { flex: 1; min-width: 0; }
