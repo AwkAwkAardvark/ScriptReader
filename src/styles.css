@@ -594,15 +594,16 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 /* Teacher reading tools are a contextual sidebar, independent of text magnification. */
 @media screen {
  .teacher-reading-workspace { min-width: 0; }
- .teacher-layout { display: grid; grid-template-columns: 44px minmax(0,1fr); align-items: start; gap: 16px; }
+ .teacher-layout { display: grid; grid-template-columns: 64px minmax(0,1fr); align-items: start; gap: 16px; }
  .teacher-layout:has(.teacher-settings[open]) { grid-template-columns: 260px minmax(0,1fr); }
- .teacher-reading-workspace .teacher-settings { position: sticky; top: 6px; align-self: start; padding: 0; margin: 0; width: 44px; border: 0; background: transparent; z-index: 8; }
+ .teacher-reading-workspace .teacher-settings { position: sticky; top: 6px; align-self: start; padding: 0; margin: 0; width: 64px; border: 0; background: transparent; z-index: 8; }
  .teacher-reading-workspace .teacher-settings[open] { width: 100%; }
- .teacher-reading-workspace .teacher-settings > summary { display: flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 1px solid #c6d7c7; border-radius: 50%; background: #f2f7f2; color: #315e44; font-size: 22px; font-weight: 400; line-height: 1; cursor: pointer; box-shadow: 0 2px 7px #20372912; }
+ .teacher-reading-workspace .teacher-settings > summary { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; width: 64px; min-height: 64px; padding: 6px; border: 1px solid #c6d7c7; border-radius: 14px; background: #f2f7f2; color: #315e44; font-size: 22px; font-weight: 400; line-height: 1; cursor: pointer; box-shadow: 0 2px 7px #20372912; }
  .teacher-reading-workspace .teacher-settings-icon { flex: none; }
+ .teacher-reading-workspace .teacher-settings > summary > .teacher-settings-label { color: inherit; font-size: 11px; font-weight: 600; line-height: 1.15; text-align: center; }
  .teacher-reading-workspace .teacher-settings[open] > summary { margin: 0 0 10px; }
  .teacher-reading-workspace .teacher-settings > summary::-webkit-details-marker { display: none; }
- .teacher-reading-workspace .teacher-settings-body { position: static; width: 100%; max-height: calc(100dvh - 72px); overflow-y: auto; padding: 16px; border: 1px solid #dce5df; border-radius: 18px; background: white; box-shadow: 0 4px 12px #20372910; }
+ .teacher-reading-workspace .teacher-settings-body { position: static; width: 100%; max-height: calc(100dvh - 120px); overflow-y: auto; padding: 16px; border: 1px solid #dce5df; border-radius: 18px; background: white; box-shadow: 0 4px 12px #20372910; }
  .teacher-tools-title { margin: 0 0 18px; font-size: 16px; }
  .teacher-settings-body output { margin-left: auto; font-variant-numeric: tabular-nums; color: #315e44; }
  .teacher-settings-body label[for=teacher-text-size] { display: flex; align-items: baseline; gap: 12px; }
@@ -633,10 +634,25 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 }
 @media screen and (max-width: 899px) {
  .teacher-layout, .teacher-layout:has(.teacher-settings[open]) { display: block; }
- .teacher-reading-workspace .teacher-settings, .teacher-reading-workspace .teacher-settings[open] { height: 0; width: 44px; margin: 0 0 0 auto; }
- .teacher-reading-workspace .teacher-settings-body { position: absolute; right: 0; left: auto; top: 52px; width: min(320px,calc(100vw - 32px)); max-height: calc(100dvh - 72px); }
- .teacher-reading-content > .teacher-column-key { padding-right: 56px; min-height: 44px; align-items: center; }
- .teacher-reading-content .scene-heading { scroll-margin-top: 58px; padding-right: 50px; }
+ .teacher-reading-workspace .teacher-settings, .teacher-reading-workspace .teacher-settings[open] {
+  top: 0;
+  width: 100%;
+  padding-block: 4px;
+  background: #f1f4f1;
+  border-radius: 0;
+ }
+ .teacher-reading-workspace .teacher-settings > summary,
+ .teacher-reading-workspace .teacher-settings[open] > summary {
+  flex-direction: row;
+  gap: 8px;
+  width: fit-content;
+  min-height: 44px;
+  margin: 0;
+  padding-inline: 12px;
+ }
+ .teacher-reading-workspace .teacher-settings > summary > .teacher-settings-label { font-size: 13px; }
+ .teacher-reading-workspace .teacher-settings-body { position: absolute; left: 0; top: 100%; width: min(320px, calc(100% - 24px)); max-height: calc(100dvh - 72px); }
+ .teacher-reading-content .scene-heading { scroll-margin-top: 64px; }
 }
 
 .roster-files { display: grid; gap: 16px; margin-top: 20px; min-width: 0; }

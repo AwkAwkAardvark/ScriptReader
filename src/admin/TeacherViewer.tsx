@@ -94,6 +94,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
           <path d="M3 6h6m4 0h8M3 12h12m4 0h2M3 18h3m4 0h11"/>
           <circle cx="11" cy="6" r="2"/><circle cx="17" cy="12" r="2"/><circle cx="8" cy="18" r="2"/>
         </svg>
+        <span className="teacher-settings-label">{settingsLabel}</span>
       </summary>
       <div className="teacher-settings-body"><h2 className="teacher-tools-title">{settingsLabel}</h2>
       <label className="control-label" htmlFor="teacher-text-size">{ko?'글자 크기':'Text size'} <output htmlFor="teacher-text-size">{fontScale}%</output></label>

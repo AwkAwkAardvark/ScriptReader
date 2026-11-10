@@ -161,8 +161,7 @@ try {
   await staff.locator('.teacher-view .script-entry').first().waitFor();
   assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
   assert.equal(await staff.locator('.teacher-settings .teacher-settings-icon').count(),1);
-  const iconOffset=await staff.locator('.teacher-settings > summary').evaluate(el=>{const outer=el.getBoundingClientRect(),icon=el.querySelector('.teacher-settings-icon')!.getBoundingClientRect();return {x:icon.x+icon.width/2-outer.x-outer.width/2,y:icon.y+icon.height/2-outer.y-outer.height/2};});
-  assert.ok(Math.abs(iconOffset.x)<=.5&&Math.abs(iconOffset.y)<=.5);
+  assert.equal(await staff.locator('.teacher-settings-label').innerText(),'Reading settings');
   assert.equal(await staff.locator('.teacher-settings > summary').getAttribute('aria-label'),'Workshop 2027 revised · Both — Reading settings');
   assert.equal(await staff.locator('.teacher-view .script-entry.highlighted').count(),0);
   const recordCount=await staff.locator('.teacher-view [data-record]').count();
@@ -196,7 +195,7 @@ try {
   await staff.screenshot({path:join(out,'teacher-floating-expanded-390.png')});
   assert.ok(Math.abs(await staff.locator('.teacher-view [data-record="10"]').evaluate(e=>e.getBoundingClientRect().top)-anchorTop)<2);
   await staff.getByRole('radio',{name:'2부',exact:true}).check();assert.ok(await staff.evaluate(()=>window.scrollY>200));
-  await staff.mouse.click(24, 300);
+  await staff.mouse.click(366, 300);
   assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
   await settingsButton.click();
   assert.ok(await staff.getByRole('radio',{name:'2부',exact:true}).isChecked());
