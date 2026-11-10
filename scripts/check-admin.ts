@@ -230,8 +230,18 @@ try {
     await assignment.click();
     const picker = staff.getByRole('dialog',{name:'Rowan · 1부',exact:true});
     const list = picker.locator('.roster-student-options');
+    const marker = picker.locator('.roster-scroll-marker');
+    const hasNativeScrollbar = await list.evaluate((el: HTMLElement) => el.offsetWidth > el.clientWidth);
+    if (!hasNativeScrollbar) await marker.waitFor({state:'visible'});
     await list.evaluate(el => { el.scrollTop = el.scrollHeight; });
     assert.ok(await list.evaluate(el => el.scrollTop > 0));
+    if (!hasNativeScrollbar) {
+      await staff.waitForFunction(() => {
+        const marker = document.querySelector<HTMLElement>('.roster-scroll-marker')!;
+        const thumb = getComputedStyle(marker, '::before');
+        return Math.abs(parseFloat(thumb.top) + parseFloat(thumb.height) - marker.clientHeight) < 2;
+      });
+    }
     const layout = await picker.evaluate(el => {
       const bounds = el.getBoundingClientRect();
       const search = el.querySelector('input[type=search]')!.getBoundingClientRect();
@@ -240,6 +250,9 @@ try {
     });
     assert.ok(layout, 'Search and actions stay visible while the student list scrolls');
     await staff.screenshot({path: join(out, `roster-picker-bounded-${width}.png`)});
+    await picker.getByRole('searchbox').fill('Sample student 60');
+    assert.equal(await list.locator('li').count(), 1);
+    await marker.waitFor({state:'hidden'});
     await staff.mouse.click(2, 2);
     await picker.waitFor({state:'hidden'});
     assert.ok(await assignment.isVisible());

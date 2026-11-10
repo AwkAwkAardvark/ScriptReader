@@ -457,11 +457,38 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .roster-dialog-body { border: 0; margin: 0; padding: 0; min-width: 0; }
 .roster-picker-dialog[open] { display: flex; flex-direction: column; }
 .roster-picker-dialog .roster-dialog-body { display: contents; }
-.roster-picker-dialog .roster-student-options {
+.roster-picker-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   max-height: min(45dvh, 24rem);
+  margin-block: 12px;
+  padding-inline-end: 7px;
+}
+.roster-picker-list .roster-student-options {
+  min-height: 0;
+  margin: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+.roster-scroll-marker {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: #e2e9e3;
+  pointer-events: none;
+}
+.roster-scroll-marker::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: var(--marker-offset);
+  height: var(--marker-size);
+  border-radius: inherit;
+  background: #6b8d74;
 }
 .roster-picker-dialog .roster-dialog-heading,
 .roster-picker-dialog input[type=search],
