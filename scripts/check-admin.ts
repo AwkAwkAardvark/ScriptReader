@@ -160,8 +160,8 @@ try {
   await staff.goto(demo.origin+'/admin/viewer?production=workshop-2027');
   await staff.locator('.teacher-view .script-entry').first().waitFor();
   assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
-  assert.equal(await staff.locator('.teacher-settings .teacher-menu-bars > span').count(),3);
-  const iconOffset=await staff.locator('.teacher-settings > summary').evaluate(el=>{const outer=el.getBoundingClientRect(),icon=el.querySelector('.menu-icon')!.getBoundingClientRect();return {x:icon.x+icon.width/2-outer.x-outer.width/2,y:icon.y+icon.height/2-outer.y-outer.height/2};});
+  assert.equal(await staff.locator('.teacher-settings .teacher-settings-icon').count(),1);
+  const iconOffset=await staff.locator('.teacher-settings > summary').evaluate(el=>{const outer=el.getBoundingClientRect(),icon=el.querySelector('.teacher-settings-icon')!.getBoundingClientRect();return {x:icon.x+icon.width/2-outer.x-outer.width/2,y:icon.y+icon.height/2-outer.y-outer.height/2};});
   assert.ok(Math.abs(iconOffset.x)<=.5&&Math.abs(iconOffset.y)<=.5);
   assert.equal(await staff.locator('.teacher-settings > summary').getAttribute('aria-label'),'Workshop 2027 revised · Both — Reading settings');
   assert.equal(await staff.locator('.teacher-view .script-entry.highlighted').count(),0);
@@ -185,13 +185,21 @@ try {
   await staff.locator('.teacher-settings > summary').click();
   for(const width of [320,390,1440]) {await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`teacher-${width}.png`),fullPage:true});}
   await staff.setViewportSize({width:390,height:700});
+  const settingsButton = staff.locator('.teacher-settings > summary');
+  const initialButton = await settingsButton.boundingBox();
   await staff.evaluate(()=>window.scrollTo(0,800));await staff.waitForTimeout(100);
   const viewerBar=await staff.locator('.teacher-settings').boundingBox();assert.ok(viewerBar&&viewerBar.y>=0&&viewerBar.y<=10&&viewerBar.height<=64);
+  const scrolledButton = await settingsButton.boundingBox();
+  assert.ok(initialButton && scrolledButton && Math.abs(initialButton.x - scrolledButton.x) < 1);
   const anchorTop=await staff.locator('.teacher-view [data-record="10"]').evaluate(e=>e.getBoundingClientRect().top);
   await staff.locator('.teacher-settings > summary').click();
   await staff.screenshot({path:join(out,'teacher-floating-expanded-390.png')});
   assert.ok(Math.abs(await staff.locator('.teacher-view [data-record="10"]').evaluate(e=>e.getBoundingClientRect().top)-anchorTop)<2);
   await staff.getByRole('radio',{name:'2부',exact:true}).check();assert.ok(await staff.evaluate(()=>window.scrollY>200));
+  await staff.mouse.click(24, 300);
+  assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
+  await settingsButton.click();
+  assert.ok(await staff.getByRole('radio',{name:'2부',exact:true}).isChecked());
   await staff.keyboard.press('Escape');assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
   await staff.screenshot({path:join(out,'teacher-floating-390.png')});
   await staff.evaluate(()=>window.scrollTo(0,0));
@@ -208,6 +216,42 @@ try {
   assert.ok(!(await anonymous.locator('body').innerText()).includes('PRIVATE_STUDENT_FIXTURE'));
   await anonymous.close();
   // Actual roster editor against the local database; production data is never used.
+  const rosterUrl = '**/api/admin/productions/workshop-2027/roster';
+  await staff.route(rosterUrl, async route => {
+    const response = await route.fetch();
+    const roster = await response.json();
+    const extra = Array.from({length: 60}, (_, i) => ({ id: 'picker-' + i, name: 'Sample student ' + (i + 1), className: 'EBCD', label: '' }));
+    await route.fulfill({ response, json: { ...roster, students: [...roster.students, ...extra] } });
+  });
+  for (const width of [320, 390, 1440]) {
+    await staff.setViewportSize({ width, height: width === 320 ? 420 : 700 });
+    await staff.goto(demo.origin+'/admin/roster?production=workshop-2027');
+    const assignment = staff.getByRole('button',{name:'Rowan · 1부: PRIVATE_STUDENT_FIXTURE · Class A',exact:true});
+    await assignment.click();
+    const picker = staff.getByRole('dialog',{name:'Rowan · 1부',exact:true});
+    const list = picker.locator('.roster-student-options');
+    await list.evaluate(el => { el.scrollTop = el.scrollHeight; });
+    assert.ok(await list.evaluate(el => el.scrollTop > 0));
+    const layout = await picker.evaluate(el => {
+      const bounds = el.getBoundingClientRect();
+      const search = el.querySelector('input[type=search]')!.getBoundingClientRect();
+      const actions = el.querySelector('.roster-dialog-actions')!.getBoundingClientRect();
+      return search.top >= bounds.top && actions.bottom <= bounds.bottom && bounds.bottom <= innerHeight;
+    });
+    assert.ok(layout, 'Search and actions stay visible while the student list scrolls');
+    await staff.screenshot({path: join(out, `roster-picker-bounded-${width}.png`)});
+    await staff.mouse.click(2, 2);
+    await picker.waitFor({state:'hidden'});
+    assert.ok(await assignment.isVisible());
+    assert.ok(!(await staff.getByRole('button',{name:'Review changes',exact:true}).isEnabled()));
+    await assignment.click();
+    await picker.getByRole('button',{name:'Add new student',exact:true}).click();
+    await staff.getByLabel('Name',{exact:true}).fill('Unsaved student');
+    await staff.mouse.click(2, 2);
+    assert.equal(await staff.getByLabel('Name',{exact:true}).inputValue(),'Unsaved student');
+  }
+  await staff.unroute(rosterUrl);
+  await staff.setViewportSize({width:390,height:700});
   await staff.goto(demo.origin+'/admin/roster?production=workshop-2027');
   await staff.getByRole('button',{name:'Rowan · 1부: PRIVATE_STUDENT_FIXTURE · Class A',exact:true}).click();
   await staff.getByRole('button',{name:'Edit details: PRIVATE_STUDENT_FIXTURE · 1부 Rowan, 2부 Rowan',exact:true}).click();
@@ -222,6 +266,8 @@ try {
   const beforeSave=await (await staff.request.get(demo.origin+'/api/admin/productions/workshop-2027/roster')).json();
   assert.equal(beforeSave.students.length,2);assert.equal(beforeSave.students[0].name,'PRIVATE_STUDENT_FIXTURE');
   await staff.getByRole('button',{name:'Review changes',exact:true}).click();
+  await staff.mouse.click(2, 2);
+  assert.ok(await staff.getByRole('button',{name:'Save changes',exact:true}).isVisible());
   await staff.screenshot({path:join(out,'roster-editor-review-390.png')});
   await staff.getByRole('button',{name:'Save changes',exact:true}).click();await staff.getByText('Saved.',{exact:true}).waitFor();
   await staff.reload();await staff.getByRole('button',{name:'Mira · 1부: 김민준 · EPG',exact:true}).waitFor();
