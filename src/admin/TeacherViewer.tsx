@@ -86,7 +86,6 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     if (window.matchMedia?.('(max-width: 899px)').matches && settings.current) settings.current.open = false;
     requestAnimationFrame(() => { target.focus({preventScroll:true});target.scrollIntoView({block:'start'}); });
   }
-  const castingHeaders = <><span>{ko ? '배역' : 'Role'}</span><span>1부</span><span>2부</span></>;
   return <section className="teacher-view teacher-reading-workspace" aria-busy={loading} style={{'--teacher-font-scale':fontScale/100} as CSSProperties}>
     <div className="teacher-layout">
     <div className="teacher-tools">
@@ -128,7 +127,6 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
       {selected && <AdminActionLink href={`/admin/roster?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 편집' : 'Edit roster'}</AdminActionLink>}
       </div>
     </details>
-    {context && reading && <div className={`teacher-column-key teacher-mobile-column-key${fontScale >= 175 ? ' teacher-large-type' : ''}`} aria-hidden="true">{castingHeaders}</div>}
     </div>
     <div className={`teacher-reading-content${fontScale>=175?' teacher-large-type':''}`} onClick={event => {
       if (!settings.current?.open || window.getSelection()?.isCollapsed === false) return;
@@ -138,9 +136,9 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     {loading && <p role="status">{ko ? '불러오는 중…' : 'Loading…'}</p>}
     {error && <p role="alert" className="admin-error">{ko ? '불러오지 못했습니다. 권한을 확인하고 페이지를 새로고침하세요.' : 'Unable to load. Check your access and refresh the page.'}</p>}
     {context && reading && <>
+      <div className="teacher-column-key" aria-hidden="true"><span>{ko ? '배역' : 'Role'}</span><span>1부</span><span>2부</span></div>
       {!context.assignments.length && <p className="admin-empty">{ko ? (isFocused ? '배역 배정 전입니다.' : '배역 배정 전입니다. 전체 대본을 표시합니다.') : (isFocused ? 'No student assignments yet.' : 'No student assignments yet. Showing the full script.')}</p>}
       {isFocused && !reading.blocks.some(b => b.kind === 'passage') && <p className="admin-empty" role="status">{copy[locale].noMatches}</p>}
-      <div className="teacher-column-key" aria-hidden="true">{castingHeaders}</div>
       <ReadingContent sceneIdPrefix="teacher-scene-" focusKey={JSON.stringify(activeRoles)} document={reading} text={copy[locale]} media={context.payload.media} attribution={entry => {
         const tags = entry.tags ?? [];
         const assigned = context.assignments.filter(a => tags.includes(a.tag));
