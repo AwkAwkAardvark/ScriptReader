@@ -471,7 +471,7 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .teacher-role-options input { flex: none; }
 .teacher-role-options .role-divider { border-top: 1px solid #dce5df; }
 .teacher-clear-roles {
-  margin-top: 8px;
+  margin-block: 8px 12px;
 }
 .settings-summary:focus-visible { border-radius: 10px; }
 
@@ -656,7 +656,9 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
   min-height: 44px;
   margin: 0;
   padding: 0;
+  box-shadow: none;
  }
+ .teacher-reading-workspace .teacher-settings[open] > summary { background: #e3ece3; }
  .teacher-reading-workspace .teacher-settings > summary > .teacher-settings-label {
   position: absolute;
   left: calc(100% + 6px);
