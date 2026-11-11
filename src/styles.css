@@ -670,7 +670,27 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
  }
  .teacher-settings:not([open]) > summary:focus-visible > .teacher-settings-label { visibility: visible; }
  .teacher-reading-workspace .teacher-settings-body { position: absolute; left: 0; right: auto; top: 50px; width: min(320px, calc(100% - 24px)); max-height: calc(100dvh - 72px); }
- .teacher-reading-content > .teacher-column-key { align-items: center; min-height: 44px; }
+ .teacher-reading-content > .teacher-column-key {
+  position: sticky;
+  top: 6px;
+  z-index: 2;
+  align-items: center;
+  min-height: 44px;
+  background: #f1f4f1;
+  transition: transform 140ms ease-out;
+ }
+ .teacher-reading-content > .teacher-column-key::before {
+  content: '';
+  position: absolute;
+  inset: -6px 0 auto;
+  height: 6px;
+  background: inherit;
+  pointer-events: none;
+ }
+ .teacher-reading-content[data-casting-hidden] > .teacher-column-key { transform: translateY(calc(-100% - 6px)); }
+ @media (prefers-reduced-motion: reduce) {
+  .teacher-reading-content > .teacher-column-key { transition: none; }
+ }
  .teacher-reading-content > .teacher-column-key > span:first-child { padding-inline-start: 42px; }
  .teacher-reading-content > [role="status"]:first-child,
  .teacher-reading-content > [role="alert"]:first-child {

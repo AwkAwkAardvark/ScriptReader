@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.31 — 2026-11-11
+
+- Focus the Teacher Viewer on multiple roles at once, with shared context and dialogue shown in script order.
+- Keep mobile reading settings within reach and recall the casting headings on an upward scroll.
+
 ## v0.3.30 — 2026-11-10
 
 - Keep search and assignment actions visible in the roster picker, with a scroll position marker for long lists.

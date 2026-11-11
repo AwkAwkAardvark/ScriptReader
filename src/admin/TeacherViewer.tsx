@@ -26,6 +26,47 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
   const [loading, setLoading] = useState(false);
   const generation = useRef(0);
   const settings = useRef<HTMLDetailsElement>(null);
+  const readingContent = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const content = readingContent.current;
+    const narrow = window.matchMedia?.('(max-width: 899px)');
+    if (!content || !narrow) return;
+
+    let previousY = Math.max(0, window.scrollY);
+    let direction = 0;
+    let distance = 0;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const y = Math.max(0, window.scrollY);
+      const delta = y - previousY;
+      previousY = y;
+      if (!narrow.matches || content.getBoundingClientRect().top >= 6) {
+        content.removeAttribute('data-casting-hidden');
+        distance = 0;
+        direction = 0;
+        return;
+      }
+      if (!delta || settings.current?.open) return;
+      const nextDirection = Math.sign(delta);
+      if (nextDirection !== direction) distance = 0;
+      direction = nextDirection;
+      distance += Math.abs(delta);
+      // Ignore small scroll corrections while reading.
+      if (direction > 0 && distance >= 16) content.setAttribute('data-casting-hidden', '');
+      if (direction < 0 && distance >= 56) content.removeAttribute('data-casting-hidden');
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', schedule, { passive: true });
+    narrow.addEventListener('change', schedule);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule);
+      narrow.removeEventListener('change', schedule);
+    };
+  }, []);
   useEffect(() => {
     let live = true;
     void productionCall<ProductionList>('productions').then(value => {
@@ -128,7 +169,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
       </div>
     </details>
     </div>
-    <div className={`teacher-reading-content${fontScale>=175?' teacher-large-type':''}`} onClick={event => {
+    <div ref={readingContent} className={`teacher-reading-content${fontScale>=175?' teacher-large-type':''}`} onClick={event => {
       if (!settings.current?.open || window.getSelection()?.isCollapsed === false) return;
       if (event.target instanceof Element && event.target.closest('button, a')) return;
       settings.current.open = false;

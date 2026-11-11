@@ -184,12 +184,33 @@ try {
   await staff.locator('.teacher-settings > summary').click();
   for(const width of [320,390,1440]) {await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`teacher-${width}.png`),fullPage:true});}
   await staff.setViewportSize({width:390,height:700});
+  await staff.evaluate(() => window.scrollTo(0, 0));
   const settingsButton = staff.locator('.teacher-settings > summary');
   const initialButton = await settingsButton.boundingBox();
-  await staff.evaluate(()=>window.scrollTo(0,800));await staff.waitForTimeout(100);
+  const castingRow = staff.locator('.teacher-column-key');
+  const readingContent = staff.locator('.teacher-reading-content');
+  await staff.evaluate(() => window.scrollTo(0, 800));
+  await readingContent.and(staff.locator('[data-casting-hidden]')).waitFor();
   const viewerBar=await staff.locator('.teacher-settings').boundingBox();assert.ok(viewerBar&&viewerBar.y>=0&&viewerBar.y<=10&&viewerBar.height<=64);
   const scrolledButton = await settingsButton.boundingBox();
   assert.ok(initialButton && scrolledButton && Math.abs(initialButton.x - scrolledButton.x) < 1);
+  const scrollY = await staff.evaluate(() => window.scrollY);
+  await staff.evaluate(() => window.scrollBy(0, -18));
+  await staff.waitForFunction(y => window.scrollY === y, scrollY - 18);
+  assert.equal(await readingContent.getAttribute('data-casting-hidden'), '');
+  const anchor = staff.locator('.teacher-view [data-record="10"]');
+  const beforeReveal = await anchor.boundingBox();
+  await staff.evaluate(() => window.scrollBy(0, -44));
+  await readingContent.and(staff.locator('[data-casting-hidden]')).waitFor({state:'detached'});
+  await staff.waitForFunction(() => Math.abs(document.querySelector('.teacher-column-key')!.getBoundingClientRect().top - 6) < 1);
+  const afterReveal = await anchor.boundingBox();
+  assert.ok(beforeReveal && afterReveal && Math.abs(afterReveal.y - beforeReveal.y - 44) < 1);
+  assert.ok(await castingRow.evaluate(el => {
+    const fill = getComputedStyle(el, '::before');
+    return fill.top === '-6px' && fill.height === '6px' && fill.backgroundColor === getComputedStyle(el).backgroundColor;
+  }));
+  await staff.evaluate(() => window.scrollBy(0, 20));
+  await readingContent.and(staff.locator('[data-casting-hidden]')).waitFor();
   const anchorTop=await staff.locator('.teacher-view [data-record="10"]').evaluate(e=>e.getBoundingClientRect().top);
   await staff.locator('.teacher-settings > summary').click();
   await staff.screenshot({path:join(out,'teacher-floating-expanded-390.png')});
