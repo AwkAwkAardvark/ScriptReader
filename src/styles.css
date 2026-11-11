@@ -592,11 +592,13 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 @media (max-width: 899px) { .staff-home-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 50%; text-decoration: none; color: #315e44; font-size: 22px; } }
 
 /* Teacher reading tools are a contextual sidebar, independent of text magnification. */
+.teacher-mobile-column-key { display: none; }
 @media screen {
  .teacher-reading-workspace { min-width: 0; }
  .teacher-layout { display: grid; grid-template-columns: 64px minmax(0,1fr); align-items: start; gap: 16px; }
  .teacher-layout:has(.teacher-settings[open]) { grid-template-columns: 260px minmax(0,1fr); }
- .teacher-reading-workspace .teacher-settings { position: sticky; top: 6px; align-self: start; padding: 0; margin: 0; width: 64px; border: 0; background: transparent; z-index: 8; }
+ .teacher-tools { position: sticky; top: 6px; align-self: start; z-index: 8; }
+ .teacher-reading-workspace .teacher-settings { padding: 0; margin: 0; width: 64px; border: 0; background: transparent; }
  .teacher-reading-workspace .teacher-settings[open] { width: 100%; }
  .teacher-reading-workspace .teacher-settings > summary { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; width: 64px; min-height: 64px; padding: 6px; border: 1px solid #c6d7c7; border-radius: 14px; background: #f2f7f2; color: #315e44; font-size: 22px; font-weight: 400; line-height: 1; cursor: pointer; box-shadow: 0 2px 7px #20372912; }
  .teacher-reading-workspace .teacher-settings-icon { flex: none; }
@@ -633,26 +635,55 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
  .teacher-reading-content.teacher-large-type .teacher-column-key { grid-template-columns: minmax(0,1fr) minmax(0,.65fr) minmax(0,.65fr); }
 }
 @media screen and (max-width: 899px) {
- .teacher-layout, .teacher-layout:has(.teacher-settings[open]) { display: block; }
- .teacher-reading-workspace .teacher-settings, .teacher-reading-workspace .teacher-settings[open] {
+ .teacher-layout, .teacher-layout:has(.teacher-settings[open]) { display: block; container-type: inline-size; }
+ .teacher-tools {
   top: 0;
-  width: 100%;
-  padding-block: 4px;
+  display: grid;
+  align-items: center;
+  min-height: 44px;
   background: #f1f4f1;
-  border-radius: 0;
+ }
+ .teacher-tools > * { grid-area: 1 / 1; }
+ .teacher-tools .teacher-settings { position: static; z-index: 1; }
+ .teacher-reading-workspace .teacher-settings, .teacher-reading-workspace .teacher-settings[open] {
+  width: 44px;
+  padding: 0;
  }
  .teacher-reading-workspace .teacher-settings > summary,
  .teacher-reading-workspace .teacher-settings[open] > summary {
-  flex-direction: row;
-  gap: 8px;
-  width: fit-content;
+  position: relative;
+  width: 44px;
   min-height: 44px;
   margin: 0;
-  padding-inline: 12px;
+  padding: 0;
  }
- .teacher-reading-workspace .teacher-settings > summary > .teacher-settings-label { font-size: 13px; }
- .teacher-reading-workspace .teacher-settings-body { position: absolute; left: 0; top: 100%; width: min(320px, calc(100% - 24px)); max-height: calc(100dvh - 72px); }
- .teacher-reading-content .scene-heading { scroll-margin-top: 64px; }
+ .teacher-reading-workspace .teacher-settings > summary > .teacher-settings-label {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  visibility: hidden;
+  white-space: nowrap;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #315e44;
+  color: white;
+  font-size: 13px;
+  pointer-events: none;
+ }
+ @media (hover: hover) {
+  .teacher-settings:not([open]) > summary:hover > .teacher-settings-label { visibility: visible; }
+ }
+ .teacher-settings:not([open]) > summary:focus-visible > .teacher-settings-label { visibility: visible; }
+ .teacher-reading-workspace .teacher-settings-body { position: absolute; left: 0; right: auto; top: 100%; width: min(320px, calc(100% - 24px)); max-height: calc(100dvh - 64px); }
+ .teacher-reading-content > .teacher-column-key { display: none; }
+ .teacher-mobile-column-key { display: grid; align-items: center; min-height: 44px; }
+ .teacher-mobile-column-key > span:first-child { padding-left: 42px; }
+ .teacher-mobile-column-key.teacher-large-type { grid-template-columns: minmax(0,1fr) minmax(0,.65fr) minmax(0,.65fr); }
+ @container (max-width: 780px) {
+  .teacher-mobile-column-key { grid-template-columns: minmax(0,1fr) minmax(0,.65fr) minmax(0,.65fr); }
+ }
+ .teacher-reading-content .scene-heading { scroll-margin-top: 54px; }
 }
 
 .roster-files { display: grid; gap: 16px; margin-top: 20px; min-width: 0; }

@@ -161,7 +161,7 @@ try {
   await staff.locator('.teacher-view .script-entry').first().waitFor();
   assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),null);
   assert.equal(await staff.locator('.teacher-settings .teacher-settings-icon').count(),1);
-  assert.equal(await staff.locator('.teacher-settings-label').innerText(),'Reading settings');
+  assert.equal(await staff.locator('.teacher-settings-label').textContent(),'Reading settings');
   assert.equal(await staff.locator('.teacher-settings > summary').getAttribute('aria-label'),'Workshop 2027 revised · Both — Reading settings');
   assert.equal(await staff.locator('.teacher-view .script-entry.highlighted').count(),0);
   const recordCount=await staff.locator('.teacher-view [data-record]').count();

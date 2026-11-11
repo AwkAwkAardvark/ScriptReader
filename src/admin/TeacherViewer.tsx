@@ -86,15 +86,17 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     if (window.matchMedia?.('(max-width: 899px)').matches && settings.current) settings.current.open = false;
     requestAnimationFrame(() => { target.focus({preventScroll:true});target.scrollIntoView({block:'start'}); });
   }
+  const castingHeaders = <><span>{ko ? '배역' : 'Role'}</span><span>1부</span><span>2부</span></>;
   return <section className="teacher-view teacher-reading-workspace" aria-busy={loading} style={{'--teacher-font-scale':fontScale/100} as CSSProperties}>
     <div className="teacher-layout">
+    <div className="teacher-tools">
     <details ref={settings} className="admin-card teacher-settings" onKeyDown={event => { if (event.key === 'Escape' && settings.current?.open) { event.preventDefault(); settings.current.open = false; settings.current.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true }); } }}>
-      <summary className="settings-summary" title={`${settingsLabel} — ${summary}`} aria-label={`${summary} — ${settingsLabel}`}>
+      <summary className="settings-summary" aria-label={`${summary} — ${settingsLabel}`}>
         <svg className="teacher-settings-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
           <path d="M3 6h6m4 0h8M3 12h12m4 0h2M3 18h3m4 0h11"/>
           <circle cx="11" cy="6" r="2"/><circle cx="17" cy="12" r="2"/><circle cx="8" cy="18" r="2"/>
         </svg>
-        <span className="teacher-settings-label">{settingsLabel}</span>
+        <span className="teacher-settings-label" aria-hidden="true">{settingsLabel}</span>
       </summary>
       <div className="teacher-settings-body"><h2 className="teacher-tools-title">{settingsLabel}</h2>
       <label className="control-label" htmlFor="teacher-text-size">{ko?'글자 크기':'Text size'} <output htmlFor="teacher-text-size">{fontScale}%</output></label>
@@ -126,6 +128,8 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
       {selected && <AdminActionLink href={`/admin/roster?production=${selected}${ko ? '&lang=ko' : ''}`}>{ko ? '배역 편집' : 'Edit roster'}</AdminActionLink>}
       </div>
     </details>
+    {context && reading && <div className={`teacher-column-key teacher-mobile-column-key${fontScale >= 175 ? ' teacher-large-type' : ''}`} aria-hidden="true">{castingHeaders}</div>}
+    </div>
     <div className={`teacher-reading-content${fontScale>=175?' teacher-large-type':''}`} onClick={event => {
       if (!settings.current?.open || window.getSelection()?.isCollapsed === false) return;
       if (event.target instanceof Element && event.target.closest('button, a')) return;
@@ -136,7 +140,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     {context && reading && <>
       {!context.assignments.length && <p className="admin-empty">{ko ? (isFocused ? '배역 배정 전입니다.' : '배역 배정 전입니다. 전체 대본을 표시합니다.') : (isFocused ? 'No student assignments yet.' : 'No student assignments yet. Showing the full script.')}</p>}
       {isFocused && !reading.blocks.some(b => b.kind === 'passage') && <p className="admin-empty" role="status">{copy[locale].noMatches}</p>}
-      <div className="teacher-column-key" aria-hidden="true"><span>{ko ? '배역' : 'Role'}</span><span>1부</span><span>2부</span></div>
+      <div className="teacher-column-key" aria-hidden="true">{castingHeaders}</div>
       <ReadingContent sceneIdPrefix="teacher-scene-" focusKey={JSON.stringify(activeRoles)} document={reading} text={copy[locale]} media={context.payload.media} attribution={entry => {
         const tags = entry.tags ?? [];
         const assigned = context.assignments.filter(a => tags.includes(a.tag));
