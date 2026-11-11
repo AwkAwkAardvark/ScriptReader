@@ -1,7 +1,7 @@
 import type { ReadingBlock, ReadingDocument } from './reading-document';
 
 /** Hide standalone cues after context selection; preserve source-based grouping and inline directions. */
-export function applyActionVisibility(document: ReadingDocument, hide: boolean): ReadingDocument {
+export function applyActionVisibility<T extends Pick<ReadingDocument, 'blocks'>>(document: T, hide: boolean): T {
   if (!hide) return document;
   const blocks: ReadingBlock[] = [];
   for (const block of document.blocks) {

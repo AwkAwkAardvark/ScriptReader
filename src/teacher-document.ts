@@ -1,6 +1,6 @@
 import { assignmentMatches, type Assignment, type ViewerSelection } from './assignments';
 import { attribution, filterScript, type Script } from './script';
-import { buildReadingDocument, type ReadingBlock, type ReadingEntry } from './reading-document';
+import { buildReadingBlocks, type ReadingBlock, type ReadingEntry } from './reading-document';
 import { applyActionVisibility } from './action-visibility';
 import type { Context } from './context';
 
@@ -27,8 +27,8 @@ export function buildTeacherDocument(script: Script, assignments: Assignment[], 
 }
 
 /** Role focus shares the student passage pipeline; rehearsal selection never filters rows. */
-export function buildFocusedTeacherDocument(script: Script, character: string, context: Context, showKorean: boolean, hideActions: boolean) {
+export function buildFocusedTeacherDocument(script: Script, character: string | readonly string[], context: Context, showKorean: boolean, hideActions: boolean) {
   const includeNonDialogue = !hideActions;
   const filtered = filterScript(script.records, { character, ...context, includeNonDialogue });
-  return applyActionVisibility(buildReadingDocument(script, filtered, character, { ...context, includeNonDialogue, showKorean }), hideActions);
+  return applyActionVisibility({ blocks: buildReadingBlocks(script, filtered, showKorean) }, hideActions);
 }

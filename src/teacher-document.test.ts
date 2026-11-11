@@ -13,7 +13,7 @@ it('matches the student passage pipeline across contexts, cues, songs, scenes an
   const context = { before, after, includeNonDialogue: !hide, showKorean };
   const student = applyActionVisibility(buildReadingDocument(script, filterScript(script.records, { character, ...context }), character, context), hide);
   const focused = buildFocusedTeacherDocument(script, character, context, showKorean, hide);
-  expect(focused).toEqual(student);
+  expect(focused.blocks).toEqual(student.blocks);
   for (const entry of entries(focused)) expect(entry.tags).toEqual(script.records.find(r => r.no === entry.no)?.tags);
  }
  const focused = buildFocusedTeacherDocument(script, 'Ro', { before: 0, after: 0 }, true, true);
@@ -36,4 +36,14 @@ it('preserves full-script membership and rehearsal emphasis in All roles', () =>
  const document = buildTeacherDocument(script, rows, { performance: '1부', classes: ['EPG'] }, true);
  expect(entries(document).map(e => e.no)).toEqual(script.records.map(r => r.no));
  expect(entries(document).find(e => e.no === 2)?.highlighted).toBe(true);
+});
+
+it('merges context for multiple roles in source order without duplicating shared lines', () => {
+ const script = scriptFor(syntheticRecords.map(r => r.No === '4' ? { ...r, Tag: 'Ro;Mi', Role: 'Together' } : r));
+ const document = buildFocusedTeacherDocument(script, ['Ro', 'Mi'], { before: 1, after: 1 }, true, false);
+ const visible = entries(document);
+ expect(visible.filter(entry => entry.no === 4)).toHaveLength(1);
+ expect(visible.filter(entry => [2, 4, 7].includes(entry.no)).map(entry => entry.highlighted)).toEqual([true, true, true]);
+ const first = document.blocks.find(block => block.kind === 'passage');
+ expect(first?.kind === 'passage' && first.entries.map(entry => entry.no)).toEqual(Array.from({ length: 12 }, (_, index) => index + 2));
 });

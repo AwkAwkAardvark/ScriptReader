@@ -32,10 +32,17 @@ export async function checkTeacherRoleFocus(page: Page, rpc: Rpc, origin: string
  const all = await recordsShown();
  const summary = page.locator('.teacher-settings > summary');
  const open = async () => { if (!await page.locator('.teacher-settings').evaluate((node: HTMLDetailsElement) => node.open)) await summary.click(); };
+ const roles = page.locator('.teacher-role-filter');
+ const chooseRole = async (tag: string) => {
+  if (await roles.getAttribute('open') === null) await roles.locator('summary').click();
+  for (const checkbox of await roles.getByRole('checkbox').all()) {
+   await checkbox.setChecked(await checkbox.getAttribute('value') === tag);
+  }
+ };
  await open();
- assert.equal(await page.getByLabel('Character', { exact: true }).inputValue(), '');
+ assert.match(await roles.locator('summary').innerText(), /All roles/);
  const initialRequests = requests.length;
- await page.getByLabel('Character', { exact: true }).selectOption('Ro');
+ await chooseRole('Ro');
  assert.equal(await page.getByRole('slider', { name: 'Before', exact: true }).inputValue(), '1');
  assert.equal(await page.getByRole('slider', { name: 'After', exact: true }).inputValue(), '0');
  assert.equal(await page.getByLabel('Hide actions & cues').isChecked(), false);
@@ -56,23 +63,23 @@ export async function checkTeacherRoleFocus(page: Page, rpc: Rpc, origin: string
  await page.getByLabel('Hide actions & cues').check();
  assert.equal(await page.locator('.script-entry.direction').count(), 0);
  assert.equal(await page.locator('[data-record="2"] .inline-stage-action').textContent(), '(quietly)');
- await page.getByLabel('Character', { exact: true }).selectOption('Mi');
+ await chooseRole('Mi');
  assert.equal(await page.getByRole('slider', { name: 'Before', exact: true }).inputValue(), '2');
  assert.equal(await page.getByRole('slider', { name: 'After', exact: true }).inputValue(), '3');
  await page.getByLabel('Hide actions & cues').uncheck();
  assert.equal(await page.locator('.teacher-chapters a').count(), 1);
  await page.locator('[data-record="9"] .video-toggle').click(); assert.equal(await page.locator('.song-player iframe').count(), 1);
- await page.getByLabel('Character', { exact: true }).selectOption('Ro'); assert.equal(await page.locator('.song-player iframe').count(), 0);
+ await chooseRole('Ro'); assert.equal(await page.locator('.song-player iframe').count(), 0);
  await page.getByLabel('Display Korean lines').uncheck(); assert.equal(await page.locator('.teacher-reading-content .translation').count(), 0);
- await page.getByLabel('Character', { exact: true }).selectOption('Nil1'); assert.equal(await page.locator('[data-record]').count(), 0); assert.equal(await page.locator('.teacher-chapters').count(), 0);
- await page.getByLabel('Character', { exact: true }).selectOption('Act1'); assert.equal(await page.locator('[data-record="16"]').count(), 1);
+ await chooseRole('Nil1'); assert.equal(await page.locator('[data-record]').count(), 0); assert.equal(await page.locator('.teacher-chapters').count(), 0);
+ await chooseRole('Act1'); assert.equal(await page.locator('[data-record="16"]').count(), 1);
  await page.getByLabel('Hide actions & cues').check(); assert.equal(await page.locator('[data-record]').count(), 0);
- await page.getByLabel('Character', { exact: true }).selectOption(''); assert.deepEqual(await recordsShown(), all);
+ await chooseRole(''); assert.deepEqual(await recordsShown(), all);
  assert.equal(requests.length, initialRequests, 'local focus/rehearsal controls must not fetch or use anonymous quotas');
  await page.getByLabel('Production', { exact: true }).selectOption('focus-second');
  await page.locator('.teacher-view[aria-busy="false"] [data-record="20"]').waitFor();
- assert.equal(await page.getByLabel('Character', { exact: true }).inputValue(), '');
- await page.getByLabel('Character', { exact: true }).selectOption('Ro');
+ assert.match(await roles.locator('summary').innerText(), /All roles/);
+ await chooseRole('Ro');
  assert.equal(await page.getByRole('slider', { name: 'Before', exact: true }).inputValue(), '4');
  assert.equal(await page.getByRole('slider', { name: 'After', exact: true }).inputValue(), '3');
  assert.equal(await page.getByLabel('Hide actions & cues').isChecked(), false);
@@ -80,19 +87,19 @@ export async function checkTeacherRoleFocus(page: Page, rpc: Rpc, origin: string
   await page.setViewportSize({ width, height: 900 }); await open();
   await page.getByRole('slider', { name: /Text size/ }).fill('250');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-  await page.getByLabel('Character', { exact: true }).selectOption('Mi');
+  await chooseRole('Mi');
   const chapter = page.locator('.teacher-chapters a').last(); const href = await chapter.getAttribute('href'); await chapter.click();
   await page.waitForFunction(id => document.activeElement?.id === id, href!.slice(1));
-  await open(); await page.getByLabel('Character', { exact: true }).focus(); await page.keyboard.press('Escape');
+  await open(); await roles.locator('summary').focus(); await page.keyboard.press('Escape');
   assert.equal(await page.locator('.teacher-settings').evaluate((node: HTMLDetailsElement) => node.open), false);
  }
  await page.getByRole('button', { name: '한국어', exact: true }).click(); await open();
- assert.equal(await page.getByRole('option', { name: '전체 배역' }).count(), 1);
- await page.getByLabel('배역', { exact: true }).selectOption('Ro');
+ assert.ok(await roles.locator('summary').isVisible());
+ await chooseRole('Ro');
  assert.equal(await page.getByRole('slider', { name: '앞', exact: true }).getAttribute('max'), '5');
  assert.ok(await page.getByLabel('동작·큐 숨기기').isVisible());
  await page.reload(); await page.locator('[data-record="20"]').waitFor(); await open();
- assert.equal(await page.getByLabel('Character', { exact: true }).inputValue(), '');
+ assert.match(await roles.locator('summary').innerText(), /All roles/);
  assert.equal(await page.getByRole('slider', { name: /Text size/ }).inputValue(), '100');
  assert.equal(requests.some(path => !path.startsWith('/api/admin/')), false);
 }

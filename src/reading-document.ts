@@ -17,11 +17,18 @@ export function buildReadingDocument(script: Script, filtered: FilteredScript, c
   context: ReadingDocument['context']): ReadingDocument {
   const selected = script.characters.find(choice => choice.tag === character);
   if (!selected) throw new Error('Select a known character before building a reading document.');
+  const blocks = buildReadingBlocks(script, filtered, context.showKorean);
+  return { character: { ...selected }, context: { ...context }, blocks,
+    sceneCount: new Set(filtered.items.map(item => item.record.scene)).size,
+    contributionCount: filtered.items.filter(item => item.highlighted && item.record.types.includes('Line')).length };
+}
+
+export function buildReadingBlocks(script: Script, filtered: FilteredScript, showKorean: boolean): ReadingBlock[] {
   const blocks: ReadingBlock[] = [];
   for (const { record, highlighted, passage } of filtered.items) {
     const entry: ReadingEntry = {
       no: record.no, scene: record.scene, english: record.source.English,
-      korean: context.showKorean ? record.source.Korean : '', speaker: attribution(record, script), tags: record.tags,
+      korean: showKorean ? record.source.Korean : '', speaker: attribution(record, script), tags: record.tags,
       kind: record.types.includes('Title') ? 'scene' : record.types.includes('Song') ? 'song' : record.types.includes('Line') ? 'dialogue' : 'cue',
       highlighted, stageDirection: record.types.includes('StageDirection'),
     };
@@ -32,7 +39,5 @@ export function buildReadingDocument(script: Script, filtered: FilteredScript, c
       else blocks.push({ kind: 'passage', passage: passage ?? -record.no, entries: [entry] });
     }
   }
-  return { character: { ...selected }, context: { ...context }, blocks,
-    sceneCount: new Set(filtered.items.map(item => item.record.scene)).size,
-    contributionCount: filtered.items.filter(item => item.highlighted && item.record.types.includes('Line')).length };
+  return blocks;
 }
