@@ -171,6 +171,7 @@ export function TeacherViewer({ locale }: { locale: Locale }) {
     </div>
     <div ref={readingContent} className={`teacher-reading-content${fontScale>=175?' teacher-large-type':''}`} onClick={event => {
       if (!settings.current?.open || window.getSelection()?.isCollapsed === false) return;
+      if (!window.matchMedia?.('(max-width: 899px)').matches) return;
       if (event.target instanceof Element && event.target.closest('button, a')) return;
       settings.current.open = false;
     }}>

@@ -554,7 +554,7 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .staff-main { min-width: 0; width: 100%; max-width: 1180px; padding: 20px 28px 40px; }
 .staff-main .admin-main { padding: 0; }
 .staff-main .roster-main { padding: 0; max-width: none; }
-.staff-reading .staff-main { max-width: 1240px; margin: 0 auto; }
+.staff-reading .staff-main { max-width: 1440px; margin: 0 auto; }
 .staff-skip { position: absolute; top: -100px; left: 12px; z-index: 20; padding: 12px; background: white; color: #315e44; }
 .staff-skip:focus { top: 8px; }
 .admin-production-picker { display: grid; min-width: 0; gap: 8px; font-size: 13px; color: #536358; }
@@ -594,8 +594,13 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 /* Teacher reading tools are a contextual sidebar, independent of text magnification. */
 @media screen {
  .teacher-reading-workspace { min-width: 0; }
- .teacher-layout { display: grid; grid-template-columns: 64px minmax(0,1fr); align-items: start; gap: 16px; }
- .teacher-layout:has(.teacher-settings[open]) { grid-template-columns: 260px minmax(0,1fr); }
+ .teacher-layout {
+  --teacher-side-width: clamp(168px, 17.5%, 236px);
+  display: grid;
+  grid-template-columns: var(--teacher-side-width) minmax(0, 1fr) var(--teacher-side-width);
+  align-items: start;
+  gap: clamp(8px, 1.2vw, 16px);
+ }
  .teacher-tools { position: sticky; top: 6px; align-self: start; z-index: 8; }
  .teacher-reading-workspace .teacher-settings { padding: 0; margin: 0; width: 64px; border: 0; background: transparent; }
  .teacher-reading-workspace .teacher-settings[open] { width: 100%; }
@@ -634,7 +639,7 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
  .teacher-reading-content.teacher-large-type .teacher-column-key { grid-template-columns: minmax(0,1fr) minmax(0,.65fr) minmax(0,.65fr); }
 }
 @media screen and (max-width: 899px) {
- .teacher-layout, .teacher-layout:has(.teacher-settings[open]) { display: block; }
+ .teacher-layout { display: block; }
  .teacher-tools { height: 0; }
  .teacher-reading-workspace .teacher-settings, .teacher-reading-workspace .teacher-settings[open] {
   position: static;

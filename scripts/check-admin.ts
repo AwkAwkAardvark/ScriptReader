@@ -182,6 +182,22 @@ try {
   assert.ok(await staff.locator('.teacher-view .script-entry[data-record="4"]').evaluate(e=>!e.classList.contains('highlighted')));
   assert.equal(await staff.locator('.teacher-view [data-record]').count(),recordCount);
   await staff.locator('.teacher-settings > summary').click();
+  for (const width of [900, 1440]) {
+    await staff.setViewportSize({width,height:900});
+    const desktopReader = staff.locator('.teacher-reading-content');
+    const desktopToggle = staff.locator('.teacher-settings > summary');
+    const closed = await desktopReader.boundingBox();
+    const workspace = await staff.locator('.teacher-layout').boundingBox();
+    assert.ok(closed && workspace && Math.abs(closed.x + closed.width / 2 - workspace.x - workspace.width / 2) < 1);
+    await desktopToggle.click();
+    const panel = await staff.locator('.teacher-settings-body').boundingBox();
+    const opened = await desktopReader.boundingBox();
+    assert.ok(opened && panel && Math.abs(closed.x - opened.x) < 1 && Math.abs(closed.width - opened.width) < 1);
+    assert.ok(panel.x + panel.width <= opened.x);
+    await desktopReader.locator('.script-entry').first().click();
+    assert.equal(await staff.locator('.teacher-settings').getAttribute('open'),'');
+    await desktopToggle.click();
+  }
   for(const width of [320,390,1440]) {await staff.setViewportSize({width,height:1000});assert.ok(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await staff.screenshot({path:join(out,`teacher-${width}.png`),fullPage:true});}
   await staff.setViewportSize({width:390,height:700});
   await staff.evaluate(() => window.scrollTo(0, 0));
