@@ -42,6 +42,7 @@ try {
   await owner.setViewportSize({width:1440,height:1000});
   assert.equal((await owner.request.get(demo.origin + '/api/admin/accounts')).status(), 401);
   await owner.getByRole('button', { name: 'Continue with Google' }).click();
+  await owner.getByRole('button',{name:'Navigation',exact:true}).click();
   await owner.getByRole('link', { name: 'Access Management', exact: true }).click();
   await owner.getByRole('heading', { name: 'Access Management', exact: true }).waitFor();
   await staff.goto(demo.origin + '/api/admin/auth/callback?code=staff');
@@ -63,13 +64,14 @@ try {
   await staff.getByRole('button',{name:'Navigation',exact:true}).click();
   await staff.getByRole('link',{name:'Scripts',exact:true}).click();
   // Approved staff can publish, but cannot manage accounts. All files are fictional.
-  // An open in-flow menu must not collapse on blur and move a pointer target before click.
-  await staff.getByRole('button',{name:'Navigation',exact:true}).click();
-  await staff.locator('#staff-navigation a').first().focus();
+  const staffMenu = staff.getByRole('button',{name:'Navigation',exact:true});
+  const pageBeforeMenu = await staff.locator('#staff-main').boundingBox();
+  await staffMenu.click();
+  assert.deepEqual(await staff.locator('#staff-main').boundingBox(), pageBeforeMenu);
+  await staff.locator('.staff-appbar h1').click();
+  assert.equal(await staffMenu.getAttribute('aria-expanded'),'false');
   await staff.getByRole('button', { name: 'New production', exact: true }).click();
   await staff.getByLabel('Reader title', { exact: true }).waitFor();
-  assert.equal(await staff.getByRole('button',{name:'Navigation',exact:true}).getAttribute('aria-expanded'),'true');
-  await staff.getByRole('button',{name:'Navigation',exact:true}).click();
   await staff.getByLabel('Reader title', { exact: true }).fill('Workshop 2027');
   await staff.getByRole('group',{name:'Default context',exact:true}).getByRole('slider',{name:'Before',exact:true}).fill('5');
   await staff.getByRole('group',{name:'Default context',exact:true}).getByRole('slider',{name:'After',exact:true}).fill('0');
@@ -367,7 +369,7 @@ try {
       const menu=staff.getByRole('button',{name:'Navigation',exact:true});if(await menu.getAttribute('aria-expanded')==='false')await menu.click();
       await staff.locator('#staff-navigation a').first().focus();await staff.keyboard.press('Escape');
       assert.equal(await menu.getAttribute('aria-expanded'),'false');
-    } else await staff.locator('.staff-sidebar').waitFor({state:'visible'});
+    }
     await staff.screenshot({path:join(out,`roster-preview-${width}.png`),fullPage:true});
   }
   await staff.setViewportSize({width:390,height:1000});

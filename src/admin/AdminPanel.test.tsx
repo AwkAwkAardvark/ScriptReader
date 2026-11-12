@@ -106,6 +106,7 @@ it('keeps the overview separate from master account loading and links to dedicat
  render(<AdminPanel/>);await screen.findByText('Master');
  expect(adminClient.accounts).not.toHaveBeenCalled();
  expect(screen.getByRole('heading',{name:'My Account'})).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Navigation'}));
  expect(screen.getByRole('link',{name:'My Account'})).toHaveAttribute('href','/admin');
  expect(screen.getByRole('link',{name:'Scripts'})).toHaveAttribute('href','/admin/scripts');
  expect(screen.getByRole('link',{name:'Access Management'})).toHaveAttribute('href','/admin/accounts');

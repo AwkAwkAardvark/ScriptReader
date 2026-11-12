@@ -542,9 +542,21 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .staff-brand .brand-mark { height: 38px; }
 .staff-nav-toggle { min-width: 44px; min-height: 44px; padding: 8px; border: 0; border-radius: 50%; font-size: 22px; color: #315e44; background: transparent; }
 .staff-nav-toggle:hover { background: #e3ece3; }
-.staff-layout { display: grid; grid-template-columns: minmax(0,1fr); align-items: start; }
-.staff-nav-open .staff-layout { grid-template-columns: 220px minmax(0,1fr); }
-.staff-sidebar { position: sticky; top: 12px; min-width: 0; max-height: calc(100dvh - 24px); overflow-y: auto; padding: 18px 12px; }
+.staff-layout { position: relative; display: grid; grid-template-columns: minmax(0,1fr); align-items: start; }
+.staff-sidebar {
+ position: absolute;
+ z-index: 12;
+ top: 0;
+ left: 0;
+ width: 220px;
+ max-height: calc(100dvh - 72px);
+ overflow-y: auto;
+ padding: 12px;
+ border: 1px solid #dce5dc;
+ border-radius: 0 0 16px 16px;
+ background: #f1f4f1;
+ box-shadow: 0 4px 12px #20372918;
+}
 .staff-sidebar[hidden] { display: none; }
 .staff-sidebar nav { display: grid; gap: 4px; }
 .staff-sidebar a { display: block; min-height: 44px; padding: 12px 16px; border-radius: 24px; font-size: 14px; color: #3f5144; text-decoration: none; }
@@ -569,12 +581,11 @@ a.admin-action-link:active, button.admin-action-link:active:not(:disabled) { bac
 .csv-example-body > p:not(.csv-example-note) { font-size: 12px; line-height: 1.5; color: #536358; margin: 12px 0; }
 .csv-example-download { font-size: 12px; }
 @media (max-width: 899px) {
- .staff-nav-open .staff-layout { grid-template-columns: minmax(0,1fr); }
  .staff-appbar { min-height: 64px; gap: 10px; padding: 8px 12px; }
  .staff-appbar h1 { font-size: 18px; }
  .staff-brand { display: none; }
  .staff-main { padding: 16px 12px 28px; }
- .staff-sidebar { position: static; max-height: min(60dvh,420px); padding: 10px 12px; border-bottom: 1px solid #dce5dc; }
+ .staff-sidebar { width: 100%; max-height: min(60dvh,420px); padding: 10px 12px; }
  .staff-sidebar nav { grid-template-columns: repeat(2,minmax(0,1fr)); }
  .staff-sidebar a { font-size: 13px; padding: 12px; }
  .staff-reader-link { margin-top: 8px; }

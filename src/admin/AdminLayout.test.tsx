@@ -6,6 +6,7 @@ beforeEach(()=>{window.history.replaceState({},'','/admin/scripts?production=wor
 afterEach(()=>vi.unstubAllGlobals());
 it('shares active navigation with production/language context and respects account permissions',()=>{
  render(<AdminLayout page="scripts" locale="ko" onLocale={vi.fn()}><p>Page content</p></AdminLayout>);
+ fireEvent.click(screen.getByRole('button',{name:'메뉴'}));
  expect(screen.getByRole('link',{name:'공연 대본'})).toHaveAttribute('aria-current','page');
  expect(screen.getByRole('link',{name:'노래'})).toHaveAttribute('href','/admin/songs?production=workshop&lang=ko');
  expect(screen.queryByRole('link',{name:'권한 관리'})).not.toBeInTheDocument();
@@ -15,12 +16,14 @@ it('shares active navigation with production/language context and respects accou
 });
 it('collapses desktop navigation without hiding content and restores button focus with Escape',()=>{
  render(<AdminLayout page="scripts" locale="en" onLocale={vi.fn()} master><p>Page content</p></AdminLayout>);
- const button=screen.getByRole('button',{name:'Navigation'});expect(button).toHaveAttribute('aria-expanded','true');
- fireEvent.keyDown(screen.getByRole('navigation'),{key:'Escape'});expect(button).toHaveFocus();expect(button).toHaveAttribute('aria-expanded','false');
+ const button=screen.getByRole('button',{name:'Navigation'});expect(button).toHaveAttribute('aria-expanded','false');
+ fireEvent.click(button);expect(button).toHaveAttribute('aria-expanded','true');
+ const link=screen.getByRole('link',{name:'Scripts'});link.focus();
+ fireEvent.keyDown(link,{key:'Escape'});expect(button).toHaveFocus();expect(button).toHaveAttribute('aria-expanded','false');
  expect(screen.queryByRole('navigation')).not.toBeInTheDocument();expect(screen.getByText('Page content')).toBeInTheDocument();
  fireEvent.click(button);expect(screen.getByRole('link',{name:'Access Management'})).toBeInTheDocument();
 });
-it('keeps in-flow mobile navigation stable when focus moves to a content action',()=>{
+it('keeps the pinned menu open on blur and dismisses it with Escape',()=>{
  media.matches=false;render(<AdminLayout page="roster" locale="en" onLocale={vi.fn()}><button>Content action</button></AdminLayout>);
  const button=screen.getByRole('button',{name:'Navigation'});expect(button).toHaveAttribute('aria-expanded','false');fireEvent.click(button);
  fireEvent.blur(screen.getByRole('link',{name:'Scripts'}),{relatedTarget:screen.getByRole('button',{name:'Content action'})});
@@ -31,6 +34,7 @@ it('starts the teacher workspace without an expanded admin sidebar, and hides pr
  const view=render(<AdminLayout page="viewer" locale="en" onLocale={vi.fn()}><p>Script</p></AdminLayout>);
  expect(screen.getByRole('button',{name:'Navigation'})).toHaveAttribute('aria-expanded','false');view.unmount();
  render(<AdminLayout page="overview" locale="en" onLocale={vi.fn()} approved={false}><p>Pending</p></AdminLayout>);
+ fireEvent.click(screen.getByRole('button',{name:'Navigation'}));
  expect(screen.getByRole('link',{name:'My Account'})).toBeInTheDocument();expect(screen.queryByRole('link',{name:'Roster'})).not.toBeInTheDocument();
 });
 
